@@ -1,0 +1,14 @@
+# Directorios de dependencias
+**/node_modules/
+
+# Archivos de entorno y configuración
+**/.env
+**/.env.*
+.DS_Store
+
+# Artefactos de construcción
+backend/dist/
+frontend/.next/
+
+# Archivos de bloqueo de dependencias
+package-lock.json
