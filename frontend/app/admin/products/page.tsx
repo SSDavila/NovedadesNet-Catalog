@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FaBoxOpen } from 'react-icons/fa';
 import ProductGrid from './components/ProductGrid';
-import ProductModal from './components/ProductModal';
+import NewProductModal from './components/NewProductModal';
 import FloatingButton from './components/FloatingButton';
 
 interface Producto {
@@ -60,7 +60,7 @@ export default function ProductosPage() {
 
       <FloatingButton onClick={() => setIsModalOpen(true)} />
 
-      <ProductModal
+      <NewProductModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onAdd={handleAddProduct}

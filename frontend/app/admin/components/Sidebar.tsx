@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FaChartBar, FaBox, FaShoppingCart, FaBars } from 'react-icons/fa';
+import { FaChartBar, FaBox, FaShoppingCart, FaBars, FaTags } from 'react-icons/fa';
 import clsx from 'clsx';
 import { useState } from 'react';
 
@@ -14,6 +14,7 @@ const links = [
 
 const productLinks = [
   { href: '/admin/products', label: 'Productos', icon: FaBox },
+  { href: '/admin/categories', label: 'Categorias', icon: FaTags },
 ];
 
 export default function Sidebar() {
@@ -74,7 +75,7 @@ export default function Sidebar() {
               className={clsx(
                 'flex items-center gap-3 px-4 py-2 rounded-lg transition-all duration-200',
                 pathname === href
-                  ? 'bg-blue-600 text-white shadow-lg'
+                  ? 'bg-green-600 text-white shadow-lg'
                   : 'text-gray-400 hover:bg-neutral-800 hover:text-white',
                 collapsed && 'justify-center px-0'
               )}

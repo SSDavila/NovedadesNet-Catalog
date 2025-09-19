@@ -11,14 +11,14 @@ interface Producto {
   imagen: string;
 }
 
-interface ProductModalProps {
+interface NewProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (producto: Producto) => void;
   nextId: number;
 }
 
-export default function ProductModal({ isOpen, onClose, onAdd, nextId }: ProductModalProps) {
+export default function NewProductModal({ isOpen, onClose, onAdd, nextId }: NewProductModalProps) {
   const [nombre, setNombre] = useState('');
   const [precio, setPrecio] = useState('');
   const [stock, setStock] = useState('');
@@ -49,8 +49,8 @@ export default function ProductModal({ isOpen, onClose, onAdd, nextId }: Product
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center px-4 z-50">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 relative">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 relative animate-fadeIn">
         <h2 className="text-2xl font-bold mb-4 text-gray-900">Agregar nuevo producto</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
