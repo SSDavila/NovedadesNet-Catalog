@@ -1,18 +1,18 @@
+'use client';
+
 import Sidebar from './components/Sidebar';
 
-export const metadata = {
-  title: 'Panel de Administración',
-  description: 'Panel interno de Novedades Net',
-};
-
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <div className="flex min-h-screen bg-gray-50 text-gray-900">
-      {/* Sidebar */}
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       <Sidebar />
-
-      {/* Main */}
-      <main className="flex-1 p-6 overflow-auto bg-gray-50">{children}</main>
+      <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        {children}
+      </main>
     </div>
   );
 }
