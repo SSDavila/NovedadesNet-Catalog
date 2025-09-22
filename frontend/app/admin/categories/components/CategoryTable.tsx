@@ -1,69 +1,47 @@
 'use client';
 
-import { FaTrash, FaEdit } from 'react-icons/fa';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 
-interface CategoryTableProps {
-  categories?: string[];
-  onDelete: (index: number) => void;
-  onEdit: (index: number) => void;
+interface Category {
+  categoryId: number;
+  categoryName: string;
 }
 
-export default function CategoryTable({
-  categories = [],
-  onDelete,
-  onEdit,
-}: CategoryTableProps) {
-  if (categories.length === 0) {
-    return (
-      <p className="mt-6 text-gray-500 text-center">
-        No hay categorías creadas aún.
-      </p>
-    );
-  }
+interface CategoryTableProps {
+  categories: Category[];
+  onEdit: (category: Category) => void;
+  onDelete: (categoryId: number) => void;
+}
 
+export default function CategoryTable({ categories, onEdit, onDelete }: CategoryTableProps) {
   return (
-    <div className="mt-6 overflow-x-auto rounded-lg shadow border border-gray-200">
-      <table className="min-w-full bg-white rounded-lg">
-        <thead className="bg-gray-100 text-gray-700 text-sm">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      <table className="min-w-full divide-y divide-gray-200">
+        <thead className="bg-gray-50">
           <tr>
-            <th className="px-6 py-3 text-left font-medium">#</th>
-            <th className="px-6 py-3 text-left font-medium">Nombre</th>
-            <th className="px-6 py-3 text-center font-medium">Acciones</th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              ID
+            </th>
+            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              Nombre
+            </th>
+            <th scope="col" className="relative px-6 py-3">
+              <span className="sr-only">Acciones</span>
+            </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-200">
-          {categories.map((cat, idx) => (
-            <tr key={idx} className="hover:bg-gray-50 transition">
-              <td className="px-6 py-3">{idx + 1}</td>
-              <td className="px-6 py-3 font-medium text-gray-900">{cat}</td>
-              <td className="px-6 py-3 flex justify-center gap-3">
-                {/* Editar */}
-                <div className="relative group">
-                  <button
-                    onClick={() => onEdit(idx)}
-                    className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition"
-                    aria-label="Editar"
-                  >
-                    <FaEdit />
-                  </button>
-                  <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-200">
-                    Editar
-                  </span>
-                </div>
-
-                {/* Eliminar */}
-                <div className="relative group">
-                  <button
-                    onClick={() => onDelete(idx)}
-                    className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition"
-                    aria-label="Eliminar"
-                  >
-                    <FaTrash />
-                  </button>
-                  <span className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 whitespace-nowrap px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 group-hover:-translate-y-1 transition-all duration-200">
-                    Eliminar
-                  </span>
-                </div>
+        <tbody className="bg-white divide-y divide-gray-200">
+          {categories.map((category) => (
+            <tr key={category.categoryId}>
+              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{category.categoryId}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{category.categoryName}</td>
+              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                <button onClick={() => onEdit(category)} className="text-blue-600 hover:text-blue-900 p-2 rounded-full hover:bg-blue-100 transition" aria-label="Editar">
+                  <FaEdit />
+                </button>
+                <button onClick={() => onDelete(category.categoryId)} className="text-red-600 hover:text-red-900 p-2 rounded-full hover:bg-red-100 transition" aria-label="Eliminar">
+                  <FaTrash />
+                </button>
               </td>
             </tr>
           ))}

@@ -5,20 +5,47 @@ import { useState } from 'react';
 interface NewCategoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (name: string) => void;
+  onCategoryCreated: () => void;
 }
 
-export default function NewCategoryModal({ isOpen, onClose, onCreate }: NewCategoryModalProps) {
+export default function NewCategoryModal({ isOpen, onClose, onCategoryCreated }: NewCategoryModalProps) {
   const [name, setName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
-    onCreate(name);
-    setName('');
-    onClose();
+    if (!name.trim()) {
+      setError('El nombre no puede estar vacío.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryName: name }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al crear la categoría.');
+      }
+
+      // Si todo fue bien, limpiamos y notificamos al padre
+      setName('');
+      onCategoryCreated();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -38,6 +65,7 @@ export default function NewCategoryModal({ isOpen, onClose, onCreate }: NewCateg
               placeholder="Ej. Electrónica"
               className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-600 outline-none"
             />
+            {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
           </div>
 
           <div className="flex justify-end gap-3">
@@ -50,9 +78,10 @@ export default function NewCategoryModal({ isOpen, onClose, onCreate }: NewCateg
             </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+              disabled={isLoading}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:bg-blue-300"
             >
-              Crear
+              {isLoading ? 'Creando...' : 'Crear'}
             </button>
           </div>
         </form>

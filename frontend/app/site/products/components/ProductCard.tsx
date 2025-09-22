@@ -1,6 +1,5 @@
 'use client';
 import { useState } from 'react';
-import { FaSearch } from 'react-icons/fa';
 import ProductDetailModal from './ProductDetailModal';
 
 interface Producto {
@@ -13,15 +12,13 @@ interface Producto {
 }
 
 export default function ProductCard({ producto }: { producto: Producto }) {
-  const [hovered, setHovered] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <>
       <div
-        className="bg-white rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden"
-        onMouseEnter={() => setHovered(true)}
-        onMouseLeave={() => setHovered(false)}
+        className="bg-white rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all duration-300 relative overflow-hidden cursor-pointer"
+        onClick={() => setModalOpen(true)}
       >
         <img
           src={producto.imagen}
@@ -33,15 +30,6 @@ export default function ProductCard({ producto }: { producto: Producto }) {
           <p className="text-blue-600 font-bold text-xl">${producto.precio.toFixed(2)}</p>
           <p className="text-gray-500 text-sm">{producto.categoria}</p>
         </div>
-
-        {hovered && (
-          <button
-            onClick={() => setModalOpen(true)}
-            className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-lg text-blue-600 hover:bg-blue-50 transition"
-          >
-            <FaSearch />
-          </button>
-        )}
       </div>
 
       <ProductDetailModal

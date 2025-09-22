@@ -31,8 +31,6 @@ export default function ProductsPage() {
     { id: 14, nombre: 'Taladro Inalámbrico', precio: 110, categoria: 'Herramientas', imagen: 'https://images.unsplash.com/photo-1595623228136-3a404a359153?w=400' },
   ];
 
-  const categories = Array.from(new Set(products.map(p => p.categoria)));
-
   const filteredProducts = selectedCategory
     ? products.filter(p => p.categoria === selectedCategory)
     : products;
@@ -51,7 +49,6 @@ export default function ProductsPage() {
 
         {/* Carrusel de categorías centrado */}
         <CategoryFilterCarousel
-          categories={categories}
           selectedCategory={selectedCategory}
           onSelect={setSelectedCategory}
         />

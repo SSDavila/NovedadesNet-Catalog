@@ -18,6 +18,6 @@ model User {
 }
 
 model Category {
-  categoryId   Int      @id @default(autoincrement())
-  categoryName String   @unique
+  categoryId   Int    @id @default(autoincrement())
+  categoryName String @unique
 }
