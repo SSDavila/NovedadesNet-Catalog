@@ -22,6 +22,7 @@ model Product {
   prodName   String
   prodDesc   String?
   prodPrice  Decimal   @db.Decimal(10, 2)
+  prodCategory String?
   prodImages String[] 
   prodStock  Int       @default(0)
   createdAt  DateTime  @default(now())

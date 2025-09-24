@@ -7,7 +7,10 @@ import {
   Param,
   Delete,
   ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 
@@ -16,8 +19,12 @@ export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  create(@Body() createProductDto: CreateProductDto) {
-    return this.productsService.create(createProductDto);
+  @UseInterceptors(FilesInterceptor('images', 10))
+  create(
+    @UploadedFiles() files: Array<Express.Multer.File>,
+    @Body() createProductDto: CreateProductDto,
+  ) {
+    return this.productsService.create(createProductDto, files);
   }
 
   @Get()

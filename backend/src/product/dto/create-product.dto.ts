@@ -1,13 +1,13 @@
 import {
   IsString,
   IsNumber,
-  IsUrl,
   IsNotEmpty,
   IsPositive,
   IsOptional,
   Min,
   IsArray,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class CreateProductDto {
   @IsString()
@@ -18,15 +18,16 @@ export class CreateProductDto {
   @IsOptional()
   prodDesc?: string;
 
+  @IsString()
+  @IsOptional()
+  prodCategory?: string;
+
+  @Type(() => Number)
   @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
   prodPrice: number;
 
-  @IsArray()
-  @IsUrl({}, { each: true }) // Valida que cada elemento del array sea una URL
-  @IsOptional()
-  prodImages?: string[];
-
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   prodStock: number;

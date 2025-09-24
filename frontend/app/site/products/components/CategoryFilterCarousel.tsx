@@ -22,7 +22,7 @@ export default function CategoryFilterCarousel({
   const [categories, setCategories] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isPaused, setIsPaused] = useState(false);
-  const marqueeRef = useRef<any>(null); // Ref para controlar el Marquee
+  const marqueeRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -55,18 +55,15 @@ export default function CategoryFilterCarousel({
 
   const handleArrowClick = (direction: 'left' | 'right') => {
     if (marqueeRef.current) {
-      // Pausamos la animación para el control manual
       setIsPaused(true);
 
-      // Cambiamos la dirección y damos un "empujón"
       const marqueeInstance = marqueeRef.current.getMarquee();
       marqueeInstance.changeDirection(direction);
       marqueeInstance.applyTransition();
 
-      // Reanudamos la animación después de un momento
       setTimeout(() => {
         setIsPaused(false);
-        marqueeInstance.changeDirection('left'); // Volvemos a la dirección original
+        marqueeInstance.changeDirection('left');
       }, 500);
     }
   };
@@ -82,15 +79,13 @@ export default function CategoryFilterCarousel({
         </div>
       ) : (
         <div className="relative flex items-center" style={{ width: containerWidth }}>
-          {/* Flecha izquierda */}
           <button
-            onClick={() => handleArrowClick('right')} // Invertido para empujar el contenido
+            onClick={() => handleArrowClick('right')}
             className="absolute left-0 z-10 p-2 bg-gray-50 rounded-full shadow hover:bg-gray-100 transition"
           >
             <FaChevronLeft />
           </button>
 
-          {/* Contenedor del carrusel con difuminado elegante */}
           <div
             ref={containerRef}
             className="overflow-hidden w-full relative px-10 before:absolute before:top-0 before:left-0 before:h-full before:w-16 before:bg-gradient-to-r before:from-gray-50 before:to-transparent after:absolute after:top-0 after:right-0 after:h-full after:w-16 after:bg-gradient-to-l after:from-gray-50 after:to-transparent"
@@ -122,9 +117,8 @@ export default function CategoryFilterCarousel({
             </Marquee>
           </div>
 
-          {/* Flecha derecha */}
           <button
-            onClick={() => handleArrowClick('left')} // Invertido para empujar el contenido
+            onClick={() => handleArrowClick('left')}
             className="absolute right-0 z-10 p-2 bg-gray-50 rounded-full shadow hover:bg-gray-100 transition"
           >
             <FaChevronRight />
