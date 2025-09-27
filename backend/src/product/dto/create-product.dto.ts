@@ -1,34 +1,40 @@
 import {
-  IsString,
-  IsNumber,
-  IsNotEmpty,
-  IsPositive,
-  IsOptional,
-  Min,
   IsArray,
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsPositive,
+  IsString,
+  MinLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateProductDto {
   @IsString()
-  @IsNotEmpty()
+  @MinLength(1)
   prodName: string;
+
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Type(() => Number)
+  @IsPositive()
+  prodPrice: number;
 
   @IsString()
   @IsOptional()
-  prodDesc?: string;
+  prodDescription?: string;
 
   @IsString()
   @IsOptional()
   prodCategory?: string;
 
+  @IsInt()
   @Type(() => Number)
-  @IsNumber({ maxDecimalPlaces: 2 })
   @IsPositive()
-  prodPrice: number;
+  @IsOptional()
+  prodStock?: number;
 
-  @Type(() => Number)
-  @IsNumber()
-  @Min(0)
-  prodStock: number;
+  @IsString({ each: true })
+  @IsArray()
+  @IsOptional()
+  prodImages?: string[];
 }

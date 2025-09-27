@@ -18,15 +18,22 @@ model User {
 }
 
 model Product {
-  prodId     String    @id @default(uuid())
-  prodName   String
-  prodDesc   String?
-  prodPrice  Decimal   @db.Decimal(10, 2)
-  prodCategory String?
-  prodImages String[] 
-  prodStock  Int       @default(0)
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @updatedAt
+  prodId          String         @id @default(uuid())
+  prodName        String
+  prodDescription String?
+  prodPrice       Decimal        @db.Decimal(10, 2)
+  prodCategory    String?
+  prodStock       Int            @default(0)
+  prodImages      ProductImage[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model ProductImage {
+  prodImageId        Int      @id @default(autoincrement())
+  prodImageUrl       String
+  product   Product  @relation(fields: [prodId], references: [prodId], onDelete: Cascade, onUpdate: Cascade)
+  prodId String
 }
 
 model Category {
