@@ -52,6 +52,8 @@ export default function ProductCard({ product, onEdit, onDelete, onClick }: Prod
     return { dot: 'bg-red-500', bg: 'bg-red-100', text: 'text-red-800' };
   };
 
+  const stockClasses = getStockClasses(product.prodStock);
+
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
       <div
@@ -96,8 +98,8 @@ export default function ProductCard({ product, onEdit, onDelete, onClick }: Prod
         </div>
         <div className="mt-3 flex items-baseline justify-between">
           <p className="text-lg font-bold text-green-600">${product.prodPrice.toFixed(2)}</p>
-          <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold ${getStockClasses(product.prodStock).bg} ${getStockClasses(product.prodStock).text}`}>
-            <div className={`h-2 w-2 rounded-full ${getStockClasses(product.prodStock).dot}`}></div>
+          <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold ${stockClasses.bg} ${stockClasses.text}`}>
+            <div className={`h-2 w-2 rounded-full ${stockClasses.dot}`}></div>
             {product.prodStock > 0 ? `${product.prodStock} en Stock` : 'Agotado'}
           </div>
         </div>
