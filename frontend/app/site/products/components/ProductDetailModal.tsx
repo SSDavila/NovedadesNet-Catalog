@@ -1,6 +1,5 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { getProductImageUrl } from '@/lib/utils';
 import { FaTimes, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { Product } from '@/interfaces/product';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,17 +19,15 @@ export default function ProductDetailModal({
 
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const imageUrls = product.prodImages.map(getProductImageUrl);
+  const imageUrls = product.prodImages.map(image => image.prodImageUrl);
   const hasImages = imageUrls && imageUrls.length > 0;
 
-  // Asegurarnos de que el placeholder se muestre si no hay imágenes
   const displayImages = hasImages ? imageUrls : ['/placeholder.png'];
 
   const paginate = (newIndex: number) => {
     setActiveIndex(newIndex);
   };
 
-  // Resetear el carrusel cuando el modal se abre/cierra
   useEffect(() => {
     if (isOpen) {
       setActiveIndex(0);
@@ -107,7 +104,7 @@ export default function ProductDetailModal({
             <h2 className="text-3xl font-bold text-gray-900">{product.prodName}</h2>
             <p className="text-2xl font-semibold text-blue-600 mt-2">${Number(product.prodPrice).toFixed(2)}</p>
             <div className="mt-4 text-gray-600 prose max-w-none">
-              <p>{product.prodDesc || 'Este producto no tiene una descripción detallada.'}</p>
+              <p>{product.prodDescription || 'Este producto no tiene una descripción detallada.'}</p>
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function Header() {
@@ -8,14 +9,22 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center gap-8">
-            <div className="flex-shrink-0">
-              <Link href="/site" className="text-2xl font-bold text-gray-900">
-                NovedadesNet
+            <div className="flex-shrink-0 ">
+              <Link href="/site" className="flex items-center gap-3">
+                <Image
+                  src="/Logo-NovedadesNet.png"
+                  alt="Novedades Net Logo"
+                  width={40}
+                  height={40}
+                />
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-500 to-green-500 text-transparent bg-clip-text">
+                  NovedadesNet
+                </span>
               </Link>
             </div>
             <nav className="hidden md:flex gap-6">
               <Link href="/site" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-                Home
+                Inicio
               </Link>
               <Link href="/site/products" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
                 Productos
