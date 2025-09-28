@@ -2,6 +2,7 @@
 
 import { useState, FormEvent, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
+import Notification from '@/components/Notification';
 import { FaImage, FaTimes, FaSpinner } from 'react-icons/fa';
 
 interface NewProductModalProps {
@@ -141,7 +142,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="prodPrice" className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
-              <input type="number" id="prodPrice" value={prodPrice} onChange={(e) => setProdPrice(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+              <input type="number" id="prodPrice" value={prodPrice} onChange={(e) => setProdPrice(e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-green-600 font-semibold" />
             </div>
             <div>
               <label htmlFor="prodStock" className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
@@ -197,7 +198,13 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
             )}
           </div>
 
-          {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+          {error && (
+            <Notification
+              message={error}
+              type="error"
+              onClose={() => setError(null)}
+            />
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition">Cancelar</button>

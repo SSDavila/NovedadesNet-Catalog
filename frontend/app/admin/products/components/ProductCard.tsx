@@ -27,6 +27,31 @@ interface ProductCardProps {
 export default function ProductCard({ product, onEdit, onDelete, onClick }: ProductCardProps) {
   const imageUrl = product.prodImages?.[0]?.prodImageUrl || 'https://via.placeholder.com/400';
 
+  const getStockClasses = (stock: number) => {
+    if (stock > 5) {
+      return {
+        dot: 'bg-green-500',
+        bg: 'bg-green-100',
+        text: 'text-green-800',
+      };
+    }
+    if (stock >= 3) {
+      return {
+        dot: 'bg-yellow-500',
+        bg: 'bg-yellow-100',
+        text: 'text-yellow-800',
+      };
+    }
+    if (stock >= 1) {
+      return {
+        dot: 'bg-orange-500',
+        bg: 'bg-orange-100',
+        text: 'text-orange-800',
+      };
+    }
+    return { dot: 'bg-red-500', bg: 'bg-red-100', text: 'text-red-800' };
+  };
+
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
       <div
@@ -70,12 +95,10 @@ export default function ProductCard({ product, onEdit, onDelete, onClick }: Prod
           <p className="mt-1 text-xs font-medium text-gray-500">{product.prodCategory}</p>
         </div>
         <div className="mt-3 flex items-baseline justify-between">
-          <p className="text-lg font-bold text-gray-900">${product.prodPrice.toFixed(2)}</p>
-          <div className="flex items-center gap-2">
-            <div className={`h-2.5 w-2.5 rounded-full ${product.prodStock === 0 ? 'bg-red-500' : product.prodStock < 10 ? 'bg-yellow-400' : 'bg-green-500'}`}></div>
-            <span className="text-xs font-semibold text-gray-600">
-              {product.prodStock > 0 ? `${product.prodStock} en Stock` : 'Agotado'}
-            </span>
+          <p className="text-lg font-bold text-green-600">${product.prodPrice.toFixed(2)}</p>
+          <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold ${getStockClasses(product.prodStock).bg} ${getStockClasses(product.prodStock).text}`}>
+            <div className={`h-2 w-2 rounded-full ${getStockClasses(product.prodStock).dot}`}></div>
+            {product.prodStock > 0 ? `${product.prodStock} en Stock` : 'Agotado'}
           </div>
         </div>
       </div>

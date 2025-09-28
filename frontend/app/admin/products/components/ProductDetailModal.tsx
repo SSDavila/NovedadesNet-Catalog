@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { FaTimes, FaChevronLeft, FaChevronRight, FaEdit, FaTrash } from 'react-icons/fa';
+import { useState, useEffect, MouseEvent } from 'react';
+import { FaTimes, FaChevronLeft, FaChevronRight, FaWhatsapp } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductDetailModalProps {
@@ -11,8 +11,6 @@ interface ProductDetailModalProps {
   precio: number;
   descripcion: string | null;
   imagenes: string[];
-  onEdit: () => void;
-  onDelete: () => void;
 }
 
 export default function ProductDetailModal({
@@ -22,45 +20,52 @@ export default function ProductDetailModal({
   descripcion,
   precio,
   imagenes,
-  onEdit,
-  onDelete,
 }: ProductDetailModalProps) {
   if (!isOpen) return null;
 
   const [activeIndex, setActiveIndex] = useState(0);
+  const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '593963988846';
 
   const hasImages = imagenes && imagenes.length > 0;
   const displayImages = hasImages ? imagenes : ['/placeholder.png'];
 
   const paginate = (newIndex: number) => {
-    setActiveIndex(newIndex);
+    if (newIndex < 0) {
+      setActiveIndex(displayImages.length - 1);
+    } else if (newIndex >= displayImages.length) {
+      setActiveIndex(0);
+    } else {
+      setActiveIndex(newIndex);
+    }
   };
 
-  // Resetear el carrusel cuando el modal se abre/cierra
   useEffect(() => {
     if (isOpen) {
       setActiveIndex(0);
     }
   }, [isOpen]);
 
+  const handleWhatsAppClick = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    const message = `Hola, estoy interesado/a en el producto: ${nombre}.`;
+    const whatsappUrl = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Fondo difuminado */}
-      <div
-        className="fixed inset-0 bg-black/30 backdrop-blur-sm"
-        onClick={onClose}
-      />
 
-      {/* Modal */}
+      <div className="fixed inset-0 bg-black/30 backdrop-blur-sm" />
+
       <div className="relative z-10 bg-white rounded-2xl shadow-xl max-w-3xl w-full animate-fadeIn max-h-[90vh] flex flex-col">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition z-30"
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 transition z-30 p-2 rounded-full hover:bg-gray-100"
         >
           <FaTimes />
         </button>
 
-        <div className="relative flex items-center justify-center w-full h-64 md:h-80 p-6 overflow-hidden">
+        <div className="relative flex items-center justify-center w-full h-64 md:h-80 p-6 py-4 overflow-hidden">
           <AnimatePresence>
             {displayImages.map((image, index) => {
               const position = index - activeIndex;
@@ -71,19 +76,19 @@ export default function ProductDetailModal({
                   key={image + index}
                   src={image}
                   alt={`${nombre} - Image ${index + 1}`}
-                  className="absolute h-full w-full object-contain cursor-grab active:cursor-grabbing will-change-transform"
+                  className="absolute h-full w-full object-contain cursor-grab active:cursor-grabbing"
                   initial={{
-                    x: `${position * 40}%`,
-                    scale: isCenter ? 1 : 0.6,
-                    opacity: isCenter ? 1 : 0.4,
-                    filter: isCenter ? 'blur(0px)' : 'blur(4px)',
+                    x: `${position * 50}%`,
+                    scale: isCenter ? 1 : 0.7,
+                    opacity: isCenter ? 1 : 0.5,
+                    filter: isCenter ? 'blur(0px)' : 'blur(2px)',
                     zIndex: displayImages.length - Math.abs(position),
                   }}
                   animate={{
-                    x: `${position * 40}%`,
-                    scale: isCenter ? 1 : 0.6,
-                    opacity: isCenter ? 1 : 0.4,
-                    filter: isCenter ? 'blur(0px)' : 'blur(4px)',
+                    x: `${position * 50}%`,
+                    scale: isCenter ? 1 : 0.7,
+                    opacity: isCenter ? 1 : 0.5,
+                    filter: isCenter ? 'blur(0px)' : 'blur(2px)',
                     zIndex: displayImages.length - Math.abs(position),
                   }}
                   transition={{ type: 'spring', stiffness: 300, damping: 30 }}
@@ -111,7 +116,7 @@ export default function ProductDetailModal({
 
         <div className="p-6 md:p-8 pt-0 overflow-y-auto">
           <div className="mt-4">
-            <h2 className="text-3xl font-bold text-gray-900">{nombre}</h2>
+            <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{nombre}</h2>
             <p className="text-2xl font-semibold text-green-600 mt-2">${precio.toFixed(2)}</p>
             <div className="mt-4 text-gray-600 prose max-w-none">
               <p>{descripcion || 'Este producto no tiene una descripción detallada.'}</p>
@@ -119,17 +124,12 @@ export default function ProductDetailModal({
           </div>
 
           <div className="mt-8 pt-6 border-t flex justify-end items-center gap-4">
-            <div className="flex gap-4">
-              <button onClick={onEdit} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
-                <FaEdit /> Editar
-              </button>
-              <button onClick={onDelete} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold">
-                <FaTrash /> Eliminar
+            <div className="flex-grow flex gap-4">
+              <button onClick={handleWhatsAppClick} className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-semibold">
+                <FaWhatsapp size={20} />
+                Pedir por WhatsApp
               </button>
             </div>
-            <button onClick={onClose} className="px-6 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition font-semibold">
-              Cerrar
-            </button>
           </div>
         </div>
       </div>

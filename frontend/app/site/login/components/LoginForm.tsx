@@ -1,18 +1,21 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import Notification from '@/components/Notification';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     setIsLoading(true);
 
     try {
@@ -30,14 +33,13 @@ export default function LoginForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Ocurrió un error al iniciar sesión.');
+        throw new Error(data.message || 'Ocurrió un error al iniciar sesión.');
       }
 
-      // Éxito en el inicio de sesión
-      console.log('Login exitoso:', data);
-      alert(`¡Bienvenido, ${data.user.userName}!`);
-      // Aquí podrías guardar el token/usuario y redirigir, por ejemplo:
-      router.push('/admin');
+      setSuccess(`¡Bienvenido, ${data.user.userName}!`);
+      setTimeout(() => {
+        router.push('/admin');
+      }, 1500);
 
     } catch (err: any) {
       setError(err.message);
@@ -48,10 +50,15 @@ export default function LoginForm() {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative" role="alert">
-          <span className="block sm:inline">{error}</span>
-        </div>
+      {(error || success) && (
+        <Notification
+          message={error || success}
+          type={error ? 'error' : 'success'}
+          onClose={() => {
+            setError(null);
+            setSuccess(null);
+          }}
+        />
       )}
       <div className="space-y-4">
         <div>

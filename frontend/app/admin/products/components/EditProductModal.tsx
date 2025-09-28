@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaTimes, FaImage, FaSpinner } from 'react-icons/fa';
+import Notification from '@/components/Notification';
 import { Product } from '@/interfaces/product';
 import { getProductImageUrl } from '@/lib/utils';
 
@@ -31,15 +32,15 @@ export default function EditProductModal({
   const [categoria, setCategoria] = useState(product.prodCategory || '');
   const [categorias, setCategorias] = useState<Categoria[]>([]);
 
-  // imágenes de la BD (urls)
   const [existingImages, setExistingImages] = useState<string[]>([]);
-  // imágenes nuevas seleccionadas
+
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
-  // urls de imágenes a borrar
+
   const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -52,6 +53,7 @@ export default function EditProductModal({
       setNewImages([]);
       setNewImagePreviews([]);
       setImagesToDelete([]);
+      setError(null);
 
       const fetchCategorias = async () => {
         try {
@@ -105,6 +107,7 @@ export default function EditProductModal({
     e.preventDefault();
     if (!nombre || !precio || !stock || !descripcion || !categoria) return;
     setIsLoading(true);
+    setError(null);
 
     const formData = new FormData();
     formData.append('prodName', nombre);
@@ -128,13 +131,16 @@ export default function EditProductModal({
         }
       );
 
-      if (!response.ok) throw new Error('Error al actualizar el producto');
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || 'Error al actualizar el producto');
+      }
 
-      const updatedProduct = await response.json();
-      onProductUpdated(updatedProduct);
+      onProductUpdated(data);
       onClose();
     } catch (error) {
       console.error(error);
+      setError((error as Error).message);
     } finally {
       setIsLoading(false);
     }
@@ -144,10 +150,10 @@ export default function EditProductModal({
 
   return (
     <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg p-6 relative animate-fadeIn">
+      <div className="bg-white rounded-xl shadow-xl w-full max-w-lg max-h-[90vh] flex flex-col p-6 relative animate-fadeIn">
         <h2 className="text-2xl font-bold mb-4 text-gray-900">Editar Producto</h2>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Nombre */}
+
           <div>
             <label htmlFor="nombre" className="block text-sm font-medium text-gray-700 mb-1">
               Nombre
@@ -162,13 +168,12 @@ export default function EditProductModal({
             />
           </div>
 
-          {/* Precio y stock */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label htmlFor="precio" className="block text-sm font-medium text-gray-700 mb-1">
                 Precio
               </label>
-              <input
+              <input 
                 type="number"
                 id="precio"
                 value={precio}
@@ -193,7 +198,6 @@ export default function EditProductModal({
             </div>
           </div>
 
-          {/* Categoría */}
           <div>
             <label htmlFor="categoria" className="block text-sm font-medium text-gray-700 mb-1">
               Categoría
@@ -213,7 +217,6 @@ export default function EditProductModal({
             </select>
           </div>
 
-          {/* Descripción */}
           <div>
             <label htmlFor="descripcion" className="block text-sm font-medium text-gray-700 mb-1">
               Descripción
@@ -228,11 +231,9 @@ export default function EditProductModal({
             />
           </div>
 
-          {/* Imágenes */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Imágenes</label>
 
-            {/* Imágenes actuales */}
             {existingImages.length > 0 && (
               <div className="mb-4">
                 <p className="text-xs font-medium text-gray-600 mb-2">Imágenes actuales:</p>
@@ -257,7 +258,6 @@ export default function EditProductModal({
               </div>
             )}
 
-            {/* Dropzone */}
             <div
               {...getRootProps()}
               className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${
@@ -277,7 +277,6 @@ export default function EditProductModal({
               </div>
             </div>
 
-            {/* Previews de nuevas imágenes */}
             {newImagePreviews.length > 0 && (
               <div className="mt-4">
                 <p className="text-xs font-medium text-gray-600 mb-2">Nuevas imágenes:</p>
@@ -303,7 +302,14 @@ export default function EditProductModal({
             )}
           </div>
 
-          {/* Botones */}
+          {error && (
+            <Notification
+              message={error}
+              type="error"
+              onClose={() => setError(null)}
+            />
+          )}
+
           <div className="flex justify-end gap-3 mt-6">
             <button
               type="button"
