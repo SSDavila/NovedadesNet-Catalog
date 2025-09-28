@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { FaPlus, FaSpinner } from 'react-icons/fa';
 import NewProductModal from './components/NewProductModal';
 import ProductDetailModal from './components/ProductDetailModal';
+import ConfirmationModal from './components/ConfirmationModal';
 import { Product } from './components/ProductCard';
 import ProductGrid from './components/ProductGrid';
 
@@ -14,6 +15,9 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -50,8 +54,33 @@ export default function AdminProductsPage() {
     console.log('Edit product:', product.prodId);
   };
 
-  const handleDelete = (productId: string) => {
-    console.log('Delete product:', productId);
+  const handleDeleteClick = (productId: string) => {
+    setProductToDelete(productId);
+    setIsConfirmModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!productToDelete) return;
+    setIsDeleting(true);
+    
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productToDelete}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('No se pudo eliminar el producto.');
+      }
+
+      fetchProducts();
+      setIsDetailModalOpen(false); // Cerrar modal de detalle si está abierto
+    } catch (err: any) {
+      setError(err.message || 'Ocurrió un error al eliminar el producto.');
+    } finally {
+      setIsDeleting(false);
+      setIsConfirmModalOpen(false);
+      setProductToDelete(null);
+    }
   };
 
   const handleCardClick = (product: Product) => {
@@ -79,7 +108,7 @@ export default function AdminProductsPage() {
         <ProductGrid
           products={products}
           onEdit={handleEdit}
-          onDelete={handleDelete}
+          onDelete={handleDeleteClick}
           onClick={handleCardClick}
         />
       )}
@@ -94,8 +123,19 @@ export default function AdminProductsPage() {
           precio={selectedProduct.prodPrice}
           descripcion={selectedProduct.prodDescription}
           imagenes={selectedProduct.prodImages.map(img => img.prodImageUrl)}
+          onEdit={() => handleEdit(selectedProduct)}
+          onDelete={() => handleDeleteClick(selectedProduct.prodId)}
         />
       )}
+
+      <ConfirmationModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar Eliminación"
+        message={"¿Estás seguro de que quieres eliminar este producto?\nEsta acción no se puede deshacer."}
+        isConfirming={isDeleting}
+      />
     </div>
   );
 }

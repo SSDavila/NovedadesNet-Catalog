@@ -11,6 +11,8 @@ interface ProductDetailModalProps {
   precio: number;
   descripcion: string | null;
   imagenes: string[];
+  onEdit: () => void;
+  onDelete: () => void;
 }
 
 export default function ProductDetailModal({
@@ -20,6 +22,8 @@ export default function ProductDetailModal({
   descripcion,
   precio,
   imagenes,
+  onEdit,
+  onDelete,
 }: ProductDetailModalProps) {
   if (!isOpen) return null;
 
@@ -116,10 +120,10 @@ export default function ProductDetailModal({
 
           <div className="mt-8 pt-6 border-t flex justify-end items-center gap-4">
             <div className="flex gap-4">
-              <button className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
+              <button onClick={onEdit} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold">
                 <FaEdit /> Editar
               </button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold">
+              <button onClick={onDelete} className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold">
                 <FaTrash /> Eliminar
               </button>
             </div>
