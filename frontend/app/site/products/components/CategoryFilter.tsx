@@ -2,8 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import clsx from 'clsx';
-import { FaChevronLeft, FaChevronRight, FaSpinner } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import { FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 
 interface CategoryAPI {
   categoryId: number;
@@ -26,6 +25,7 @@ export default function CategoryFilterCarousel({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
+  // Fetch dinámico de categorías
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -43,6 +43,7 @@ export default function CategoryFilterCarousel({
     fetchCategories();
   }, []);
 
+  // Comprobar scroll disponible
   const checkScroll = () => {
     if (!containerRef.current) return;
     const { scrollLeft, scrollWidth, clientWidth } = containerRef.current;
@@ -85,7 +86,6 @@ export default function CategoryFilterCarousel({
           style={{ paddingBottom: '20px', marginBottom: '-20px' }}
         >
           <div className="absolute left-0 top-0 h-full w-12 pointer-events-none bg-gradient-to-r from-white to-transparent z-10" />
-
           <div className="absolute right-0 top-0 h-full w-12 pointer-events-none bg-gradient-to-l from-white to-transparent z-10" />
 
           {isLoading
@@ -93,24 +93,18 @@ export default function CategoryFilterCarousel({
               <div key={i} className="w-24 h-10 bg-gray-200 animate-pulse rounded-full" />
             ))
           : categories.map((category, i) => (
-              <motion.button
+              <button
                 key={i}
                 onClick={() => onSelect(category === 'Todos' ? null : category)}
-                whileHover={{ y: -2, scale: 1.05 }}
-                whileTap={{ scale: 0.98 }}
-                transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                animate={{
-                  scale: selectedCategory === category || (selectedCategory === null && category === 'Todos') ? 1.1 : 1,
-                }}
                 className={clsx(
-                  'flex-shrink-0 px-6 py-3 rounded-full text-sm font-semibold whitespace-nowrap snap-center cursor-pointer',
-                  selectedCategory === category || (selectedCategory === null && category === 'Todos')
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-white text-gray-700 border border-gray-200 hover:shadow-md'
+                  'flex-shrink-0 px-6 py-3 rounded-full text-sm font-semibold whitespace-nowrap snap-center cursor-pointer transition-all duration-300 transform',
+                  selectedCategory === category
+                    ? 'bg-blue-600 text-white shadow-2xl scale-110'
+                    : 'bg-white text-gray-700 border border-gray-200 hover:scale-105 hover:shadow-lg hover:brightness-110'
                 )}
               >
                 {category}
-              </motion.button>
+              </button>
             ))}
         </div>
       </div>

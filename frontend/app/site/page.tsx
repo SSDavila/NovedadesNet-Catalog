@@ -49,7 +49,6 @@ export default function Home() {
     },
   };
 
-  // Datos de ejemplo para las nuevas secciones
   const featuredProducts = [
     {
       name: 'Mini Impresora Térmica Portátil',
@@ -85,14 +84,12 @@ export default function Home() {
 
   return (
     <div className="bg-gray-50 text-gray-800">
-      {/* Hero Section */}
       <motion.section
         className="relative text-center py-20 md:py-32 px-4 bg-white overflow-hidden"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {/* Fondo sutil de cuadrícula */}
         <div className="absolute inset-0 z-0">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-green-50 opacity-50"></div>
           <div
@@ -192,7 +189,6 @@ export default function Home() {
         </div>
       </motion.section>
 
-      {/* Featured Products Section */}
       <section className="py-16 md:py-24 bg-white">
         <motion.div
           className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"

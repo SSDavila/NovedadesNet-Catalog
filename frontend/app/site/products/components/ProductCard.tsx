@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { FaExpand } from 'react-icons/fa';
+import { AnimatePresence } from 'framer-motion';
 import ProductDetailModal from './ProductDetailModal';
 import { Product } from '@/interfaces/product';
 
@@ -12,14 +13,14 @@ export default function ProductCard({ product }: { product: Product }) {
   return (
     <>
       <div
-        className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer"
+        className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer"
         onClick={() => setModalOpen(true)}
       >
         <div className="relative h-60 w-full overflow-hidden bg-gray-200">
           <img
             src={imageUrl}
             alt={product.prodName}
-            className="h-full w-full object-cover object-center transition-transform duration-500 group-hover:scale-105"
+            className="h-full w-full object-cover object-center"
           />
 
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
@@ -59,11 +60,14 @@ export default function ProductCard({ product }: { product: Product }) {
         </div>
       </div>
 
-      <ProductDetailModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        product={product}
-      />
+      <AnimatePresence>
+        {modalOpen && (
+          <ProductDetailModal
+            onClose={() => setModalOpen(false)}
+            product={product}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

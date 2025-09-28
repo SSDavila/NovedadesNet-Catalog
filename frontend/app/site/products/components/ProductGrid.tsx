@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import ProductGrid from '../components/ProductGrid';
 import ProductDetailModal from '../components/ProductDetailModal';
-import CategoryFilterCarousel from '../components/CategoryFilterCarousel';
+import CategoryFilterCarousel from './CategoryFilter';
 
 interface Producto {
   id: number;

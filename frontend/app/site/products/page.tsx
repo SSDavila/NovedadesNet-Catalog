@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 import ProductCard from './components/ProductCard';
-import CategoryFilterCarousel from './components/CategoryFilterCarousel';
+import CategoryFilterCarousel from './components/CategoryFilter';
 import { Product } from '@/interfaces/product';
 
 export default function ProductsPage() {

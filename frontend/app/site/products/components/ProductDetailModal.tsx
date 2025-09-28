@@ -5,18 +5,14 @@ import { Product } from '@/interfaces/product';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ProductDetailModalProps {
-  isOpen: boolean;
   onClose: () => void;
   product: Product;
 }
 
 export default function ProductDetailModal({
-  isOpen,
   onClose,
   product,
 }: ProductDetailModalProps) {
-  if (!isOpen) return null;
-
   const [activeIndex, setActiveIndex] = useState(0);
 
   const imageUrls = product.prodImages.map(image => image.prodImageUrl);
@@ -29,10 +25,8 @@ export default function ProductDetailModal({
   };
 
   useEffect(() => {
-    if (isOpen) {
-      setActiveIndex(0);
-    }
-  }, [isOpen]);
+    setActiveIndex(0);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -41,7 +35,6 @@ export default function ProductDetailModal({
         onClick={onClose}
       />
 
-      {/* Modal */}
       <div className="relative z-10 bg-white rounded-2xl shadow-xl max-w-3xl w-full animate-fadeIn max-h-[90vh] flex flex-col">
         <button
           onClick={onClose}
