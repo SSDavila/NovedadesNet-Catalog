@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FaImage, FaTimes, FaSpinner, FaMagic } from 'react-icons/fa';
+import { FaImage, FaTimes, FaSpinner, FaMagic, FaPlus } from 'react-icons/fa';
 
 interface Categoria {
   categoryId: number;
@@ -116,23 +116,23 @@ export default function ProductForm({
   return (
     <div className="space-y-4 overflow-y-auto pr-2 h-full">
       <div>
-        <label htmlFor="prodName" className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
-        <input type="text" id="prodName" value={productData.prodName} onChange={(e) => handleChange('prodName', e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+        <label htmlFor="prodName" className="block text-sm font-semibold text-gray-800 mb-1">Nombre del Producto</label>
+        <input type="text" id="prodName" value={productData.prodName} onChange={(e) => handleChange('prodName', e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg text-gray-900" />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="prodPrice" className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
-          <input type="number" id="prodPrice" value={productData.prodPrice} onChange={(e) => handleChange('prodPrice', e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-green-600 font-semibold" />
+          <label htmlFor="prodPrice" className="block text-sm font-semibold text-gray-800 mb-1">Precio</label>
+          <input type="number" id="prodPrice" value={productData.prodPrice} onChange={(e) => handleChange('prodPrice', e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg text-black font-semibold" />
         </div>
         <div>
-          <label htmlFor="prodStock" className="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+          <label htmlFor="prodStock" className="block text-sm font-semibold text-gray-800 mb-1">Stock</label>
           <input type="number" id="prodStock" value={productData.prodStock} onChange={(e) => handleChange('prodStock', e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
         </div>
       </div>
 
       <div>
-        <label htmlFor="prodCategory" className="block text-sm font-medium text-gray-700 mb-1">Categoría</label>
+        <label htmlFor="prodCategory" className="block text-sm font-semibold text-gray-800 mb-1">Categoría</label>
         <select id="prodCategory" value={productData.prodCategory} onChange={(e) => handleChange('prodCategory', e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white transition">
           {categorias.map((cat) => (
             <option key={cat.categoryId} value={cat.categoryName}>
@@ -144,7 +144,7 @@ export default function ProductForm({
 
       <div>
         <div className="flex justify-between items-center mb-1">
-          <label htmlFor="prodDesc" className="block text-sm font-medium text-gray-700">Descripción</label>
+          <label htmlFor="prodDesc" className="block text-sm font-semibold text-gray-800">Descripción</label>
           <button
             type="button"
             onClick={handleGenerateDescription}
@@ -155,39 +155,28 @@ export default function ProductForm({
             {isGenerating ? 'Generando...' : 'Generar con IA'}
           </button>
         </div>
-        <textarea id="prodDesc" value={productData.prodDesc} onChange={(e) => handleChange('prodDesc', e.target.value)} rows={6} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+        <textarea id="prodDesc" value={productData.prodDesc} onChange={(e) => handleChange('prodDesc', e.target.value)} rows={8} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-gray-700" />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Imágenes</label>
-        <div {...getRootProps()} className={`mt-1 flex justify-center px-6 pt-5 pb-6 border-2 ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'} border-dashed rounded-md transition-colors duration-200 cursor-pointer`}>
-          <input {...getInputProps()} />
-          <div className="space-y-1 text-center">
-            <FaImage className="mx-auto h-12 w-12 text-gray-400" />
-            <div className="flex text-sm text-gray-600">
-              <p className="relative bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none">
-                <span>Añadir imágenes</span>
-              </p>
-              <p className="pl-1">o arrástralas aquí</p>
+        <label className="block text-sm font-semibold text-gray-800 mb-1">Imágenes</label>
+        <div className="mt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+          {imagePreviews.map((preview, index) => (
+            <div key={`${preview}-${index}`} className="relative group aspect-square">
+              <img src={preview} alt={`Previsualización ${index + 1}`} className="h-full w-full object-cover rounded-md shadow-sm" />
+              <button type="button" onClick={() => handleRemoveNewImage(index)} className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 outline-none z-10">
+                <FaTimes size={12} />
+              </button>
             </div>
-            <p className="text-xs text-gray-500">PNG, JPG, GIF hasta 10MB</p>
+          ))}
+          <div {...getRootProps()} className={`group relative aspect-square flex flex-col items-center justify-center gap-1 border-2 ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'} border-dashed rounded-md transition-colors duration-200 cursor-pointer hover:border-blue-500 hover:bg-blue-50`}>
+            <input {...getInputProps()} />
+            <FaPlus className="text-gray-400 group-hover:text-blue-500 transition-colors" size={24} />
+            <span className="text-xs text-gray-500 group-hover:text-blue-600 transition-colors">
+              Añadir
+            </span>
           </div>
         </div>
-        {imagePreviews.length > 0 && (
-          <div className="mt-4">
-            <p className="text-xs font-medium text-gray-600 mb-2">Nuevas imágenes:</p>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-              {imagePreviews.map((preview, index) => (
-                <div key={`${preview}-${index}`} className="relative group">
-                  <img src={preview} alt={`Previsualización ${index + 1}`} className="h-24 w-24 object-cover rounded-md shadow-sm" />
-                  <button type="button" onClick={() => handleRemoveNewImage(index)} className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 outline-none">
-                    <FaTimes size={12} />
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

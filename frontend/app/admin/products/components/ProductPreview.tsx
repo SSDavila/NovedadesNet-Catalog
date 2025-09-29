@@ -9,6 +9,7 @@ interface ProductPreviewProps {
   precio: number;
   descripcion: string | null;
   imagenes: string[];
+  className?: string;
 }
 
 export default function ProductPreview({
@@ -16,21 +17,22 @@ export default function ProductPreview({
   descripcion,
   precio,
   imagenes,
+  className = '',
 }: ProductPreviewProps) {
   const [activeIndex, setActiveIndex] = useState(0);
   const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '593963988846';
 
   const hasImages = imagenes && imagenes.length > 0;
-  const displayImages = hasImages ? imagenes : ['/placeholder.png'];
 
   useEffect(() => {
     setActiveIndex(0);
   }, [imagenes]);
 
   const paginate = (newIndex: number) => {
+    if (!hasImages) return;
     if (newIndex < 0) {
-      setActiveIndex(displayImages.length - 1);
-    } else if (newIndex >= displayImages.length) {
+      setActiveIndex(imagenes.length - 1);
+    } else if (newIndex >= imagenes.length) {
       setActiveIndex(0);
     } else {
       setActiveIndex(newIndex);
@@ -45,50 +47,54 @@ export default function ProductPreview({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-xl w-full h-full flex flex-col">
-      <div className="relative flex items-center justify-center w-full h-64 md:h-80 p-6 py-4 overflow-hidden">
-        <AnimatePresence>
-          {displayImages.map((image, index) => {
-            const position = index - activeIndex;
-            const isCenter = position === 0;
+    <div className="bg-white rounded-xl border w-full h-full flex flex-col overflow-hidden">
+      <div className="relative flex items-center justify-center w-full h-64 md:h-80 p-6 py-4 overflow-hidden bg-white border-b">
+        {hasImages ? (
+          <AnimatePresence>
+            {imagenes.map((image, index) => {
+              const position = index - activeIndex;
+              const isCenter = position === 0;
 
-            return (
-              <motion.img
-                key={image + index}
-                src={image}
-                alt={`${nombre || 'Producto'} - Imagen ${index + 1}`}
-                className="absolute h-full w-full object-contain"
-                initial={{
-                  x: `${position * 50}%`,
-                  scale: isCenter ? 1 : 0.7,
-                  opacity: isCenter ? 1 : 0.5,
-                  zIndex: displayImages.length - Math.abs(position),
-                }}
-                animate={{
-                  x: `${position * 50}%`,
-                  scale: isCenter ? 1 : 0.7,
-                  opacity: isCenter ? 1 : 0.5,
-                  zIndex: displayImages.length - Math.abs(position),
-                }}
-                transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              />
-            );
-          })}
-        </AnimatePresence>
-        {displayImages.length > 1 && (
+              return (
+                <motion.img
+                  key={image + index}
+                  src={image}
+                  alt=""
+                  className="absolute h-full w-full object-contain"
+                  initial={{
+                    x: `${position * 50}%`,
+                    scale: isCenter ? 1 : 0.7,
+                    opacity: isCenter ? 1 : 0.5,
+                    zIndex: imagenes.length - Math.abs(position),
+                  }}
+                  animate={{
+                    x: `${position * 50}%`,
+                    scale: isCenter ? 1 : 0.7,
+                    opacity: isCenter ? 1 : 0.5,
+                    zIndex: imagenes.length - Math.abs(position),
+                  }}
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              );
+            })}
+          </AnimatePresence>
+        ) : (
+          <div className="text-gray-400 font-semibold">Imágenes</div>
+        )}
+        {hasImages && imagenes.length > 1 && (
           <>
             <button onClick={() => paginate(activeIndex - 1)} disabled={activeIndex === 0} className="absolute left-4 z-20 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 rounded-full p-2 transition disabled:opacity-30 disabled:cursor-not-allowed"> <FaChevronLeft /> </button>
-            <button onClick={() => paginate(activeIndex + 1)} disabled={activeIndex === displayImages.length - 1} className="absolute right-4 z-20 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 rounded-full p-2 transition disabled:opacity-30 disabled:cursor-not-allowed"> <FaChevronRight /> </button>
+            <button onClick={() => paginate(activeIndex + 1)} disabled={activeIndex === imagenes.length - 1} className="absolute right-4 z-20 top-1/2 -translate-y-1/2 bg-white/50 hover:bg-white/80 rounded-full p-2 transition disabled:opacity-30 disabled:cursor-not-allowed"> <FaChevronRight /> </button>
           </>
         )}
       </div>
 
-      <div className="p-6 md:p-8 pt-0 overflow-y-auto">
+      <div className={`p-6 md:p-8 pt-0 overflow-y-auto flex-grow ${className}`}>
         <div className="mt-4">
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900">{nombre || 'Nombre del Producto'}</h2>
-          <p className="text-2xl font-semibold text-green-600 mt-2">${(precio || 0).toFixed(2)}</p>
-          <div className="mt-4 text-gray-600 prose max-w-none">
-            <p>{descripcion || 'Descripción detallada del producto.'}</p>
+          <p className="text-2xl font-bold text-green-600 mt-2">${(precio || 0).toFixed(2)}</p>
+          <div className="mt-4 text-gray-700 prose max-w-none">
+            <p className="whitespace-pre-line">{descripcion || 'Aquí aparecerá la descripción detallada del producto.'}</p>
           </div>
         </div>
 
