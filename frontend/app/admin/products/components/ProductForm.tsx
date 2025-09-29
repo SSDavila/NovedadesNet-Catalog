@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { FaImage, FaTimes } from 'react-icons/fa';
+import { FaImage, FaTimes, FaSpinner, FaMagic } from 'react-icons/fa';
 
 interface Categoria {
   categoryId: number;
@@ -33,6 +33,7 @@ export default function ProductForm({
   onImagePreviewsChange,
 }: ProductFormProps) {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -41,15 +42,19 @@ export default function ProductForm({
         if (!response.ok) throw new Error('No se pudieron cargar las categorías');
         const data: Categoria[] = await response.json();
         setCategorias(data);
-        if (data.length > 0 && !productData.prodCategory) {
-          handleChange('prodCategory', data[0].categoryName);
-        }
       } catch (error) {
         console.error(error);
       }
     };
     fetchCategorias();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Se ejecuta solo una vez al montar
+
+  useEffect(() => {
+    if (categorias.length > 0 && !productData.prodCategory) {
+      onProductDataChange({ ...productData, prodCategory: categorias[0].categoryName });
+    }
+  }, [categorias, productData, onProductDataChange]);
 
   useEffect(() => {
     return () => {
@@ -79,6 +84,33 @@ export default function ProductForm({
 
   const handleChange = (field: keyof ProductFormProps['productData'], value: string) => {
     onProductDataChange({ ...productData, [field]: value });
+  };
+
+  const handleGenerateDescription = async () => {
+    if (!productData.prodName) {
+      alert('Por favor, ingresa un nombre de producto primero.');
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-description`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productName: productData.prodName }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error en la respuesta de la IA');
+      }
+      const data = await response.json();
+      handleChange('prodDesc', data.description);
+    } catch (error) {
+      console.error(error);
+      const errorMessage = error instanceof Error ? error.message : 'No se pudo generar la descripción.';
+      alert(`Error: ${errorMessage}`);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   return (
@@ -111,8 +143,19 @@ export default function ProductForm({
       </div>
 
       <div>
-        <label htmlFor="prodDesc" className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
-        <textarea id="prodDesc" value={productData.prodDesc} onChange={(e) => handleChange('prodDesc', e.target.value)} rows={3} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
+        <div className="flex justify-between items-center mb-1">
+          <label htmlFor="prodDesc" className="block text-sm font-medium text-gray-700">Descripción</label>
+          <button
+            type="button"
+            onClick={handleGenerateDescription}
+            disabled={isGenerating || !productData.prodName}
+            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {isGenerating ? <FaSpinner className="animate-spin" /> : <FaMagic />}
+            {isGenerating ? 'Generando...' : 'Generar con IA'}
+          </button>
+        </div>
+        <textarea id="prodDesc" value={productData.prodDesc} onChange={(e) => handleChange('prodDesc', e.target.value)} rows={6} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition" />
       </div>
 
       <div>
