@@ -2,8 +2,8 @@
 
 import { useState, FormEvent } from 'react';
 import Notification from '@/components/Notification';
-import { FaSpinner, FaTimes } from 'react-icons/fa';
-import ProductForm from './ProductForm';
+import { FaSpinner, FaTimes, FaMagic } from 'react-icons/fa';
+import NewProductForm from './NewProductForm';
 import ProductPreview from './ProductPreview';
 
 interface NewProductModalProps {
@@ -15,7 +15,7 @@ interface NewProductModalProps {
 export default function NewProductModal({ isOpen, onClose, onProductAdded }: NewProductModalProps) {
   const [productData, setProductData] = useState({
     prodName: '',
-    prodDesc: '',
+    prodDescription: '',
     prodPrice: '',
     prodStock: '',
     prodCategory: '',
@@ -24,12 +24,13 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   const handleClose = () => {
 
     setProductData({
       prodName: '',
-      prodDesc: '',
+      prodDescription: '',
       prodPrice: '',
       prodStock: '',
       prodCategory: '',
@@ -38,12 +39,38 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
     setImagePreviews([]);
     setError(null);
     setIsSubmitting(false);
+    setIsGenerating(false);
     onClose();
   };
 
   if (!isOpen) {
     return null;
   }
+
+  const handleGenerateDescription = async () => {
+    if (!productData.prodName) {
+      alert('Por favor, ingresa un nombre de producto primero.');
+      return;
+    }
+    setIsGenerating(true);
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-description`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productName: productData.prodName }),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error en la respuesta de la IA');
+      }
+      const data = await response.json();
+      setProductData(prev => ({ ...prev, prodDescription: data.description }));
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -60,7 +87,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
 
     const formData = new FormData();
     formData.append('prodName', productData.prodName.trim());
-    formData.append('prodDescription', productData.prodDesc.trim());
+    formData.append('prodDescription', productData.prodDescription.trim());
     formData.append('prodPrice', productData.prodPrice.trim());
     formData.append('prodStock', productData.prodStock.trim());
     formData.append('prodCategory', productData.prodCategory.trim());
@@ -105,13 +132,15 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
           <div className="flex flex-col overflow-hidden p-4">
             <form onSubmit={handleSubmit} className="flex-grow flex flex-col overflow-hidden">
               <div className="flex-grow overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full">
-                <ProductForm
+                <NewProductForm
                   productData={productData}
                   onProductDataChange={setProductData}
                   images={images}
                   onImagesChange={setImages}
                   imagePreviews={imagePreviews}
                   onImagePreviewsChange={setImagePreviews}
+                  isGenerating={isGenerating}
+                  onGenerateDescription={handleGenerateDescription}
                 />
               </div>
               {error && (
@@ -127,9 +156,8 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
               </div>
             </form>
           </div>
-          {/* Columna derecha para la vista previa */}
           <div className="hidden md:flex flex-col overflow-hidden h-full">
-            <ProductPreview nombre={productData.prodName} precio={parseFloat(productData.prodPrice) || 0} descripcion={productData.prodDesc} imagenes={imagePreviews} className="scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full" />
+            <ProductPreview nombre={productData.prodName} precio={productData.prodPrice} descripcion={productData.prodDescription} stock={productData.prodStock} categoria={productData.prodCategory} imagenes={imagePreviews} />
           </div>
         </div>
       </div>

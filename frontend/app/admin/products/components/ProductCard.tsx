@@ -64,29 +64,7 @@ export default function ProductCard({ product, onEdit, onDelete, onClick }: Prod
           src={imageUrl}
           alt={product.prodName}
           className="h-full w-full object-cover object-center"
-        />
-        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-4">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit(product);
-            }}
-            className="p-3 bg-white/80 rounded-full text-blue-600 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all"
-            title="Editar producto"
-          >
-            <FaEdit size={18} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(product.prodId);
-            }}
-            className="p-3 bg-white/80 rounded-full text-red-600 backdrop-blur-sm hover:bg-white hover:scale-110 transition-all"
-            title="Eliminar producto"
-          >
-            <FaTrash size={18} />
-          </button>
-        </div>
+        />       
       </div>
       <div className="flex flex-1 flex-col justify-between p-4">
         <div>

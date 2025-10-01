@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FaPlus, FaSpinner } from 'react-icons/fa';
 import NewProductModal from './components/NewProductModal';
+import EditProductModal from './components/EditProductModal';
 import ProductDetailModal from './components/ProductDetailModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import { Product } from './components/ProductCard';
@@ -11,8 +12,9 @@ import ProductGrid from './components/ProductGrid';
 export default function AdminProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true); 
   const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -50,8 +52,15 @@ export default function AdminProductsPage() {
     fetchProducts();
   };
 
+  const handleProductUpdated = () => {
+    setIsEditModalOpen(false);
+    fetchProducts();
+  };
+
   const handleEdit = (product: Product) => {
-    console.log('Edit product:', product.prodId);
+    setSelectedProduct(product);
+    setIsDetailModalOpen(false); 
+    setIsEditModalOpen(true);
   };
 
   const handleDeleteClick = (productId: string) => {
@@ -73,7 +82,8 @@ export default function AdminProductsPage() {
       }
 
       fetchProducts();
-      setIsDetailModalOpen(false); // Cerrar modal de detalle si está abierto
+      setIsDetailModalOpen(false);
+      closeDetailModal();
     } catch (err: any) {
       setError(err.message || 'Ocurrió un error al eliminar el producto.');
     } finally {
@@ -86,6 +96,11 @@ export default function AdminProductsPage() {
   const handleCardClick = (product: Product) => {
     setSelectedProduct(product);
     setIsDetailModalOpen(true);
+  };
+
+  const closeDetailModal = () => {
+    setIsDetailModalOpen(false);
+    setSelectedProduct(null);
   };
 
   return (
@@ -118,12 +133,9 @@ export default function AdminProductsPage() {
       {selectedProduct && (
         <ProductDetailModal
           isOpen={isDetailModalOpen}
-          onClose={() => setIsDetailModalOpen(false)}
-          nombre={selectedProduct.prodName}
-          precio={selectedProduct.prodPrice}
-          descripcion={selectedProduct.prodDescription}
-          imagenes={selectedProduct.prodImages.map(img => img.prodImageUrl)}
-          onEdit={() => handleEdit(selectedProduct)}
+          onClose={closeDetailModal}
+          product={selectedProduct}
+          onEdit={handleEdit}
           onDelete={() => handleDeleteClick(selectedProduct.prodId)}
         />
       )}
@@ -136,6 +148,21 @@ export default function AdminProductsPage() {
         message={"¿Estás seguro de que quieres eliminar este producto?\nEsta acción no se puede deshacer."}
         isConfirming={isDeleting}
       />
+
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        initialData={selectedProduct ? {
+          prodId: selectedProduct.prodId,
+          prodName: selectedProduct.prodName, 
+          prodDescription: selectedProduct.prodDescription, 
+          prodPrice: selectedProduct.prodPrice.toString(), 
+          prodStock: selectedProduct.prodStock.toString(), 
+          prodCategory: selectedProduct.prodCategory, 
+          images: selectedProduct.prodImages
+        } : { prodId: '', prodName: '', prodDescription: '', prodPrice: '', prodStock: '', prodCategory: '', images: [] }}
+        onProductUpdated={handleProductUpdated}
+      /> 
     </div>
   );
 }

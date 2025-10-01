@@ -79,6 +79,7 @@ export default function ProductCard({ product }: { product: Product }) {
         {modalOpen && (
           <ProductDetailModal
             onClose={() => setModalOpen(false)}
+            isOpen={modalOpen}
             product={product}
           />
         )}
