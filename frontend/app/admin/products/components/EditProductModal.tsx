@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, FormEvent } from 'react';
+import { useEffect, useState, FormEvent, useCallback } from 'react';
 import EditProductForm from './EditProductForm'; 
 import { ProductImage } from './ProductCard';
 import { FaTimes, FaSpinner } from 'react-icons/fa';
@@ -46,7 +46,6 @@ export default function EditProductModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Solo inicializa los estados cuando cambia el producto a editar
   useEffect(() => {
     if (initialData && isOpen) {
       setProductData({
@@ -65,6 +64,49 @@ export default function EditProductModal({
       setIsSubmitting(false);
     }
   }, [initialData, isOpen]);
+
+  const handleRemoveExistingImage = useCallback((identifier: number) => {
+    let imageIdToDelete: number | undefined;
+
+    const updatedImages = existingImages.filter((img, index) => {
+      const match = img.prodImageId === identifier || index === identifier;
+      if (match) {
+        imageIdToDelete = img.prodImageId;
+      }
+      return !match;
+    });
+
+    setExistingImages(updatedImages);
+    if (imageIdToDelete !== undefined) {
+      setImagesToDelete(current => [...current, imageIdToDelete!]);
+    }
+  }, [existingImages]);
+
+  const handleRemoveNewImage = useCallback((indexToRemove: number) => {
+    const imageUrlToRemove = newImagePreviews[indexToRemove];
+    if (imageUrlToRemove) {
+      URL.revokeObjectURL(imageUrlToRemove);
+    }
+    setNewImages(prev => prev.filter((_, i) => i !== indexToRemove));
+    setNewImagePreviews(prev => prev.filter((_, i) => i !== indexToRemove));
+  }, [newImagePreviews]);
+
+  const handleDropNewImages = useCallback((acceptedFiles: File[]) => {
+    const newFilesWithPreview = acceptedFiles.map(file =>
+      Object.assign(file, {
+        preview: URL.createObjectURL(file),
+      })
+    );
+    setNewImages(prev => [...prev, ...newFilesWithPreview]);
+    setNewImagePreviews(prev => [
+      ...prev,
+      ...newFilesWithPreview.map(f => f.preview),
+    ]);
+  }, []);
+
+  const handleProductDataChange = useCallback((data: typeof productData) => {
+    setProductData(data);
+  }, []);
 
   if (!isOpen) return null;
 
@@ -111,32 +153,68 @@ export default function EditProductModal({
     setIsSubmitting(true);
     setError(null);
 
-    const formData = new FormData();
-    formData.append('prodName', productData.prodName.trim());
-    formData.append('prodDescription', productData.prodDescription.trim());
-    formData.append('prodPrice', productData.prodPrice.trim());
-    formData.append('prodStock', productData.prodStock.trim());
-    formData.append('prodCategory', productData.prodCategory.trim());
-    formData.append('imagesToDelete', JSON.stringify(imagesToDelete));
-    newImages.forEach((image) => {
-      formData.append('prodImages', image);
-    });
-
     try {
-      const response = await fetch(
+      const productUpdateData = {
+        prodName: productData.prodName.trim(),
+        prodDescription: productData.prodDescription.trim(),
+        prodPrice: productData.prodPrice.trim(),
+        prodStock: productData.prodStock.trim(),
+        prodCategory: productData.prodCategory.trim(),
+      };
+
+      const productUpdateResponse = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/products/${initialData.prodId}`,
         {
-          method: 'PUT',
-          body: formData,
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(productUpdateData),
         }
       );
 
-      if (!response.ok) {
-        const errorData = await response.json();
+      if (!productUpdateResponse.ok) {
+        const errorData = await productUpdateResponse.json();
         const message = Array.isArray(errorData.message)
           ? errorData.message.join(', ')
           : errorData.message;
-        throw new Error(message || 'Error al actualizar el producto');
+        throw new Error(message || 'Error al actualizar los datos del producto.');
+      }
+
+      if (imagesToDelete.length > 0) {
+        const deleteResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/products/images/delete`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ imageIds: imagesToDelete }),
+          }
+        );
+
+        if (!deleteResponse.ok) {
+          console.error('Los datos del producto se guardaron, pero hubo un error al eliminar las imágenes antiguas.');
+        }
+      }
+
+      if (newImages.length > 0) {
+        const imageFormData = new FormData();
+        newImages.forEach(image => {
+          imageFormData.append('prodImages', image);
+        });
+
+        const imageResponse = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/products/${initialData.prodId}/upload-images`,
+          {
+            method: 'POST',
+            body: imageFormData,
+          }
+        );
+
+        if (!imageResponse.ok) {
+          throw new Error('Error al subir las nuevas imágenes.');
+        }
       }
 
       onProductUpdated();
@@ -169,14 +247,13 @@ export default function EditProductModal({
               <div className="flex-grow overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full">
                 <EditProductForm
                   productData={productData}
-                  onProductDataChange={setProductData}
+                  onProductDataChange={handleProductDataChange}
                   newImages={newImages}
-                  onNewImagesChange={setNewImages}
                   newImagePreviews={newImagePreviews}
-                  onNewImagePreviewsChange={setNewImagePreviews}
                   existingImages={existingImages}
-                  onExistingImagesChange={setExistingImages}
-                  onImagesToDeleteChange={setImagesToDelete}
+                  onRemoveExistingImage={handleRemoveExistingImage}
+                  onRemoveNewImage={handleRemoveNewImage}
+                  onDropNewImages={handleDropNewImages}
                   isGenerating={isGenerating}
                   onGenerateDescription={handleGenerateDescription}
                 />

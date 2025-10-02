@@ -37,4 +37,9 @@ export class CreateProductDto {
   @IsArray()
   @IsOptional()
   prodImages?: string[];
+
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  imagesToDelete?: string[];
 }

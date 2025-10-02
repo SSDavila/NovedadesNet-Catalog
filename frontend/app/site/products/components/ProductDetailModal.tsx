@@ -18,9 +18,8 @@ export default function ProductDetailModal({
   const [activeIndex, setActiveIndex] = useState(0);
   const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '593963988846';
 
-  const imageUrls = product.prodImages?.map(image => image.prodImageUrl) || [];
-  const hasImages = imageUrls.length > 0;
-  const displayImages = hasImages ? imageUrls : [];
+  const displayImages = product.prodImages || [];
+  const hasImages = displayImages.length > 0;
 
   const paginate = (newIndex: number) => {
     if (newIndex < 0) {
@@ -90,15 +89,15 @@ export default function ProductDetailModal({
         <div className="relative flex items-center justify-center w-full h-80 md:h-96 p-4 overflow-hidden bg-white flex-shrink-0 rounded-t-2xl">
           {hasImages ? (
             <>
-              <AnimatePresence initial={false}>
+              <AnimatePresence initial={false} custom={activeIndex}>
                 {displayImages.map((image, index) => {
                   const position = index - activeIndex;
                   const isCenter = position === 0;
 
                   return (
                     <motion.img
-                      key={image + index}
-                      src={image}
+                      key={image.prodImageId} // <-- CORRECCIÓN: Usar el ID único de la imagen
+                      src={image.prodImageUrl}
                       alt={`${product.prodName} - Image ${index + 1}`}
                       className="absolute h-full w-full object-contain cursor-grab active:cursor-grabbing"
                       initial={{ x: `${position * 50}%`, scale: isCenter ? 1 : 0.7, opacity: isCenter ? 1 : 0.5, filter: isCenter ? 'blur(0px)' : 'blur(2px)', zIndex: displayImages.length - Math.abs(position) }}

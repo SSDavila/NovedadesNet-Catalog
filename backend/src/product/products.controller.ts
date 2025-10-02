@@ -17,6 +17,7 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { fileFilter } from './helpers/fileFilter.helper';
 import { fileNamer } from './helpers/fileNamer.helper';
+import { DeleteImagesDto } from './dto/delete-images.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -55,6 +56,28 @@ export class ProductsController {
     @Body() updateProductDto: UpdateProductDto,
   ) {
     return this.productsService.update(id, updateProductDto);
+  }
+
+  @Post(':id/upload-images')
+  @UseInterceptors(
+    FilesInterceptor('prodImages', 10, {
+      fileFilter: fileFilter,
+      storage: diskStorage({
+        destination: './static/uploads',
+        filename: fileNamer,
+      }),
+    }),
+  )
+  uploadImages(
+    @Param('id', ParseUUIDPipe) id: string,
+    @UploadedFiles() files: Express.Multer.File[],
+  ) {
+    return this.productsService.uploadImages(id, files);
+  }
+
+  @Delete('images/delete')
+  deleteImages(@Body() deleteImagesDto: DeleteImagesDto) {
+    return this.productsService.deleteImages(deleteImagesDto.imageIds);
   }
 
   @Delete(':id')

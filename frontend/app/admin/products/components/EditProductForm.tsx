@@ -20,28 +20,26 @@ interface EditProductFormProps {
   };
   onProductDataChange: (data: EditProductFormProps['productData']) => void;
   newImages: File[];
-  onNewImagesChange: (images: File[]) => void;
   newImagePreviews: string[];
-  onNewImagePreviewsChange: (previews: string[]) => void;
   existingImages: ProductImage[];
-  onExistingImagesChange: (images: ProductImage[]) => void;
-  onImagesToDeleteChange: React.Dispatch<React.SetStateAction<number[]>>;
   isGenerating: boolean;
   onGenerateDescription: () => void;
+  onRemoveExistingImage: (imageId: number) => void;
+  onRemoveNewImage: (index: number) => void;
+  onDropNewImages: (files: File[]) => void;
 }
 
 export default function EditProductForm({
   productData,
   onProductDataChange,
   newImages,
-  onNewImagesChange,
   newImagePreviews,
-  onNewImagePreviewsChange,
   existingImages,
-  onExistingImagesChange,
-  onImagesToDeleteChange,
   isGenerating,
   onGenerateDescription,
+  onRemoveExistingImage,
+  onRemoveNewImage,
+  onDropNewImages,
 }: EditProductFormProps) {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
 
@@ -63,45 +61,12 @@ export default function EditProductForm({
     if (categorias.length > 0 && !productData.prodCategory) {
       onProductDataChange({ ...productData, prodCategory: categorias[0].categoryName });
     }
-  }, [categorias, productData.prodCategory, onProductDataChange]);
-
-  const onDrop = useCallback(
-    (acceptedFiles: File[]) => {
-      const newFilesWithPreview = acceptedFiles.map(file =>
-        Object.assign(file, { preview: URL.createObjectURL(file) })
-      );
-      onNewImagesChange([...newImages, ...newFilesWithPreview]);
-      onNewImagePreviewsChange([
-        ...newImagePreviews,
-        ...newFilesWithPreview.map(f => f.preview),
-      ]);
-    },
-    [newImages, newImagePreviews, onNewImagesChange, onNewImagePreviewsChange]
-  );
+  }, [categorias, productData, onProductDataChange]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
+    onDrop: onDropNewImages,
     accept: { 'image/*': [] },
   });
-
-  // SOLUCIÓN: Eliminar solo la imagen seleccionada, no todas
-  const handleRemoveNewImage = (index: number) => {
-    const imageUrlToRemove = newImagePreviews[index];
-    if (imageUrlToRemove) {
-      URL.revokeObjectURL(imageUrlToRemove);
-    }
-    // Elimina solo la imagen y preview correspondiente
-    const updatedImages = newImages.filter((_, i) => i !== index);
-    const updatedPreviews = newImagePreviews.filter((_, i) => i !== index);
-    onNewImagesChange(updatedImages);
-    onNewImagePreviewsChange(updatedPreviews);
-  };
-
-  // SOLUCIÓN: Eliminar solo la imagen existente seleccionada
-  const handleRemoveExistingImage = (imageId: number) => {
-    onExistingImagesChange(existingImages.filter(img => img.prodImageId !== imageId));
-    onImagesToDeleteChange(prev => [...prev, imageId]);
-  };
 
   const handleChange = (
     field: keyof EditProductFormProps['productData'],
@@ -221,7 +186,7 @@ export default function EditProductForm({
         </label>
         <div className="mt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
           {existingImages.map((image, index) => (
-            <div key={`existing-${image.prodImageId}-${index}`} className="relative group aspect-square">
+            <div key={`existing-${image.prodImageUrl}-${index}`} className="relative group aspect-square">
               <img
                 src={image.prodImageUrl}
                 alt={`Imagen existente ${image.prodImageId}`}
@@ -229,7 +194,7 @@ export default function EditProductForm({
               />
               <button
                 type="button"
-                onClick={() => handleRemoveExistingImage(image.prodImageId)}
+                onClick={() => onRemoveExistingImage(image.prodImageId ?? index)}
                 className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 outline-none z-10"
               >
                 <FaTimes size={12} />
@@ -249,7 +214,7 @@ export default function EditProductForm({
               />
               <button
                 type="button"
-                onClick={() => handleRemoveNewImage(index)}
+                onClick={() => onRemoveNewImage(index)}
                 className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 outline-none z-10"
               >
                 <FaTimes size={12} />
