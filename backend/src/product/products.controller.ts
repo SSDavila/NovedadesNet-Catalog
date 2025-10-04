@@ -17,7 +17,6 @@ import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { fileFilter } from './helpers/fileFilter.helper';
 import { fileNamer } from './helpers/fileNamer.helper';
-import { DeleteImagesDto } from './dto/delete-images.dto';
 
 @Controller('products')
 export class ProductsController {
@@ -73,11 +72,6 @@ export class ProductsController {
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.productsService.uploadImages(id, files);
-  }
-
-  @Delete('images/delete')
-  deleteImages(@Body() deleteImagesDto: DeleteImagesDto) {
-    return this.productsService.deleteImages(deleteImagesDto.imageIds);
   }
 
   @Delete(':id')

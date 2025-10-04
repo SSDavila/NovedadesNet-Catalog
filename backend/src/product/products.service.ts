@@ -2,8 +2,6 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 
 @Injectable()
 export class ProductsService {
@@ -76,8 +74,9 @@ export class ProductsService {
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-    const { imagesToDelete, prodImages, ...productDetails } = updateProductDto;
-    await this.findOne(id);
+    // Se ignoran 'imagesToDelete' y 'prodImages' del DTO.
+    const { imagesToDelete, prodImages, ...productDetails } = updateProductDto; 
+    await this.findOne(id); // Verifica que el producto exista
 
     return this.prisma.product.update({
       where: { prodId: id },
@@ -102,44 +101,6 @@ export class ProductsService {
       data: imagesData,
     });
     return this.findOne(id);
-  }
-
-  async deleteImages(imageIds: number[]) {
-    if (!imageIds || imageIds.length === 0) {
-      throw new BadRequestException('No se proporcionaron IDs de imágenes.');
-    }
-
-    if (imageIds.some(id => typeof id !== 'number' || isNaN(id))) {
-      throw new BadRequestException('Todos los IDs de imágenes deben ser números válidos.');
-    }
-
-    return this.prisma.$transaction(async (prisma) => {
-      const imagesToDelete = await prisma.productImage.findMany({
-        where: { prodImageId: { in: imageIds } },
-      });
-
-      for (const image of imagesToDelete) {
-        try {
-          if (image.prodImageUrl && image.prodImageUrl.startsWith('http')) {
-            const url = new URL(image.prodImageUrl);
-            const filename = path.basename(url.pathname);
-            const imagePath = path.join(process.cwd(), 'static', 'uploads', filename);
-            if (fs.existsSync(imagePath)) {
-              fs.unlinkSync(imagePath);
-            }
-          } else {
-            console.warn(`URL de imagen no válida o vacía, omitiendo borrado de archivo: ${image.prodImageUrl}`);
-          }
-        } catch (error) {
-          console.error(`Error al eliminar el archivo físico: ${image.prodImageUrl}`, error);
-        }
-      }
-
-      const deleteResult = await prisma.productImage.deleteMany({
-        where: { prodImageId: { in: imageIds } },
-      });
-      return { count: deleteResult.count };
-    });
   }
 
   async remove(id: string) {
