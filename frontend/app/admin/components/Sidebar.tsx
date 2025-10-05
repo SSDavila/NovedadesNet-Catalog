@@ -10,10 +10,12 @@ import {
   FaTags,
   FaTachometerAlt,
   FaFileInvoiceDollar,
-  FaFileAlt,
+  FaFileAlt, 
+  FaSignOutAlt,
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 const mainLinks = [
@@ -32,6 +34,10 @@ const billingLinks = [
   { href: '/admin/salesnotes', label: 'Notas de Venta', icon: FaFileAlt },
 ];
 
+const logoutLink = [
+  { href: '/logout', label: 'Cerrar Sesión', icon: FaSignOutAlt },
+];
+
 const sections = [
   { title: 'Principal', links: mainLinks },
   { title: 'Productos', links: productLinks },
@@ -41,6 +47,22 @@ const sections = [
 export default function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const router = useRouter();
+  
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/v1/auth/logout', {
+        method: 'POST',
+      });
+
+      if (response.ok) {
+        localStorage.removeItem('accessToken');
+        router.push('/site/login');
+      }
+    } catch (error) { 
+      console.error('Logout failed:', error);
+    }
+  };
 
   return (
     <aside
@@ -62,7 +84,6 @@ export default function Sidebar() {
         </button>
       </div>
 
-      {/* Links */}
       <nav className="flex-1 p-2 space-y-4">
         {sections.map((section, index) => (
           <div key={section.title}>
@@ -87,7 +108,7 @@ export default function Sidebar() {
                     />
                   )}
                   <div
-                    className={clsx(
+                  className={clsx(
                       'relative z-10 flex items-center gap-3 w-full',
                       collapsed && 'justify-center'
                     )}
@@ -106,6 +127,30 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+      
+      <nav className="p-2 space-y-4 mt-auto">
+  <button
+    onClick={handleLogout}
+    className={clsx(
+      'relative flex items-center gap-3 px-4 py-2 rounded-lg w-full text-left transition',
+      'hover:bg-neutral-800 focus:bg-neutral-800'
+    )}
+  >
+    <div
+      className={clsx(
+        'relative z-10 flex items-center gap-3 w-full',
+        collapsed && 'justify-center'
+      )}
+    >
+      <FaSignOutAlt className="w-5 h-5 flex-shrink-0 text-gray-400 group-hover:text-white" />
+      {!collapsed && (
+        <span className="truncate text-gray-400 group-hover:text-white">
+          Cerrar Sesión
+        </span>
+      )}
+    </div>
+  </button>
+</nav>
     </aside>
   );
 }

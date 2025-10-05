@@ -49,4 +49,8 @@ export class AuthService {
       user: userWithoutPassword,
     };
   }
+
+  async logout() {
+    return { msg: 'logout' };
+  }
 }
