@@ -3,8 +3,9 @@
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
 export interface ProductImage {
-  prodImageId: number;
+  prodImageId: string;
   prodImageUrl: string;
+  prodImagePublicid: string;
 }
 
 export interface Product {

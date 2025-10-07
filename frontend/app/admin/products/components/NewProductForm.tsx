@@ -15,6 +15,7 @@ interface NewProductFormProps {
     prodName: string;
     prodDescription: string;
     prodPrice: string;
+    prodPreviousPrice: string;
     prodStock: string;
     prodCategory: string;
   };
@@ -38,6 +39,7 @@ export default function NewProductForm({
   onGenerateDescription,
 }: NewProductFormProps) {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [isPreviousPriceEnabled, setIsPreviousPriceEnabled] = useState(false);
 
   useEffect(() => {
     const fetchCategorias = async () => {
@@ -58,6 +60,12 @@ export default function NewProductForm({
       onProductDataChange({ ...productData, prodCategory: categorias[0].categoryName });
     }
   }, [categorias, productData, onProductDataChange]);
+
+  useEffect(() => {
+    if (!isPreviousPriceEnabled) {
+      onProductDataChange({ ...productData, prodPreviousPrice: '0' });
+    }
+  }, [isPreviousPriceEnabled]);
 
   useEffect(() => {
     return () => {
@@ -96,10 +104,26 @@ export default function NewProductForm({
         <input type="text" id="prodName" value={productData.prodName} onChange={(e) => handleChange('prodName', e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg text-gray-900" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="prodPrice" className="block text-sm font-semibold text-gray-800 mb-1">Precio</label>
           <input type="number" id="prodPrice" value={productData.prodPrice} onChange={(e) => handleChange('prodPrice', e.target.value)} required className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg text-black font-semibold" />
+        </div>
+        <div className="flex flex-col">
+            <div className="flex items-center justify-between mb-1">
+                <label htmlFor="prodPreviousPrice" className="block text-sm font-semibold text-gray-800">Precio Anterior (Oferta)</label>
+                <div className="flex items-center">
+                    <input type="checkbox" id="enablePreviousPrice" checked={isPreviousPriceEnabled} onChange={(e) => setIsPreviousPriceEnabled(e.target.checked)} className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
+                    <label htmlFor="enablePreviousPrice" className="ml-2 text-sm text-gray-600">Habilitar</label>
+                </div>
+            </div>
+            <input 
+              type="number" 
+              id="prodPreviousPrice" 
+              value={productData.prodPreviousPrice} 
+              onChange={(e) => handleChange('prodPreviousPrice', e.target.value)} 
+              disabled={!isPreviousPriceEnabled} 
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed" />
         </div>
         <div>
           <label htmlFor="prodStock" className="block text-sm font-semibold text-gray-800 mb-1">Stock</label>

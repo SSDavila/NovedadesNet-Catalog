@@ -8,6 +8,7 @@ interface ProductPreviewProps {
   nombre: string;
   descripcion: string;
   precio: string;
+  precioAnterior?: string;
   stock: string;
   categoria: string;
   imagenes: string[];
@@ -17,6 +18,7 @@ export default function ProductPreview({
   nombre,
   descripcion,
   precio,
+  precioAnterior,
   stock,
   categoria,
   imagenes,
@@ -133,8 +135,15 @@ export default function ProductPreview({
           <h2 className="text-2xl font-bold text-gray-900 break-words w-full pr-4">
             {nombre || 'Nombre del producto'}
           </h2>
-          <div className="text-2xl font-semibold text-green-600 whitespace-nowrap">
-            ${precio ? Number(precio).toFixed(2) : '0.00'}
+          <div className="flex flex-col items-end whitespace-nowrap">
+            <span className="text-2xl font-bold text-green-600">
+              ${precio ? Number(precio).toFixed(2) : '0.00'}
+            </span>
+            {precioAnterior && Number(precioAnterior) > 0 && (
+              <span className="text-sm text-gray-500 line-through">
+                ${Number(precioAnterior).toFixed(2)}
+              </span>
+            )}
           </div>
         </div>
 

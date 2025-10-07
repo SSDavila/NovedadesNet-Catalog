@@ -39,7 +39,7 @@ export default function EditProductModal({
   });
 
   const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
-  const [imagesToDelete, setImagesToDelete] = useState<number[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<File[]>([]);
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -65,22 +65,14 @@ export default function EditProductModal({
     }
   }, [initialData, isOpen]);
 
-  const handleRemoveExistingImage = useCallback((identifier: number) => {
-    let imageIdToDelete: number | undefined;
+  const handleRemoveExistingImage = useCallback((imageId: string) => {
+    const imageToRemove = existingImages.find(img => img.prodImageId === imageId);
+    if (!imageToRemove) return;
 
-    const updatedImages = existingImages.filter((img, index) => {
-      const match = img.prodImageId === identifier || index === identifier;
-      if (match) {
-        imageIdToDelete = img.prodImageId;
-      }
-      return !match;
-    });
-
-    setExistingImages(updatedImages);
-    if (imageIdToDelete !== undefined) {
-      setImagesToDelete(current => [...current, imageIdToDelete!]);
-    }
-  }, [existingImages]);
+    // Guardamos el public_id para enviarlo al backend y borrarlo de Cloudinary
+    setImagesToDelete(current => [...current, imageToRemove.prodImagePublicid]);
+    setExistingImages(current => current.filter(img => img.prodImageId !== imageId));
+  }, [existingImages, imagesToDelete]);
 
   const handleRemoveNewImage = useCallback((indexToRemove: number) => {
     const imageUrlToRemove = newImagePreviews[indexToRemove];
@@ -160,6 +152,7 @@ export default function EditProductModal({
         prodPrice: productData.prodPrice.trim(),
         prodStock: productData.prodStock.trim(),
         prodCategory: productData.prodCategory.trim(),
+        imagesToDelete: imagesToDelete,
       };
 
       const productUpdateResponse = await fetch(
@@ -179,23 +172,6 @@ export default function EditProductModal({
           ? errorData.message.join(', ')
           : errorData.message;
         throw new Error(message || 'Error al actualizar los datos del producto.');
-      }
-
-      if (imagesToDelete.length > 0) {
-        const deleteResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/products/images/delete`,
-          {
-            method: 'DELETE',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ imageIds: imagesToDelete }),
-          }
-        );
-
-        if (!deleteResponse.ok) {
-          console.error('Los datos del producto se guardaron, pero hubo un error al eliminar las imágenes antiguas.');
-        }
       }
 
       if (newImages.length > 0) {

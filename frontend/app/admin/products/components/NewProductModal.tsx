@@ -17,6 +17,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
     prodName: '',
     prodDescription: '',
     prodPrice: '',
+    prodPreviousPrice: '0',
     prodStock: '',
     prodCategory: '',
   });
@@ -32,6 +33,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
       prodName: '',
       prodDescription: '',
       prodPrice: '',
+      prodPreviousPrice: '0',
       prodStock: '',
       prodCategory: '',
     });
@@ -89,6 +91,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
     formData.append('prodName', productData.prodName.trim());
     formData.append('prodDescription', productData.prodDescription.trim());
     formData.append('prodPrice', productData.prodPrice.trim());
+    formData.append('prodPreviousPrice', productData.prodPreviousPrice.trim() || '0');
     formData.append('prodStock', productData.prodStock.trim());
     formData.append('prodCategory', productData.prodCategory.trim());
     images.forEach((image) => {
@@ -157,7 +160,14 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
             </form>
           </div>
           <div className="hidden md:flex flex-col overflow-hidden h-full">
-            <ProductPreview nombre={productData.prodName} precio={productData.prodPrice} descripcion={productData.prodDescription} stock={productData.prodStock} categoria={productData.prodCategory} imagenes={imagePreviews} />
+            <ProductPreview 
+              nombre={productData.prodName} 
+              precio={productData.prodPrice} 
+              precioAnterior={productData.prodPreviousPrice}
+              descripcion={productData.prodDescription} 
+              stock={productData.prodStock} 
+              categoria={productData.prodCategory} 
+              imagenes={imagePreviews} />
           </div>
         </div>
       </div>

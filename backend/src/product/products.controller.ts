@@ -6,32 +6,23 @@ import {
   Patch,
   Param,
   Delete,
-  ParseUUIDPipe,
   UseInterceptors,
   UploadedFiles,
+  HttpCode,
+  HttpStatus,
+  ValidationPipe,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
-import { fileFilter } from './helpers/fileFilter.helper';
-import { fileNamer } from './helpers/fileNamer.helper';
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
   @Post()
-  @UseInterceptors(
-    FilesInterceptor('prodImages', 10, {
-      fileFilter: fileFilter,
-      storage: diskStorage({
-        destination: './static/uploads',
-        filename: fileNamer,
-      }),
-    }),
-  )
+  @UseInterceptors(FilesInterceptor('prodImages'))
   create(
     @Body() createProductDto: CreateProductDto,
     @UploadedFiles() files: Express.Multer.File[],
@@ -45,37 +36,31 @@ export class ProductsController {
   }
 
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
+  findOne(@Param('id', new ValidationPipe({ transform: false })) id: string) {
     return this.productsService.findOne(id);
   }
 
   @Patch(':id')
   update(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', new ValidationPipe({ transform: false })) id: string,
     @Body() updateProductDto: UpdateProductDto,
   ) {
     return this.productsService.update(id, updateProductDto);
   }
 
   @Post(':id/upload-images')
-  @UseInterceptors(
-    FilesInterceptor('prodImages', 10, {
-      fileFilter: fileFilter,
-      storage: diskStorage({
-        destination: './static/uploads',
-        filename: fileNamer,
-      }),
-    }),
-  )
+  @UseInterceptors(FilesInterceptor('prodImages'))
   uploadImages(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id', new ValidationPipe({ transform: false })) id: string,
     @UploadedFiles() files: Express.Multer.File[],
   ) {
     return this.productsService.uploadImages(id, files);
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseUUIDPipe) id: string) {
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id', new ValidationPipe({ transform: false })) id: string) {
     return this.productsService.remove(id);
   }
 }
+

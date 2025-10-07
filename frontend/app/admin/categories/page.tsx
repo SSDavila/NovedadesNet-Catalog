@@ -7,8 +7,9 @@ import NewCategoryModal from './components/NewCategoryModal';
 import EditCategoryModal from './components/EditCategoryModal';
 
 interface Category {
-  categoryId: number;
+  categoryId: string;
   categoryName: string;
+  categoryAbbreviation: string;
 }
 
 type ModalState = 
@@ -44,14 +45,14 @@ export default function CategoriesPage() {
     fetchCategories();
   }, []);
 
-  const handleUpdate = async (newName: string) => {
+  const handleUpdate = async (updatedCategory: Partial<Omit<Category, 'categoryId'>>) => {
     if (modalState.type !== 'edit') return;
 
     try {
       const response = await fetch(`${API_URL}/categories/${modalState.category.categoryId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoryName: newName }),
+        body: JSON.stringify(updatedCategory),
       });
       if (!response.ok) {
         const data = await response.json();
@@ -63,7 +64,7 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleDelete = async (categoryId: number) => {
+  const handleDelete = async (categoryId: string) => {
     if (!confirm('¿Estás seguro de que quieres eliminar esta categoría?')) return;
 
     try {
@@ -105,7 +106,7 @@ export default function CategoriesPage() {
         isOpen={modalState.type === 'edit'}
         onClose={() => setModalState({ type: 'none' })}
         onSave={handleUpdate}
-        currentName={modalState.type === 'edit' ? modalState.category.categoryName : ''}
+        category={modalState.type === 'edit' ? modalState.category : undefined}
       />
 
       {/* Tabla de categorías */}

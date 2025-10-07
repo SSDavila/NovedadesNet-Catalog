@@ -19,6 +19,12 @@ export class CreateProductDto {
   @IsPositive()
   prodPrice: number;
 
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Type(() => Number)
+  @IsPositive()
+  @IsOptional()
+  prodPreviousPrice?: number;
+
   @IsString()
   @IsOptional()
   prodDescription?: string;

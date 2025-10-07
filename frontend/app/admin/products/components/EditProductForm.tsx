@@ -6,7 +6,7 @@ import { FaImage, FaTimes, FaSpinner, FaMagic, FaPlus } from 'react-icons/fa';
 import { ProductImage } from './ProductCard';
 
 interface Categoria {
-  categoryId: number;
+  categoryId: string;
   categoryName: string;
 }
 
@@ -24,7 +24,7 @@ interface EditProductFormProps {
   existingImages: ProductImage[];
   isGenerating: boolean;
   onGenerateDescription: () => void;
-  onRemoveExistingImage: (imageId: number) => void;
+  onRemoveExistingImage: (imageId: string) => void;
   onRemoveNewImage: (index: number) => void;
   onDropNewImages: (files: File[]) => void;
 }
@@ -194,7 +194,7 @@ export default function EditProductForm({
               />
               <button
                 type="button"
-                onClick={() => onRemoveExistingImage(image.prodImageId ?? index)}
+                onClick={() => onRemoveExistingImage(image.prodImageId)}
                 className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 outline-none z-10"
               >
                 <FaTimes size={12} />
