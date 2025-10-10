@@ -1,9 +1,31 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 import ProductCard from './components/ProductCard';
-import CategoryFilterCarousel from './components/CategoryFilter';
+import CategoryFilterCarousel from './components/CategoryFilterCarousel';
 import { Product } from '@/interfaces/product';
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+    },
+  },
+};
 
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -45,49 +67,74 @@ export default function ProductsPage() {
     : products;
 
   return (
-    <div className="bg-gray-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
-            Nuestros Productos
-          </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-500">
-            Explora nuestro catálogo y encuentra lo que necesitas.
-          </p>
-        </div>
+    <div className="bg-white min-h-screen relative overflow-hidden">
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-r from-purple-50 to-yellow-50 opacity-50"></div>
+        <div
+          className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:36px_36px]"
+          style={{
+            maskImage:
+              'radial-gradient(ellipse 80% 50% at 50% 0%,#000 70%,transparent 110%)',
+          }}
+        ></div>
+      </div>
 
-        <CategoryFilterCarousel
-          selectedCategory={selectedCategory}
-          onSelect={setSelectedCategory}
-        />
+      <motion.div
+        className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+      >
+        <motion.div className="text-center mb-4" variants={itemVariants}>
+          <h1
+            className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-purple-600 to-yellow-500 text-transparent bg-clip-text pb-4"
+            style={{ backgroundImage: 'linear-gradient(to right, #7c3aed, #eab308)' }}
+          >
+            Nuestro Catálogo
+          </h1>
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-gray-600">
+            Explora nuestra colección de productos únicos e innovadores.
+          </p>
+        </motion.div>
+        
+        <motion.div variants={itemVariants}>
+          <CategoryFilterCarousel
+            selectedCategory={selectedCategory}
+            onSelect={setSelectedCategory}
+          />
+        </motion.div>
 
         {isLoading && (
-          <div className="flex flex-col items-center justify-center text-center mt-16 text-gray-500">
-            <FaSpinner className="animate-spin text-4xl mb-4" />
-            <p className="text-lg">Cargando productos...</p>
+          <div className="text-center py-16">
+            <FaSpinner className="mx-auto text-purple-600 text-4xl animate-spin" />
+            <p className="mt-4 text-lg text-gray-600">Cargando productos...</p>
           </div>
         )}
         {error && (
-          <div className="flex flex-col items-center justify-center text-center mt-16 text-red-500 bg-red-50 p-6 rounded-lg">
-            <FaExclamationTriangle className="text-4xl mb-4" />
-            <p className="text-lg font-semibold">Error al cargar los productos</p>
-            <p className="text-sm">{error}</p>
+          <div className="text-center py-16 bg-red-50 rounded-lg">
+            <FaExclamationTriangle className="mx-auto text-red-500 text-4xl" />
+            <p className="mt-4 text-lg text-red-700">Error: {error}</p>
           </div>
         )}
         {!isLoading && !error && (
           <>
             {filteredProducts.length > 0 ? (
-              <div className="mt-10 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+              <motion.div
+                className="mt-10 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8"
+                variants={containerVariants}
+              >
                 {filteredProducts.map(product => (
-                  <ProductCard key={product.prodId} product={product} />
+                  <motion.div key={product.prodId} variants={itemVariants}>
+                    <ProductCard product={product} />
+                  </motion.div>
                 ))}
-              </div>
+              </motion.div>
             ) : (
               <p className="text-center text-gray-500 mt-16 text-lg">No hay productos en esta categoría.</p>
             )}
           </>
         )}
-      </div>
+      </motion.div>
     </div>
   );
 }

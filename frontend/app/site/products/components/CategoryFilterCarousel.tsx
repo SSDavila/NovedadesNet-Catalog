@@ -108,6 +108,10 @@ export default function CategoryFilterCarousel({
                     ? 'bg-blue-600 text-white shadow-lg'
                     : 'bg-white text-gray-700 border border-gray-200 hover:shadow-md'
                 )}
+                className={clsx('flex-shrink-0 px-6 py-3 rounded-full text-sm font-semibold whitespace-nowrap snap-center cursor-pointer', {
+                  'bg-purple-600 text-white shadow-lg': selectedCategory === category || (selectedCategory === null && category === 'Todos'),
+                  'bg-white text-gray-700 border border-gray-200 hover:shadow-md': !(selectedCategory === category || (selectedCategory === null && category === 'Todos')),
+                })}
               >
                 {category}
               </motion.button>
