@@ -12,6 +12,7 @@ import {
   FaFileInvoiceDollar,
   FaFileAlt, 
   FaSignOutAlt,
+  FaUsers,
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
@@ -34,6 +35,10 @@ const billingLinks = [
   { href: '/admin/salesnotes', label: 'Notas de Venta', icon: FaFileAlt },
 ];
 
+const adminLinks = [
+  { href: '/admin/usersadmin', label: 'Usuarios', icon: FaUsers },
+];
+
 const logoutLink = [
   { href: '/logout', label: 'Cerrar Sesión', icon: FaSignOutAlt },
 ];
@@ -42,6 +47,7 @@ const sections = [
   { title: 'Principal', links: mainLinks },
   { title: 'Productos', links: productLinks },
   { title: 'Facturación', links: billingLinks },
+  { title: 'Administración', links: adminLinks },
 ];
 
 export default function Sidebar() {
