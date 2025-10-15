@@ -7,39 +7,274 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  userId       Int      @id @default(autoincrement())
-  userType     String   @default("customer")
-  userName     String
-  userEmail    String   @unique
-  userPassword String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+generator erd {
+  provider = "prisma-erd-generator"
+  output   = "ERD.svg"
 }
 
+// ==============================================================================
+// == Authentication & Users
+// ==============================================================================
+
+enum UserRole {
+  SUPER_ADMINISTRADOR
+  ADMINISTRADOR
+  VENDEDOR
+  CLIENTE
+}
+
+model User {
+  userId         Int        @id @default(autoincrement())
+  userEmail      String     @unique
+  userName       String
+  userPassword   String
+  userRole       UserRole   @default(CLIENTE)
+  userIsActive   Boolean    @default(true)
+  userCreatedAt  DateTime   @default(now())
+  userUpdatedAt  DateTime   @updatedAt
+  // Relations
+  customer       Customer?
+  saleNotes      SaleNote[]
+  invoices       Invoice[]
+}
+
+// ==============================================================================
+// == Company Information
+// ==============================================================================
+
+model Company {
+  companyId               Int      @id @default(autoincrement())
+  companyRuc              String   @unique
+  companyName             String
+  companyTradeName        String?
+  companyAddress          String
+  companyPhone            String?
+  companyEmail            String?
+  companyLogoUrl          String?
+  sriEnvironment          String   @default("1") // 1 = Pruebas, 2 = Producción
+  sriEmissionType         String   @default("1") // 1 = Normal, 2 = Contingencia
+  sriCertificatePath      String?  // Path to .p12 certificate file
+  sriCertificatePassword  String?  // Electronic signature password
+  companyCreatedAt        DateTime @default(now())
+  companyUpdatedAt        DateTime @updatedAt
+}
+
+// ==============================================================================
+// == Customers
+// ==============================================================================
+
+enum IdentificationType {
+  RUC
+  CEDULA
+  PASAPORTE
+  CONSUMIDOR_FINAL
+}
+
+model Customer {
+  customerId                   Int                @id @default(autoincrement())
+  customerIdentificationType   IdentificationType @default(CONSUMIDOR_FINAL)
+  customerIdentificationNumber String             @unique
+  customerName                 String
+  customerEmail                String
+  customerPhone                String?
+  customerAddress              String?
+  customerCreatedAt            DateTime           @default(now())
+  customerUpdatedAt            DateTime           @updatedAt
+  // Relations
+  userId                       Int?               @unique
+  user                         User?              @relation(fields: [userId], references: [userId])
+  saleNotes                    SaleNote[]
+  invoices                     Invoice[]
+}
+
+// ==============================================================================
+// == Products & Inventory
+// ==============================================================================
+
 model Product {
-  prodId          String         @id
-  prodName        String
-  prodDescription String?
-  prodPrice       Decimal        @db.Decimal(10, 2)
-  prodPreviousPrice   Decimal?       @db.Decimal(10, 2)
-  prodCategory    String?
-  prodStock       Int            @default(0)
-  prodImages      ProductImage[]
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
+  productId                 String               @id
+  productName               String
+  productDescription        String?
+  productSku                String?              @unique
+  productBarcode            String?              @unique
+  productPrice              Decimal              @db.Decimal(10, 2)
+  productPreviousPrice      Decimal?             @db.Decimal(10, 2)
+  productCost               Decimal?             @db.Decimal(10, 2)
+  productStock              Int                  @default(0)
+  productLowStockThreshold  Int?                 @default(5)
+  productCreatedAt          DateTime             @default(now())
+  productUpdatedAt          DateTime             @updatedAt
+  // Relations
+  categoryId                String?
+  category                  Category?            @relation(fields: [categoryId], references: [categoryId])
+  images                    ProductImage[]
+  inventoryMovements        InventoryMovement[]
+  saleNoteItems             SaleNoteItem[]
+  invoiceItems              InvoiceItem[]
 }
 
 model ProductImage {
-  prodImageId        String   @id
-  prodImageUrl       String
-  prodImagePublicid  String   @unique
-  product   Product  @relation(fields: [prodId], references: [prodId], onDelete: Cascade, onUpdate: Cascade)
-  prodId String
+  productImageId        String  @id
+  productImageUrl       String
+  productImagePublicId  String  @unique
+  // Relations
+  productId             String
+  product               Product @relation(fields: [productId], references: [productId], onDelete: Cascade)
 }
 
 model Category {
-  categoryId   String @id
-  categoryName String @unique
-  categoryAbbreviation String? @unique
+  categoryId           String    @id
+  categoryName         String    @unique
+  categoryAbbreviation String?   @unique
+  // Relations
+  products             Product[]
+}
+
+enum InventoryMovementType {
+  ENTRADA
+  SALIDA
+  AJUSTE_POSITIVO
+  AJUSTE_NEGATIVO
+}
+
+model InventoryMovement {
+  inventoryMovementId        Int                   @id @default(autoincrement())
+  inventoryMovementType      InventoryMovementType
+  inventoryMovementQuantity  Int
+  inventoryMovementReason    String?
+  inventoryMovementCreatedAt DateTime              @default(now())
+  // Relations
+  productId                  String
+  product                    Product               @relation(fields: [productId], references: [productId])
+  saleNoteId                 Int?
+  saleNote                   SaleNote?             @relation(fields: [saleNoteId], references: [saleNoteId])
+  invoiceId                  Int?
+  invoice                    Invoice?              @relation(fields: [invoiceId], references: [invoiceId])
+}
+
+// ==============================================================================
+// == Sale Notes
+// ==============================================================================
+
+enum SaleNoteStatus {
+  PENDIENTE
+  COMPLETADA
+  CANCELADA
+}
+
+model SaleNote {
+  saleNoteId         Int            @id @default(autoincrement())
+  saleNoteNumber     String         @unique
+  saleNoteStatus     SaleNoteStatus @default(PENDIENTE)
+  saleNoteTotal      Decimal        @db.Decimal(10, 2)
+  saleNoteCreatedAt  DateTime       @default(now())
+  saleNoteUpdatedAt  DateTime       @updatedAt
+  // Relations
+  customerId         Int
+  customer           Customer       @relation(fields: [customerId], references: [customerId])
+  sellerId           Int
+  seller             User           @relation(fields: [sellerId], references: [userId])
+  items              SaleNoteItem[]
+  invoice            Invoice?
+  inventoryMovements InventoryMovement[]
+}
+
+model SaleNoteItem {
+  saleNoteItemId        Int     @id @default(autoincrement())
+  saleNoteItemQuantity  Int
+  saleNoteItemUnitPrice Decimal @db.Decimal(10, 2)
+  saleNoteItemSubtotal  Decimal @db.Decimal(10, 2)
+  // Relations
+  saleNoteId            Int
+  saleNote              SaleNote @relation(fields: [saleNoteId], references: [saleNoteId], onDelete: Cascade)
+  productId             String
+  product               Product  @relation(fields: [productId], references: [productId])
+}
+
+// ==============================================================================
+// == Invoices
+// ==============================================================================
+
+enum InvoiceStatus {
+  PENDIENTE
+  ENVIADA
+  AUTORIZADA
+  RECHAZADA
+  ANULADA
+}
+
+model Invoice {
+  invoiceId               Int           @id @default(autoincrement())
+  invoiceNumber           String        @unique
+  invoiceAccessKey        String        @unique
+  invoiceStatus           InvoiceStatus @default(PENDIENTE)
+  invoiceSubtotal         Decimal       @db.Decimal(10, 2)
+  invoiceTax              Decimal       @default(0) @db.Decimal(10, 2)
+  invoiceDiscountTotal    Decimal       @default(0) @db.Decimal(10, 2)
+  invoiceTotal            Decimal       @db.Decimal(10, 2)
+  invoiceSriAuthorization String?
+  invoiceSriResponse      String?
+  invoiceCreatedAt        DateTime      @default(now())
+  invoiceUpdatedAt        DateTime      @updatedAt
+  // Relations
+  customerId              Int
+  customer                Customer      @relation(fields: [customerId], references: [customerId])
+  sellerId                Int
+  seller                  User          @relation(fields: [sellerId], references: [userId])
+  saleNoteId              Int?          @unique
+  saleNote                SaleNote?     @relation(fields: [saleNoteId], references: [saleNoteId])
+  items                   InvoiceItem[]
+  inventoryMovements      InventoryMovement[]
+  payments                Payment[]
+}
+
+model InvoiceItem {
+  invoiceItemId        Int     @id @default(autoincrement())
+  invoiceItemQuantity  Int
+  invoiceItemUnitPrice Decimal @db.Decimal(10, 2)
+  invoiceItemDiscount  Decimal @default(0) @db.Decimal(10, 2)
+  invoiceItemSubtotal  Decimal @db.Decimal(10, 2)
+  // Relations
+  invoiceId            Int
+  invoice              Invoice  @relation(fields: [invoiceId], references: [invoiceId], onDelete: Cascade)
+  productId            String
+  product              Product  @relation(fields: [productId], references: [productId])
+}
+
+// ==============================================================================
+// == Payments
+// ==============================================================================
+
+enum PaymentMethod {
+  EFECTIVO
+  TARJETA
+  TRANSFERENCIA
+  DEPOSITO
+  CHEQUE
+  CREDITO
+}
+
+model Payment {
+  paymentId         Int           @id @default(autoincrement())
+  paymentMethod     PaymentMethod
+  paymentAmount     Decimal       @db.Decimal(10, 2)
+  paymentReference  String?
+  paymentDate       DateTime      @default(now())
+  paymentCreatedAt  DateTime      @default(now())
+  // Relations
+  invoiceId         Int
+  invoice           Invoice       @relation(fields: [invoiceId], references: [invoiceId], onDelete: Cascade)
+}
+
+// ==============================================================================
+// == Sequence Control
+// ==============================================================================
+
+model SequenceControl {
+  sequenceId         Int      @id @default(autoincrement())
+  documentType       String   // FACTURA, NOTA_CREDITO, etc.
+  establishmentCode  String   // Ej: "001"
+  emissionPointCode  String   // Ej: "001"
+  currentNumber      Int      @default(1)
+  updatedAt          DateTime @updatedAt
 }
