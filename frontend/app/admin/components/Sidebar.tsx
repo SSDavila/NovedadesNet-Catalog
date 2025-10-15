@@ -3,9 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  FaChartBar,
   FaBox,
-  FaShoppingCart,
   FaBars,
   FaTags,
   FaTachometerAlt,
@@ -13,6 +11,10 @@ import {
   FaFileAlt, 
   FaSignOutAlt,
   FaUsers,
+  FaWarehouse,
+  FaUserTie,
+  FaBuilding,
+  FaCog,
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import clsx from 'clsx';
@@ -21,22 +23,24 @@ import { useState } from 'react';
 
 const mainLinks = [
   { href: '/admin', label: 'Dashboard', icon: FaTachometerAlt },
-  { href: '/admin/reports', label: 'Reportes', icon: FaChartBar },
-  { href: '/admin/sales', label: 'Ventas', icon: FaShoppingCart },
 ];
 
 const productLinks = [
   { href: '/admin/products', label: 'Productos', icon: FaBox },
   { href: '/admin/categories', label: 'Categorías', icon: FaTags },
+  { href: '/admin/inventory', label: 'Inventario', icon: FaWarehouse },
 ];
 
 const billingLinks = [
-  { href: '/admin/billing', label: 'Facturación', icon: FaFileInvoiceDollar },
+  { href: '/admin/invoices', label: 'Facturas', icon: FaFileInvoiceDollar },
   { href: '/admin/salesnotes', label: 'Notas de Venta', icon: FaFileAlt },
+  { href: '/admin/customers', label: 'Clientes', icon: FaUserTie },
 ];
 
 const adminLinks = [
   { href: '/admin/usersadmin', label: 'Usuarios', icon: FaUsers },
+  { href: '/admin/company', label: 'Mi Empresa', icon: FaBuilding },
+  { href: '/admin/settings', label: 'Ajustes', icon: FaCog },
 ];
 
 const logoutLink = [
@@ -47,7 +51,7 @@ const sections = [
   { title: 'Principal', links: mainLinks },
   { title: 'Productos', links: productLinks },
   { title: 'Facturación', links: billingLinks },
-  { title: 'Administración', links: adminLinks },
+  { title: 'Sistema', links: adminLinks },
 ];
 
 export default function Sidebar() {
