@@ -20,7 +20,6 @@ enum UserRole {
   SUPER_ADMINISTRADOR
   ADMINISTRADOR
   VENDEDOR
-  CLIENTE
 }
 
 model User {
@@ -28,7 +27,7 @@ model User {
   userEmail      String     @unique
   userName       String
   userPassword   String
-  userRole       UserRole   @default(CLIENTE)
+  userRole       UserRole   @default(VENDEDOR)
   userIsActive   Boolean    @default(true)
   userCreatedAt  DateTime   @default(now())
   userUpdatedAt  DateTime   @updatedAt
