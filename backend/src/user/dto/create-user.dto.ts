@@ -15,7 +15,6 @@ export class CreateUserDto {
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres.' })
   userPassword: string;
 
-  @IsOptional()
-  @IsEnum(UserRole, { message: 'El rol del usuario no es válido.' })
-  userRole?: UserRole;
+  @IsString()
+  userRole?: string;
 }

@@ -13,6 +13,7 @@ const initialUserState = {
   userEmail: '',
   userPassword: '',
   userRole: 'VENDEDOR',
+  userIsActive: true,
 };
 
 export default function AddUserModal({ onClose, onSave }: AddUserModalProps) {

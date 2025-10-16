@@ -16,18 +16,12 @@ generator erd {
 // == Authentication & Users
 // ==============================================================================
 
-enum UserRole {
-  SUPER_ADMINISTRADOR
-  ADMINISTRADOR
-  VENDEDOR
-}
-
 model User {
   userId         Int        @id @default(autoincrement())
   userEmail      String     @unique
   userName       String
   userPassword   String
-  userRole       UserRole   @default(VENDEDOR)
+  userRole       String     @default("VENDEDOR")
   userIsActive   Boolean    @default(true)
   userCreatedAt  DateTime   @default(now())
   userUpdatedAt  DateTime   @updatedAt
@@ -62,16 +56,9 @@ model Company {
 // == Customers
 // ==============================================================================
 
-enum IdentificationType {
-  RUC
-  CEDULA
-  PASAPORTE
-  CONSUMIDOR_FINAL
-}
-
 model Customer {
   customerId                   Int                @id @default(autoincrement())
-  customerIdentificationType   IdentificationType @default(CONSUMIDOR_FINAL)
+  customerIdentificationType   String             @default("CONSUMIDOR_FINAL")
   customerIdentificationNumber String             @unique
   customerName                 String
   customerEmail                String
@@ -129,16 +116,9 @@ model Category {
   products             Product[]
 }
 
-enum InventoryMovementType {
-  ENTRADA
-  SALIDA
-  AJUSTE_POSITIVO
-  AJUSTE_NEGATIVO
-}
-
 model InventoryMovement {
   inventoryMovementId        Int                   @id @default(autoincrement())
-  inventoryMovementType      InventoryMovementType
+  inventoryMovementType      String
   inventoryMovementQuantity  Int
   inventoryMovementReason    String?
   inventoryMovementCreatedAt DateTime              @default(now())
@@ -155,16 +135,10 @@ model InventoryMovement {
 // == Sale Notes
 // ==============================================================================
 
-enum SaleNoteStatus {
-  PENDIENTE
-  COMPLETADA
-  CANCELADA
-}
-
 model SaleNote {
   saleNoteId         Int            @id @default(autoincrement())
   saleNoteNumber     String         @unique
-  saleNoteStatus     SaleNoteStatus @default(PENDIENTE)
+  saleNoteStatus     String         @default("PENDIENTE")
   saleNoteTotal      Decimal        @db.Decimal(10, 2)
   saleNoteCreatedAt  DateTime       @default(now())
   saleNoteUpdatedAt  DateTime       @updatedAt
@@ -194,19 +168,11 @@ model SaleNoteItem {
 // == Invoices
 // ==============================================================================
 
-enum InvoiceStatus {
-  PENDIENTE
-  ENVIADA
-  AUTORIZADA
-  RECHAZADA
-  ANULADA
-}
-
 model Invoice {
   invoiceId               Int           @id @default(autoincrement())
   invoiceNumber           String        @unique
   invoiceAccessKey        String        @unique
-  invoiceStatus           InvoiceStatus @default(PENDIENTE)
+  invoiceStatus           String        @default("PENDIENTE")
   invoiceSubtotal         Decimal       @db.Decimal(10, 2)
   invoiceTax              Decimal       @default(0) @db.Decimal(10, 2)
   invoiceDiscountTotal    Decimal       @default(0) @db.Decimal(10, 2)
@@ -244,18 +210,9 @@ model InvoiceItem {
 // == Payments
 // ==============================================================================
 
-enum PaymentMethod {
-  EFECTIVO
-  TARJETA
-  TRANSFERENCIA
-  DEPOSITO
-  CHEQUE
-  CREDITO
-}
-
 model Payment {
   paymentId         Int           @id @default(autoincrement())
-  paymentMethod     PaymentMethod
+  paymentMethod     String
   paymentAmount     Decimal       @db.Decimal(10, 2)
   paymentReference  String?
   paymentDate       DateTime      @default(now())
