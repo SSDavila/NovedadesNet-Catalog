@@ -12,37 +12,31 @@ import { Type } from 'class-transformer';
 export class CreateProductDto {
   @IsString()
   @MinLength(1)
-  prodName: string;
+  productName: string;
 
   @IsNumber({ maxDecimalPlaces: 2 })
   @Type(() => Number)
   @IsPositive()
-  prodPrice: number;
+  productPrice: number;
 
   @IsNumber({ maxDecimalPlaces: 2 })
   @Type(() => Number)
   @IsPositive()
   @IsOptional()
-  prodPreviousPrice?: number;
+  productPreviousPrice?: number;
 
   @IsString()
   @IsOptional()
-  prodDescription?: string;
+  productDescription?: string;
 
   @IsString()
-  @IsOptional()
-  prodCategory?: string;
+  categoryId: string;
 
   @IsInt()
   @Type(() => Number)
   @IsPositive()
   @IsOptional()
-  prodStock?: number;
-
-  @IsString({ each: true })
-  @IsArray()
-  @IsOptional()
-  prodImages?: string[];
+  productStock?: number;
 
   @IsArray()
   @IsString({ each: true })

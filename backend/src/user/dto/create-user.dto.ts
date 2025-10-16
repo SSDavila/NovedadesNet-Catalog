@@ -1,5 +1,4 @@
-import { IsEmail, IsString, MinLength, IsOptional, IsEnum, IsNotEmpty } from 'class-validator';
-import { UserRole } from '@prisma/client';
+import { IsEmail, IsString, MinLength, IsOptional, IsNotEmpty, IsIn } from 'class-validator';
 
 export class CreateUserDto {
   @IsEmail({}, { message: 'El correo electrónico debe ser válido.' })
@@ -15,6 +14,8 @@ export class CreateUserDto {
   @MinLength(8, { message: 'La contraseña debe tener al menos 8 caracteres.' })
   userPassword: string;
 
+  @IsOptional()
   @IsString()
+  @IsIn(['VENDEDOR', 'ADMINISTRADOR', 'SUPER_ADMINISTRADOR'], { message: 'El rol del usuario no es válido.' })
   userRole?: string;
 }

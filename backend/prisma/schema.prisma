@@ -17,18 +17,18 @@ generator erd {
 // ==============================================================================
 
 model User {
-  userId         Int        @id @default(autoincrement())
-  userEmail      String     @unique
-  userName       String
-  userPassword   String
-  userRole       String     @default("VENDEDOR")
-  userIsActive   Boolean    @default(true)
-  userCreatedAt  DateTime   @default(now())
-  userUpdatedAt  DateTime   @updatedAt
-  // Relations
-  customer       Customer?
-  saleNotes      SaleNote[]
-  invoices       Invoice[]
+  userId        Int      @id @default(autoincrement())
+  userEmail     String   @unique
+  userName      String
+  userPassword  String
+  userRole      String   @default("VENDEDOR")
+  userIsActive  Boolean  @default(true)
+  userCreatedAt DateTime @default(now())
+  userUpdatedAt DateTime @updatedAt
+
+  customer  Customer?
+  saleNotes SaleNote[]
+  invoices  Invoice[]
 }
 
 // ==============================================================================
@@ -36,20 +36,20 @@ model User {
 // ==============================================================================
 
 model Company {
-  companyId               Int      @id @default(autoincrement())
-  companyRuc              String   @unique
-  companyName             String
-  companyTradeName        String?
-  companyAddress          String
-  companyPhone            String?
-  companyEmail            String?
-  companyLogoUrl          String?
-  sriEnvironment          String   @default("1") // 1 = Pruebas, 2 = Producción
-  sriEmissionType         String   @default("1") // 1 = Normal, 2 = Contingencia
-  sriCertificatePath      String?  // Path to .p12 certificate file
-  sriCertificatePassword  String?  // Electronic signature password
-  companyCreatedAt        DateTime @default(now())
-  companyUpdatedAt        DateTime @updatedAt
+  companyId              Int      @id @default(autoincrement())
+  companyRuc             String   @unique
+  companyName            String
+  companyTradeName       String?
+  companyAddress         String
+  companyPhone           String?
+  companyEmail           String?
+  companyLogoUrl         String?
+  sriEnvironment         String   @default("1") // 1 = Pruebas, 2 = Producción
+  sriEmissionType        String   @default("1") // 1 = Normal, 2 = Contingencia
+  sriCertificatePath     String? // Path to .p12 certificate file
+  sriCertificatePassword String? // Electronic signature password
+  companyCreatedAt       DateTime @default(now())
+  companyUpdatedAt       DateTime @updatedAt
 }
 
 // ==============================================================================
@@ -57,20 +57,20 @@ model Company {
 // ==============================================================================
 
 model Customer {
-  customerId                   Int                @id @default(autoincrement())
-  customerIdentificationType   String             @default("CONSUMIDOR_FINAL")
-  customerIdentificationNumber String             @unique
+  customerId                   Int      @id @default(autoincrement())
+  customerIdentificationType   String   @default("CONSUMIDOR_FINAL")
+  customerIdentificationNumber String   @unique
   customerName                 String
   customerEmail                String
   customerPhone                String?
   customerAddress              String?
-  customerCreatedAt            DateTime           @default(now())
-  customerUpdatedAt            DateTime           @updatedAt
-  // Relations
-  userId                       Int?               @unique
-  user                         User?              @relation(fields: [userId], references: [userId])
-  saleNotes                    SaleNote[]
-  invoices                     Invoice[]
+  customerCreatedAt            DateTime @default(now())
+  customerUpdatedAt            DateTime @updatedAt
+
+  userId    Int?       @unique
+  user      User?      @relation(fields: [userId], references: [userId])
+  saleNotes SaleNote[]
+  invoices  Invoice[]
 }
 
 // ==============================================================================
@@ -78,57 +78,57 @@ model Customer {
 // ==============================================================================
 
 model Product {
-  productId                 String               @id
-  productName               String
-  productDescription        String?
-  productSku                String?              @unique
-  productBarcode            String?              @unique
-  productPrice              Decimal              @db.Decimal(10, 2)
-  productPreviousPrice      Decimal?             @db.Decimal(10, 2)
-  productCost               Decimal?             @db.Decimal(10, 2)
-  productStock              Int                  @default(0)
-  productLowStockThreshold  Int?                 @default(5)
-  productCreatedAt          DateTime             @default(now())
-  productUpdatedAt          DateTime             @updatedAt
-  // Relations
-  categoryId                String?
-  category                  Category?            @relation(fields: [categoryId], references: [categoryId])
-  images                    ProductImage[]
-  inventoryMovements        InventoryMovement[]
-  saleNoteItems             SaleNoteItem[]
-  invoiceItems              InvoiceItem[]
+  productId                String   @id
+  productName              String
+  productDescription       String?
+  productSku               String?  @unique
+  productBarcode           String?  @unique
+  productPrice             Decimal  @db.Decimal(10, 2)
+  productPreviousPrice     Decimal? @db.Decimal(10, 2)
+  productCost              Decimal? @db.Decimal(10, 2)
+  productStock             Int      @default(0)
+  productLowStockThreshold Int?     @default(5)
+  productCreatedAt         DateTime @default(now())
+  productUpdatedAt         DateTime @updatedAt
+
+  categoryId         String?
+  category           Category?           @relation(fields: [categoryId], references: [categoryId])
+  images             ProductImage[]
+  inventoryMovements InventoryMovement[]
+  saleNoteItems      SaleNoteItem[]
+  invoiceItems       InvoiceItem[]
 }
 
 model ProductImage {
-  productImageId        String  @id
-  productImageUrl       String
-  productImagePublicId  String  @unique
-  // Relations
-  productId             String
-  product               Product @relation(fields: [productId], references: [productId], onDelete: Cascade)
+  productImageId       String @id
+  productImageUrl      String
+  productImagePublicId String @unique
+
+  productId String
+  product   Product @relation(fields: [productId], references: [productId], onDelete: Cascade)
 }
 
 model Category {
-  categoryId           String    @id
-  categoryName         String    @unique
-  categoryAbbreviation String?   @unique
-  // Relations
-  products             Product[]
+  categoryId           String  @id
+  categoryName         String  @unique
+  categoryAbbreviation String? @unique
+
+  products Product[]
 }
 
 model InventoryMovement {
-  inventoryMovementId        Int                   @id @default(autoincrement())
+  inventoryMovementId        Int       @id @default(autoincrement())
   inventoryMovementType      String
   inventoryMovementQuantity  Int
   inventoryMovementReason    String?
-  inventoryMovementCreatedAt DateTime              @default(now())
+  inventoryMovementCreatedAt DateTime  @default(now())
   // Relations
   productId                  String
-  product                    Product               @relation(fields: [productId], references: [productId])
+  product                    Product   @relation(fields: [productId], references: [productId])
   saleNoteId                 Int?
-  saleNote                   SaleNote?             @relation(fields: [saleNoteId], references: [saleNoteId])
+  saleNote                   SaleNote? @relation(fields: [saleNoteId], references: [saleNoteId])
   invoiceId                  Int?
-  invoice                    Invoice?              @relation(fields: [invoiceId], references: [invoiceId])
+  invoice                    Invoice?  @relation(fields: [invoiceId], references: [invoiceId])
 }
 
 // ==============================================================================
@@ -136,17 +136,17 @@ model InventoryMovement {
 // ==============================================================================
 
 model SaleNote {
-  saleNoteId         Int            @id @default(autoincrement())
-  saleNoteNumber     String         @unique
-  saleNoteStatus     String         @default("PENDIENTE")
-  saleNoteTotal      Decimal        @db.Decimal(10, 2)
-  saleNoteCreatedAt  DateTime       @default(now())
-  saleNoteUpdatedAt  DateTime       @updatedAt
-  // Relations
+  saleNoteId        Int      @id @default(autoincrement())
+  saleNoteNumber    String   @unique
+  saleNoteStatus    String   @default("PENDIENTE")
+  saleNoteTotal     Decimal  @db.Decimal(10, 2)
+  saleNoteCreatedAt DateTime @default(now())
+  saleNoteUpdatedAt DateTime @updatedAt
+
   customerId         Int
-  customer           Customer       @relation(fields: [customerId], references: [customerId])
+  customer           Customer            @relation(fields: [customerId], references: [customerId])
   sellerId           Int
-  seller             User           @relation(fields: [sellerId], references: [userId])
+  seller             User                @relation(fields: [sellerId], references: [userId])
   items              SaleNoteItem[]
   invoice            Invoice?
   inventoryMovements InventoryMovement[]
@@ -157,11 +157,11 @@ model SaleNoteItem {
   saleNoteItemQuantity  Int
   saleNoteItemUnitPrice Decimal @db.Decimal(10, 2)
   saleNoteItemSubtotal  Decimal @db.Decimal(10, 2)
-  // Relations
-  saleNoteId            Int
-  saleNote              SaleNote @relation(fields: [saleNoteId], references: [saleNoteId], onDelete: Cascade)
-  productId             String
-  product               Product  @relation(fields: [productId], references: [productId])
+
+  saleNoteId Int
+  saleNote   SaleNote @relation(fields: [saleNoteId], references: [saleNoteId], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [productId])
 }
 
 // ==============================================================================
@@ -169,28 +169,28 @@ model SaleNoteItem {
 // ==============================================================================
 
 model Invoice {
-  invoiceId               Int           @id @default(autoincrement())
-  invoiceNumber           String        @unique
-  invoiceAccessKey        String        @unique
-  invoiceStatus           String        @default("PENDIENTE")
-  invoiceSubtotal         Decimal       @db.Decimal(10, 2)
-  invoiceTax              Decimal       @default(0) @db.Decimal(10, 2)
-  invoiceDiscountTotal    Decimal       @default(0) @db.Decimal(10, 2)
-  invoiceTotal            Decimal       @db.Decimal(10, 2)
+  invoiceId               Int      @id @default(autoincrement())
+  invoiceNumber           String   @unique
+  invoiceAccessKey        String   @unique
+  invoiceStatus           String   @default("PENDIENTE")
+  invoiceSubtotal         Decimal  @db.Decimal(10, 2)
+  invoiceTax              Decimal  @default(0) @db.Decimal(10, 2)
+  invoiceDiscountTotal    Decimal  @default(0) @db.Decimal(10, 2)
+  invoiceTotal            Decimal  @db.Decimal(10, 2)
   invoiceSriAuthorization String?
   invoiceSriResponse      String?
-  invoiceCreatedAt        DateTime      @default(now())
-  invoiceUpdatedAt        DateTime      @updatedAt
-  // Relations
-  customerId              Int
-  customer                Customer      @relation(fields: [customerId], references: [customerId])
-  sellerId                Int
-  seller                  User          @relation(fields: [sellerId], references: [userId])
-  saleNoteId              Int?          @unique
-  saleNote                SaleNote?     @relation(fields: [saleNoteId], references: [saleNoteId])
-  items                   InvoiceItem[]
-  inventoryMovements      InventoryMovement[]
-  payments                Payment[]
+  invoiceCreatedAt        DateTime @default(now())
+  invoiceUpdatedAt        DateTime @updatedAt
+
+  customerId         Int
+  customer           Customer            @relation(fields: [customerId], references: [customerId])
+  sellerId           Int
+  seller             User                @relation(fields: [sellerId], references: [userId])
+  saleNoteId         Int?                @unique
+  saleNote           SaleNote?           @relation(fields: [saleNoteId], references: [saleNoteId])
+  items              InvoiceItem[]
+  inventoryMovements InventoryMovement[]
+  payments           Payment[]
 }
 
 model InvoiceItem {
@@ -199,11 +199,11 @@ model InvoiceItem {
   invoiceItemUnitPrice Decimal @db.Decimal(10, 2)
   invoiceItemDiscount  Decimal @default(0) @db.Decimal(10, 2)
   invoiceItemSubtotal  Decimal @db.Decimal(10, 2)
-  // Relations
-  invoiceId            Int
-  invoice              Invoice  @relation(fields: [invoiceId], references: [invoiceId], onDelete: Cascade)
-  productId            String
-  product              Product  @relation(fields: [productId], references: [productId])
+
+  invoiceId Int
+  invoice   Invoice @relation(fields: [invoiceId], references: [invoiceId], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [productId])
 }
 
 // ==============================================================================
@@ -211,15 +211,15 @@ model InvoiceItem {
 // ==============================================================================
 
 model Payment {
-  paymentId         Int           @id @default(autoincrement())
-  paymentMethod     String
-  paymentAmount     Decimal       @db.Decimal(10, 2)
-  paymentReference  String?
-  paymentDate       DateTime      @default(now())
-  paymentCreatedAt  DateTime      @default(now())
-  // Relations
-  invoiceId         Int
-  invoice           Invoice       @relation(fields: [invoiceId], references: [invoiceId], onDelete: Cascade)
+  paymentId        Int      @id @default(autoincrement())
+  paymentMethod    String
+  paymentAmount    Decimal  @db.Decimal(10, 2)
+  paymentReference String?
+  paymentDate      DateTime @default(now())
+  paymentCreatedAt DateTime @default(now())
+
+  invoiceId Int
+  invoice   Invoice @relation(fields: [invoiceId], references: [invoiceId], onDelete: Cascade)
 }
 
 // ==============================================================================
@@ -227,10 +227,10 @@ model Payment {
 // ==============================================================================
 
 model SequenceControl {
-  sequenceId         Int      @id @default(autoincrement())
-  documentType       String   // FACTURA, NOTA_CREDITO, etc.
-  establishmentCode  String   // Ej: "001"
-  emissionPointCode  String   // Ej: "001"
-  currentNumber      Int      @default(1)
-  updatedAt          DateTime @updatedAt
+  sequenceId        Int      @id @default(autoincrement())
+  documentType      String // FACTURA, NOTA_CREDITO, etc.
+  establishmentCode String // Ej: "001"
+  emissionPointCode String // Ej: "001"
+  currentNumber     Int      @default(1)
+  updatedAt         DateTime @updatedAt
 }

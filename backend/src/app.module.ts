@@ -8,6 +8,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { CategoryModule } from './category/category.module';
 import { ProductsModule } from './product/products.module';
 import { AiController } from './ai/ai.controller';
+import { UsersModule } from './user/users.module';
 
 @Module({
   imports: [
@@ -21,6 +22,8 @@ import { AiController } from './ai/ai.controller';
     PrismaModule,
     CategoryModule,
     ProductsModule,
+    UsersModule,
+
   ],
   controllers: [AiController]
 })

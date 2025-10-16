@@ -3,13 +3,13 @@ import { IsString, IsNotEmpty, IsUrl } from 'class-validator';
 export class CreateProductImageDto {
   @IsUrl()
   @IsNotEmpty()
-  prodImageUrl: string;
+  productImageUrl: string;
 
   @IsString()
   @IsNotEmpty()
-  prodImagePublicid: string;
+  productImagePublicId: string;
 
   @IsString()
   @IsNotEmpty()
-  prodId: string;
+  productId: string;
 }

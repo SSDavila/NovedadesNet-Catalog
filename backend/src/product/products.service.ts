@@ -19,10 +19,9 @@ export class ProductsService {
     createProductDto: CreateProductDto,
     files: Express.Multer.File[],
   ) {
-    const { prodCategory, prodImages, imagesToDelete, ...productDetails } =
-      createProductDto;
+    const { imagesToDelete, ...productDetails } = createProductDto;
 
-    if (!prodCategory) {
+    if (!productDetails.categoryId) {
       throw new BadRequestException(
         'La categoría del producto es requerida para generar un ID.',
       );
@@ -30,28 +29,28 @@ export class ProductsService {
 
     const newProduct = await this.prisma.$transaction(async (tx) => {
       const category = await tx.category.findUnique({
-        where: { categoryName: prodCategory },
+        where: { categoryId: productDetails.categoryId },
       });
 
       const categoryAbbreviation = category?.categoryAbbreviation;
 
       if (!category || !categoryAbbreviation) {
         throw new NotFoundException(
-          `La categoría '${prodCategory}' no fue encontrada o no tiene una abreviación.`,
+          `La categoría '${productDetails.categoryId}' no fue encontrada o no tiene una abreviación.`,
         );
       }
 
       const productCount = await tx.product.count({
-        where: { prodCategory },
+        where: { categoryId: productDetails.categoryId },
       });
       const nextIdNumber = productCount + 1;
 
-      const newProdId = `pt-${categoryAbbreviation}-${nextIdNumber}`;
+      const newProductId = `pt-${categoryAbbreviation}-${nextIdNumber}`;
 
       const imageUrls: {
-        prodImageId: string;
-        prodImageUrl: string;
-        prodImagePublicid: string;
+        productImageId: string;
+        productImageUrl: string;
+        productImagePublicId: string;
       }[] = [];
       if (files && files.length > 0) {
         for (const [index, file] of files.entries()) {
@@ -59,9 +58,9 @@ export class ProductsService {
             file,
           );
           imageUrls.push({
-            prodImageId: `${newProdId}-IMG-${index + 1}`,
-            prodImageUrl: secure_url,
-            prodImagePublicid: public_id,
+            productImageId: `${newProductId}-IMG-${index + 1}`,
+            productImageUrl: secure_url,
+            productImagePublicId: public_id,
           });
         }
       }
@@ -69,13 +68,12 @@ export class ProductsService {
       const createdProduct = await tx.product.create({
         data: {
           ...productDetails,
-          prodId: newProdId,
-          prodCategory: prodCategory,
-          prodPrice: +productDetails.prodPrice,
-          prodStock: +productDetails.prodStock,
-          prodImages: { create: imageUrls },
-          prodPreviousPrice: productDetails.prodPreviousPrice
-            ? +productDetails.prodPreviousPrice
+          productId: newProductId,
+          productPrice: +productDetails.productPrice,
+          productStock: +productDetails.productStock,
+          images: { create: imageUrls },
+          productPreviousPrice: productDetails.productPreviousPrice
+            ? +productDetails.productPreviousPrice
             : undefined,
         },
       });
@@ -88,30 +86,29 @@ export class ProductsService {
 
   findAll() {
     return this.prisma.product.findMany({
-      include: { prodImages: true },
+      include: { images: true },
     });
   }
 
   findOne(id: string) {
     return this.prisma.product.findUnique({
-      where: { prodId: id },
-      include: { prodImages: true },
+      where: { productId: id },
+      include: { images: true },
     });
   }
 
   async update(id: string, updateProductDto: UpdateProductDto) {
-    const { prodCategory, prodImages, imagesToDelete, ...productDetails } =
-      updateProductDto;
+    const { imagesToDelete, ...productDetails } = updateProductDto;
 
     const dataToUpdate: any = { ...productDetails };
 
-    if (productDetails.prodPrice) {
+    if (productDetails.productPrice) {
       const currentProduct = await this.findOne(id);
       if (
         currentProduct &&
-        +productDetails.prodPrice !== currentProduct.prodPrice.toNumber()
+        +productDetails.productPrice !== currentProduct.productPrice.toNumber()
       ) {
-        dataToUpdate.prodPreviousPrice = currentProduct.prodPrice.toNumber();
+        dataToUpdate.productPreviousPrice = currentProduct.productPrice;
       }
     }
 
@@ -123,12 +120,12 @@ export class ProductsService {
       await Promise.all(deletePromises);
 
       await this.prisma.productImage.deleteMany({
-        where: { prodImagePublicid: { in: imagesToDelete as string[] } },
+        where: { productImagePublicId: { in: imagesToDelete as string[] } },
       });
     }
 
     return this.prisma.product.update({
-      where: { prodId: id },
+      where: { productId: id },
       data: dataToUpdate,
     });
   }
@@ -139,8 +136,8 @@ export class ProductsService {
       throw new NotFoundException(`Producto con ID '${id}' no encontrado.`);
     }
 
-    const highestImageNumber = product.prodImages.reduce((max, image) => {
-      const match = image.prodImageId.match(/-IMG-(\d+)$/);
+    const highestImageNumber = product.images.reduce((max, image) => {
+      const match = image.productImageId.match(/-IMG-(\d+)$/);
       if (match) {
         const num = parseInt(match[1], 10);
         return Math.max(max, num);
@@ -154,10 +151,10 @@ export class ProductsService {
     const newImagesData = uploadResults.map((result, index) => {
       const imageNumber = highestImageNumber + index + 1;
       return {
-        prodImageId: `${id}-IMG-${imageNumber}`,
-        prodImageUrl: result.secure_url,
-        prodImagePublicid: result.public_id,
-        prodId: id,
+        productImageId: `${id}-IMG-${imageNumber}`,
+        productImageUrl: result.secure_url,
+        productImagePublicId: result.public_id,
+        productId: id,
       };
     });
 
@@ -172,17 +169,17 @@ export class ProductsService {
     }
 
     const deletedProduct = await this.prisma.product.delete({
-      where: { prodId: id },
-      include: { prodImages: true }, 
+      where: { productId: id },
+      include: { images: true }, 
     });
 
-    if (deletedProduct.prodImages && deletedProduct.prodImages.length > 0) {
-      const deletePromises = deletedProduct.prodImages.map((image) =>
-        this.cloudinary.deleteImage(image.prodImagePublicid),
+    if (deletedProduct.images && deletedProduct.images.length > 0) {
+      const deletePromises = deletedProduct.images.map((image) =>
+        this.cloudinary.deleteImage(image.productImagePublicId),
       );
       await Promise.all(deletePromises);
     }
 
-    return { message: `Producto '${deletedProduct.prodName}' y sus imágenes han sido eliminados.` };
+    return { message: `Producto '${deletedProduct.productName}' y sus imágenes han sido eliminados.` };
   }
 }

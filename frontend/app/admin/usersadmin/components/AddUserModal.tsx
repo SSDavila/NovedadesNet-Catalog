@@ -8,49 +8,49 @@ interface AddUserModalProps {
   onClose: () => void;
   onSave: (user: any) => void;
 }
-const initialUserState = {
-  userName: '',
-  userEmail: '',
-  userPassword: '',
-  userRole: 'VENDEDOR',
-  userIsActive: true,
-};
 
 export default function AddUserModal({ onClose, onSave }: AddUserModalProps) {
-  const [newUser, setNewUser] = useState(initialUserState);
+  // Estado inicial para un nuevo usuario, alineado con el DTO del backend.
+  const [newUser, setNewUser] = useState({
+    userName: '',
+    userEmail: '',
+    userPassword: '',
+    userRole: 'VENDEDOR', // Valor por defecto
+  });
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
     document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = 'auto';
-    };
+    return () => { document.body.style.overflow = 'auto'; };
   }, []);
 
+  // Manejador genérico para actualizar el estado del formulario.
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewUser(prev => ({ ...prev, [name]: value }));
   };
 
+  // Manejador para el envío del formulario.
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    onSave(newUser);
+    e.preventDefault(); // Previene la recarga de la página.
+    onSave(newUser);    // Llama a la función del padre con los datos del nuevo usuario.
   };
 
   if (!isMounted) return null;
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-        <header className="flex justify-between items-center p-4 border-b">
+      {/* El formulario ahora envuelve todo el contenido, incluyendo el pie de página con los botones. */}
+      <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+        <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-semibold text-gray-800">Añadir Nuevo Usuario</h2>
-          <button onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors">
+          <button type="button" onClick={onClose} className="text-gray-500 hover:text-gray-800 transition-colors">
             <FaTimes />
           </button>
-        </header>
+        </div>
 
-        <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto p-6">
+        <div className="flex-grow overflow-y-auto p-6">
           <div className="space-y-4">
             <div>
               <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-1">Nombre</label>
@@ -73,24 +73,26 @@ export default function AddUserModal({ onClose, onSave }: AddUserModalProps) {
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="VENDEDOR">VENDEDOR</option>
-                <option value="ADMINISTRADOR">ADMINISTRADOR</option>
-                <option value="SUPER_ADMINISTRADOR">SUPER ADMINISTRADOR</option>
+                <option value="VENDEDOR">Vendedor</option>
+                <option value="ADMINISTRADOR">Administrador</option>
+                <option value="SUPER_ADMINISTRADOR">Super Administrador</option>
               </select>
             </div>
           </div>
-        </form>
+        </div>
 
-        <footer className="flex justify-end gap-3 p-4 border-t bg-gray-50 rounded-b-xl">
+        <div className="flex justify-end gap-3 p-4 border-t bg-gray-50 rounded-b-xl">
           <button type="button" onClick={onClose} className="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
             Cancelar
           </button>
-          <button type="submit" onClick={handleSubmit} className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
+
+          <button type="submit" className="px-4 py-2 bg-blue-600 border border-transparent rounded-md text-sm font-medium text-white hover:bg-blue-700">
             Crear Usuario
           </button>
-        </footer>
-      </div>
+        </div>
+      </form>
     </div>,
     document.body
   );
 }
+

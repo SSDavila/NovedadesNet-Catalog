@@ -11,26 +11,26 @@ export class ProductImageService {
   ) {}
 
   async create(createProductImageDto: CreateProductImageDto) {
-    const { prodId, ...imageData } = createProductImageDto;
+    const { productId, ...imageData } = createProductImageDto;
 
     const product = await this.prisma.product.findUnique({
-      where: { prodId },
+      where: { productId },
     });
     if (!product) {
-      throw new NotFoundException(`Producto con ID "${prodId}" no encontrado.`);
+      throw new NotFoundException(`Producto con ID "${productId}" no encontrado.`);
     }
 
     const imageCount = await this.prisma.productImage.count({
-      where: { prodId },
+      where: { productId },
     });
 
-    const newImageId = `${prodId}-IMG-${imageCount + 1}`;
+    const newImageId = `${productId}-IMG-${imageCount + 1}`;
 
-    return this.prisma.productImage.create({
+     return this.prisma.productImage.create({
       data: {
         ...imageData,
-        prodId,
-        prodImageId: newImageId,
+        productImageId: newImageId,
+        product: { connect: { productId } },
       },
     });
   }
@@ -38,7 +38,7 @@ export class ProductImageService {
   async removeMany(imageIds: string[]) {
     const imagesToDelete = await this.prisma.productImage.findMany({
       where: {
-        prodImageId: {
+        productImageId: {
           in: imageIds,
         },
       },
@@ -48,13 +48,13 @@ export class ProductImageService {
       return;
     }
 
-    const publicIds = imagesToDelete.map(img => img.prodImagePublicid);
+    const publicIds = imagesToDelete.map(img => img.productImagePublicId);
 
     await Promise.all(publicIds.map(id => this.cloudinary.deleteImage(id)));
 
     await this.prisma.productImage.deleteMany({
       where: {
-        prodImageId: {
+        productImageId: {
           in: imageIds,
         },
       },
@@ -63,17 +63,17 @@ export class ProductImageService {
 
   async remove(id: string) {
     const productImage = await this.prisma.productImage.findUnique({
-      where: { prodImageId: id },
+      where: { productImageId: id },
     });
 
     if (!productImage) {
       throw new NotFoundException(`Imagen con ID "${id}" no encontrada.`);
     }
 
-    await this.cloudinary.deleteImage(productImage.prodImagePublicid);
+    await this.cloudinary.deleteImage(productImage.productImagePublicId);
 
     return this.prisma.productImage.delete({
-      where: { prodImageId: id },
+      where: { productImageId: id },
     });
   }
 }
