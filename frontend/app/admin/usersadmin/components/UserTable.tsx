@@ -1,4 +1,4 @@
-import { User, UserRole } from '../page';
+import { User } from '../page';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
 interface UserTableProps {
@@ -7,7 +7,7 @@ interface UserTableProps {
   onDelete: (userId: number) => void;
 }
 
-const roleClasses: Record<UserRole, string> = {
+const roleClasses: Record<string, string> = {
   SUPER_ADMINISTRADOR: 'bg-purple-100 text-purple-800',
   ADMINISTRADOR: 'bg-red-100 text-red-800',
   VENDEDOR: 'bg-blue-100 text-blue-800',
@@ -18,7 +18,7 @@ const statusClasses: Record<string, string> = {
   false: 'bg-yellow-100 text-yellow-800',
 };
 
-const roleDisplayNames: Record<UserRole, string> = {
+const roleDisplayNames: Record<string, string> = {
   SUPER_ADMINISTRADOR: 'Super Admin',
   ADMINISTRADOR: 'Administrador',
   VENDEDOR: 'Vendedor',
@@ -49,15 +49,8 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
             {users.map((user) => (
               <tr key={user.userId} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex-shrink-0 h-10 w-10">
-                      <img className="h-10 w-10 rounded-full object-cover" src={user.avatarUrl} alt={user.userName} />
-                    </div>
-                    <div className="ml-4">
-                      <div className="text-sm font-medium text-gray-900">{user.userName}</div>
-                      <div className="text-sm text-gray-500">{user.userEmail}</div>
-                    </div>
-                  </div>
+                  <div className="text-sm font-medium text-gray-900">{user.userName}</div>
+                  <div className="text-sm text-gray-500">{user.userEmail}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${roleClasses[user.userRole]}`}>

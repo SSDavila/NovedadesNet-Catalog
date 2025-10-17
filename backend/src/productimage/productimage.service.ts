@@ -30,7 +30,7 @@ export class ProductImageService {
       data: {
         ...imageData,
         productImageId: newImageId,
-        product: { connect: { productId } },
+        productId: productId,
       },
     });
   }

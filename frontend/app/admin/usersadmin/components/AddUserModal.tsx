@@ -3,19 +3,21 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { FaTimes } from 'react-icons/fa';
+import { User } from '../page';
 
 interface AddUserModalProps {
   onClose: () => void;
-  onSave: (user: any) => void;
+  onSave: (user: Omit<User, 'userId'>) => void;
 }
 
 export default function AddUserModal({ onClose, onSave }: AddUserModalProps) {
-  // Estado inicial para un nuevo usuario, alineado con el DTO del backend.
+
   const [newUser, setNewUser] = useState({
     userName: '',
     userEmail: '',
     userPassword: '',
-    userRole: 'VENDEDOR', // Valor por defecto
+    userRole: 'VENDEDOR',
+    userIsActive: true,
   });
   const [isMounted, setIsMounted] = useState(false);
 
@@ -25,23 +27,21 @@ export default function AddUserModal({ onClose, onSave }: AddUserModalProps) {
     return () => { document.body.style.overflow = 'auto'; };
   }, []);
 
-  // Manejador genérico para actualizar el estado del formulario.
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setNewUser(prev => ({ ...prev, [name]: value }));
   };
 
-  // Manejador para el envío del formulario.
   const handleSubmit = (e: FormEvent) => {
-    e.preventDefault(); // Previene la recarga de la página.
-    onSave(newUser);    // Llama a la función del padre con los datos del nuevo usuario.
+    e.preventDefault(); 
+    onSave(newUser);    
   };
 
   if (!isMounted) return null;
 
   return createPortal(
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      {/* El formulario ahora envuelve todo el contenido, incluyendo el pie de página con los botones. */}
+
       <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         <div className="flex justify-between items-center p-4 border-b">
           <h2 className="text-lg font-semibold text-gray-800">Añadir Nuevo Usuario</h2>
@@ -95,4 +95,3 @@ export default function AddUserModal({ onClose, onSave }: AddUserModalProps) {
     document.body
   );
 }
-

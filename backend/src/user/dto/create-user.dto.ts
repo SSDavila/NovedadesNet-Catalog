@@ -1,4 +1,4 @@
-import { IsEmail, IsString, MinLength, IsOptional, IsNotEmpty, IsIn } from 'class-validator';
+import { IsEmail, IsString, MinLength, IsOptional, IsNotEmpty, IsBoolean } from 'class-validator';
 
 export class CreateUserDto {
   @IsEmail({}, { message: 'El correo electrónico debe ser válido.' })
@@ -16,6 +16,9 @@ export class CreateUserDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['VENDEDOR', 'ADMINISTRADOR', 'SUPER_ADMINISTRADOR'], { message: 'El rol del usuario no es válido.' })
   userRole?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  userIsActive?: boolean;
 }

@@ -1,104 +1,137 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import UserTable from './components/UserTable';
 import EditUserModal from './components/EditUserModal';
 import AddUserModal from './components/AddUserModal';
 import { FaPlus, FaUsers } from 'react-icons/fa';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { API_ENDPOINTS } from '@/lib/api';
 
-export enum UserRole {
-  SUPER_ADMINISTRADOR = 'SUPER_ADMINISTRADOR',
-  ADMINISTRADOR = 'ADMINISTRADOR',
-  VENDEDOR = 'VENDEDOR',
-}
- 
 export interface User {
   userId: number;
   userName: string;
   userEmail: string;
-  userRole: UserRole;
+  userRole: string;
   userIsActive: boolean;
-  avatarUrl: string;
 }
 
-const API_URL = 'http://localhost:5000/api/v1/users';
-
 export default function UsersAdminPage() {
-  const [users, setUsers] = useState<User[]>([]);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const queryClient = useQueryClient();
 
-  const fetchUsers = async () => {
-    try {
-      const response = await fetch(API_URL);
-      const data = await response.json();
-      const usersWithAvatars = data.map((user: Omit<User, 'avatarUrl'>, index: number) => ({
-        ...user,
-        avatarUrl: `https://i.pravatar.cc/150?u=${user.userEmail}`
-      }));
-      setUsers(usersWithAvatars);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      // Aquí podrías manejar el error, por ejemplo, mostrando una notificación.
-    }
-  };
+  const { data: users = [], isLoading, isError, error } = useQuery<User[]>({
+    queryKey: ['users'],
+    queryFn: async () => {
+      const response = await fetch(API_ENDPOINTS.users);
+      if (!response.ok) {
+        throw new Error('Error al obtener los usuarios');
+      }
+      return response.json();
+    },
+  });
 
-  const handleEditUser = (user: User) => {
-    setEditingUser(user);
-  };
+  // 3. Hook `useMutation` para actualizar un usuario
+  const updateUserMutation = useMutation({
+    mutationFn: async (userToSave: User & { userPassword?: string }) => {
+      const { userId, ...updateData } = userToSave; // `updateData` ahora incluye userIsActive
 
-  const handleCloseModal = () => {
-    setEditingUser(null);
-    setIsAddModalOpen(false);
-  };
+      // Asegurarse de no enviar la contraseña si está vacía
+      if (updateData.userPassword === '') {
+        delete updateData.userPassword;
+      }
 
-  const handleSaveUser = async (updatedUser: User) => {
-    try {
-      const response = await fetch(`${API_URL}/${updatedUser.userId}`, {
+      const response = await fetch(`${API_ENDPOINTS.users}/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedUser),
+        body: JSON.stringify(updateData),
       });
-      if (!response.ok) throw new Error('Failed to update user');
-      await fetchUsers(); // Recargar la lista de usuarios
-    } catch (error) {
-      console.error('Error saving user:', error);
-    }
-    handleCloseModal();
-  };
 
-  const handleCreateUser = async (newUser: Omit<User, 'userId' | 'avatarUrl'>) => {
-    try {
-      const response = await fetch(API_URL, {
+      if (!response.ok) {
+        // Intentar obtener un mensaje de error más detallado del backend
+        const errorData = await response.json().catch(() => ({ message: 'Failed to update user' }));
+        throw new Error(errorData.message || 'Failed to update user');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      // Si la mutación es exitosa, invalida la query de 'users' para que se vuelva a cargar
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      handleCloseModal();
+    },
+    onError: (err) => {
+      // Aquí puedes mostrar una notificación de error al usuario
+      console.error('Error al guardar el usuario:', err);
+      alert(`Error: ${err.message}`);
+    },
+  });
+
+
+  // 4. Hook `useMutation` para crear un usuario
+  const createUserMutation = useMutation({
+    mutationFn: async (newUser: Omit<User, 'userId'>) => {
+      const response = await fetch(API_ENDPOINTS.users, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser),
       });
       if (!response.ok) throw new Error('Failed to create user');
-      await fetchUsers();
-    } catch (error) {
-      console.error('Error creating user:', error);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+      handleCloseModal();
+    },
+    onError: (err) => {
+      console.error('Error al crear el usuario:', err);
+      alert(`Error: ${err.message}`);
     }
-    handleCloseModal();
+  });
+
+  // 5. Hook `useMutation` para eliminar un usuario
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: number) => {
+      const response = await fetch(`${API_ENDPOINTS.users}/${userId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete user');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: (err) => {
+      console.error('Error al eliminar el usuario:', err);
+      alert(`Error: ${err.message}`);
+    }
+  });
+
+  // --- Funciones manejadoras (ahora mucho más simples) ---
+
+  const handleEditUser = (user: User) => setSelectedUser(user);
+
+  const handleCloseModal = () => {
+    setSelectedUser(null);
+    setIsAddModalOpen(false);
+  };
+
+  const handleSaveUser = (userToSave: User & { userPassword?: string }) => {
+    updateUserMutation.mutate(userToSave);
+  };
+
+  const handleCreateUser = (newUser: Omit<User, 'userId'>) => {
+    createUserMutation.mutate(newUser);
   };
 
   const handleDeleteUser = async (userId: number) => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-      try {
-        const response = await fetch(`${API_URL}/${userId}`, {
-          method: 'DELETE',
-        });
-        if (!response.ok) throw new Error('Failed to delete user');
-        await fetchUsers();
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
+      deleteUserMutation.mutate(userId);
     }
   };
+
+  if (isLoading) return <div className="p-8 text-center">Cargando usuarios...</div>;
+  if (isError) return <div className="p-8 text-center text-red-600">Error al cargar usuarios: {error.message}</div>;
 
   return (
     <div className="p-6 sm:p-8">
@@ -120,8 +153,13 @@ export default function UsersAdminPage() {
         <UserTable users={users} onEdit={handleEditUser} onDelete={handleDeleteUser} />
       </main>
 
-      {editingUser && (
-        <EditUserModal user={editingUser} onClose={handleCloseModal} onSave={handleSaveUser} />
+      {selectedUser && (
+        <EditUserModal
+          user={selectedUser}
+          onClose={handleCloseModal}
+          onSave={handleSaveUser}
+          isSaving={updateUserMutation.isPending}
+        />
       )}
       {isAddModalOpen && (
         <AddUserModal onClose={handleCloseModal} onSave={handleCreateUser} />
