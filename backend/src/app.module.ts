@@ -9,6 +9,7 @@ import { CategoryModule } from './category/category.module';
 import { ProductsModule } from './product/products.module';
 import { AiController } from './ai/ai.controller';
 import { UsersModule } from './user/users.module';
+import { CompanyModule } from './company/company.module';
 
 @Module({
   imports: [
@@ -23,7 +24,7 @@ import { UsersModule } from './user/users.module';
     CategoryModule,
     ProductsModule,
     UsersModule,
-
+    CompanyModule,
   ],
   controllers: [AiController]
 })

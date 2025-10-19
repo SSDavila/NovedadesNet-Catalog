@@ -6,7 +6,7 @@ import EditUserModal from './components/EditUserModal';
 import AddUserModal from './components/AddUserModal';
 import { FaPlus, FaUsers } from 'react-icons/fa';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { API_ENDPOINTS } from '@/lib/api';
+import { API_BASE_URL } from '@/lib/constants';
 
 export interface User {
   userId: number;
@@ -25,7 +25,7 @@ export default function UsersAdminPage() {
   const { data: users = [], isLoading, isError, error } = useQuery<User[]>({
     queryKey: ['users'],
     queryFn: async () => {
-      const response = await fetch(API_ENDPOINTS.users);
+      const response = await fetch(`${API_BASE_URL}/users`);
       if (!response.ok) {
         throw new Error('Error al obtener los usuarios');
       }
@@ -33,17 +33,15 @@ export default function UsersAdminPage() {
     },
   });
 
-  // 3. Hook `useMutation` para actualizar un usuario
   const updateUserMutation = useMutation({
     mutationFn: async (userToSave: User & { userPassword?: string }) => {
-      const { userId, ...updateData } = userToSave; // `updateData` ahora incluye userIsActive
+      const { userId, ...updateData } = userToSave;
 
-      // Asegurarse de no enviar la contraseña si está vacía
       if (updateData.userPassword === '') {
         delete updateData.userPassword;
       }
 
-      const response = await fetch(`${API_ENDPOINTS.users}/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(updateData),
@@ -72,7 +70,7 @@ export default function UsersAdminPage() {
   // 4. Hook `useMutation` para crear un usuario
   const createUserMutation = useMutation({
     mutationFn: async (newUser: Omit<User, 'userId'>) => {
-      const response = await fetch(API_ENDPOINTS.users, {
+      const response = await fetch(`${API_BASE_URL}/users`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newUser),
@@ -93,7 +91,7 @@ export default function UsersAdminPage() {
   // 5. Hook `useMutation` para eliminar un usuario
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
-      const response = await fetch(`${API_ENDPOINTS.users}/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
         method: 'DELETE',
       });
       if (!response.ok) throw new Error('Failed to delete user');
