@@ -5,7 +5,7 @@ import EditProductForm from './EditProductForm';
 import { ProductImage } from './ProductCard';
 import { FaTimes, FaSpinner } from 'react-icons/fa';
 import ProductPreview from './ProductPreview';
-import Notification from '@/components/Notification';
+import Notification from '@/components/Notifications/Notification';
 
 interface InitialData {
   prodId: string;

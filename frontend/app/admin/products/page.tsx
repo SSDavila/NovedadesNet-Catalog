@@ -1,65 +1,82 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { FaPlus, FaSpinner } from 'react-icons/fa';
+import { useState } from 'react';
+import { FaPlus, FaSpinner, FaBoxOpen } from 'react-icons/fa';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import NewProductModal from './components/NewProductModal';
 import EditProductModal from './components/EditProductModal';
 import ProductDetailModal from './components/ProductDetailModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import { Product } from './components/ProductCard';
 import ProductGrid from './components/ProductGrid';
+import { API_BASE_URL } from '@/lib/constants';
+import { useNotification } from '@/components/Notifications/NotificationContext';
 
 export default function AdminProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState<string | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`);
+  const { addNotification } = useNotification();
+  const queryClient = useQueryClient();
+
+  const { data: products = [], isLoading, isError, error } = useQuery<Product[]>({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/products`);
       if (!response.ok) {
         throw new Error('No se pudieron obtener los productos.');
       }
       const data = await response.json();
-      
-      const productsWithNumbers: Product[] = data.map((p: any) => ({
+      return data.map((p: any) => ({
         ...p,
-        prodPrice: Number(p.prodPrice),
+        productPrice: Number(p.productPrice),
       }));
-      setProducts(productsWithNumbers);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+  });
 
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
+  const deleteProductMutation = useMutation({
+    mutationFn: async (productId: string) => {
+      const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'No se pudo eliminar el producto.');
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      addNotification('Producto eliminado correctamente', 'success');
+      setIsConfirmModalOpen(false);
+      setProductToDelete(null);
+      closeDetailModal();
+    },
+    onError: (err: Error) => {
+      addNotification(err.message, 'error');
+      setIsConfirmModalOpen(false);
+      setProductToDelete(null);
+    },
+  });
 
   const handleProductAdded = () => {
     setIsModalOpen(false);
-    fetchProducts();
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    addNotification('Producto añadido con éxito', 'success');
   };
 
   const handleProductUpdated = () => {
     setIsEditModalOpen(false);
-    fetchProducts();
+    queryClient.invalidateQueries({ queryKey: ['products'] });
+    addNotification('Producto actualizado con éxito', 'success');
   };
 
   const handleEdit = (product: Product) => {
     setSelectedProduct(product);
-    setIsDetailModalOpen(false); 
+    setIsDetailModalOpen(false);
     setIsEditModalOpen(true);
   };
 
@@ -68,28 +85,9 @@ export default function AdminProductsPage() {
     setIsConfirmModalOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!productToDelete) return;
-    setIsDeleting(true);
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products/${productToDelete}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('No se pudo eliminar el producto.');
-      }
-
-      fetchProducts();
-      setIsDetailModalOpen(false);
-      closeDetailModal();
-    } catch (err: any) {
-      setError(err.message || 'Ocurrió un error al eliminar el producto.');
-    } finally {
-      setIsDeleting(false);
-      setIsConfirmModalOpen(false);
-      setProductToDelete(null);
+  const handleConfirmDelete = () => {
+    if (productToDelete) {
+      deleteProductMutation.mutate(productToDelete);
     }
   };
 
@@ -103,10 +101,21 @@ export default function AdminProductsPage() {
     setSelectedProduct(null);
   };
 
+  if (isLoading) {
+    return <div className="flex justify-center items-center p-10"><FaSpinner className="animate-spin text-4xl text-blue-600" /></div>;
+  }
+
+  if (isError) {
+    return <div className="text-center text-red-500 bg-red-100 p-4 rounded-lg">{error.message}</div>;
+  }
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Administrar Productos</h1>
+        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+          <FaBoxOpen />
+          Administrar Productos
+        </h1>
         <button
           onClick={() => setIsModalOpen(true)}
           className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition-colors"
@@ -116,10 +125,7 @@ export default function AdminProductsPage() {
         </button>
       </div>
 
-      {loading && <div className="flex justify-center items-center p-10"><FaSpinner className="animate-spin text-4xl text-blue-600" /></div>}
-      {error && <div className="text-center text-red-500 bg-red-100 p-4 rounded-lg">{error}</div>}
-
-      {!loading && !error && (
+      {!isLoading && !isError && (
         <ProductGrid
           products={products}
           onEdit={handleEdit}
@@ -145,8 +151,8 @@ export default function AdminProductsPage() {
         onClose={() => setIsConfirmModalOpen(false)}
         onConfirm={handleConfirmDelete}
         title="Confirmar Eliminación"
-        message={"¿Estás seguro de que quieres eliminar este producto?\nEsta acción no se puede deshacer."}
-        isConfirming={isDeleting}
+        message="¿Estás seguro de que quieres eliminar este producto? Esta acción no se puede deshacer."
+        isConfirming={deleteProductMutation.isPending}
       />
 
       <EditProductModal
@@ -158,9 +164,9 @@ export default function AdminProductsPage() {
           prodDescription: selectedProduct.prodDescription, 
           prodPrice: selectedProduct.prodPrice.toString(), 
           prodStock: selectedProduct.prodStock.toString(), 
-          prodCategory: selectedProduct.prodCategory, 
+          categoryId: selectedProduct.categoryId, 
           images: selectedProduct.prodImages
-        } : { prodId: '', prodName: '', prodDescription: '', prodPrice: '', prodStock: '', prodCategory: '', images: [] }}
+        } : { productId: '', productName: '', productDescription: '', productPrice: '', productStock: '', categoryId: '', images: [] }}
         onProductUpdated={handleProductUpdated}
       /> 
     </div>

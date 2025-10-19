@@ -7,6 +7,7 @@ import AddUserModal from './components/AddUserModal';
 import { FaPlus, FaUsers } from 'react-icons/fa';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '@/lib/constants';
+import { useNotification } from '@/components/Notifications/NotificationContext';
 
 export interface User {
   userId: number;
@@ -19,6 +20,7 @@ export interface User {
 export default function UsersAdminPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const { addNotification } = useNotification();
 
   const queryClient = useQueryClient();
 
@@ -48,26 +50,24 @@ export default function UsersAdminPage() {
       });
 
       if (!response.ok) {
-        // Intentar obtener un mensaje de error más detallado del backend
+
         const errorData = await response.json().catch(() => ({ message: 'Failed to update user' }));
         throw new Error(errorData.message || 'Failed to update user');
       }
       return response.json();
     },
     onSuccess: () => {
-      // Si la mutación es exitosa, invalida la query de 'users' para que se vuelva a cargar
+
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      addNotification('Usuario guardado con éxito', 'success');
       handleCloseModal();
     },
-    onError: (err) => {
-      // Aquí puedes mostrar una notificación de error al usuario
-      console.error('Error al guardar el usuario:', err);
-      alert(`Error: ${err.message}`);
+    onError: (err: Error) => {
+      console.error('Error al guardar el usuario:', err.message);
+      addNotification(err.message, 'error');
     },
   });
 
-
-  // 4. Hook `useMutation` para crear un usuario
   const createUserMutation = useMutation({
     mutationFn: async (newUser: Omit<User, 'userId'>) => {
       const response = await fetch(`${API_BASE_URL}/users`, {
@@ -80,15 +80,14 @@ export default function UsersAdminPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      addNotification('Usuario creado con éxito', 'success');
       handleCloseModal();
     },
-    onError: (err) => {
-      console.error('Error al crear el usuario:', err);
-      alert(`Error: ${err.message}`);
+    onError: (err: Error) => {
+      addNotification(err.message, 'error');
     }
   });
 
-  // 5. Hook `useMutation` para eliminar un usuario
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: number) => {
       const response = await fetch(`${API_BASE_URL}/users/${userId}`, {
@@ -98,14 +97,12 @@ export default function UsersAdminPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
+      addNotification('Usuario eliminado correctamente', 'info');
     },
-    onError: (err) => {
-      console.error('Error al eliminar el usuario:', err);
-      alert(`Error: ${err.message}`);
+    onError: (err: Error) => {
+      addNotification(err.message, 'error');
     }
   });
-
-  // --- Funciones manejadoras (ahora mucho más simples) ---
 
   const handleEditUser = (user: User) => setSelectedUser(user);
 

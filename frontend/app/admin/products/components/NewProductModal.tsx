@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import Notification from '@/components/Notification';
+import Notification from '@/components/Notifications/Notification';
 import { FaSpinner, FaTimes, FaMagic } from 'react-icons/fa';
 import NewProductForm from './NewProductForm';
 import ProductPreview from './ProductPreview';

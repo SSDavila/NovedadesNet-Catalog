@@ -1,7 +1,7 @@
 'use client';
 
-import { FormEvent } from 'react';
-import { FaSave, FaSpinner } from 'react-icons/fa';
+import { FormEvent, useState } from 'react';
+import { FaSave, FaSpinner, FaEye, FaEyeSlash } from 'react-icons/fa';
 import { Company } from '../page';
 
 interface CompanyFormProps {
@@ -12,6 +12,8 @@ interface CompanyFormProps {
 }
 
 export default function CompanyForm({ companyData, onFormChange, onFormSubmit, isSaving }: CompanyFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
     <form onSubmit={onFormSubmit} className="bg-white p-8 rounded-lg shadow-md space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -47,11 +49,21 @@ export default function CompanyForm({ companyData, onFormChange, onFormSubmit, i
           </div>
           <div>
             <label htmlFor="sriCert" className="block text-sm font-medium text-gray-700">Firma Electrónica (.p12)</label>
-            <input type="file" id="sriCert" className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+            <input type="file" id="sriCert" onChange={onFormChange} accept=".p12" className="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
           </div>
           <div>
             <label htmlFor="sriPassword" className="block text-sm font-medium text-gray-700">Contraseña de la Firma</label>
-            <input type="password" id="sriPassword" className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm" />
+            <div className="relative mt-1">
+              <input 
+                type={showPassword ? 'text' : 'password'} 
+                id="sriPassword" 
+                value={companyData.sriPassword || ''} 
+                onChange={onFormChange} 
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm pr-10" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 hover:text-gray-700">
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
           </div>
         </div>
       </div>

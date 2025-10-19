@@ -1,4 +1,5 @@
-import { IsString, IsOptional, IsNumberString, IsNumber } from 'class-validator';
+import { IsString, IsOptional, IsNumberString, IsNumber, IsNotEmpty } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export class UpdateCompanyDto {
   @IsOptional()
@@ -19,5 +20,10 @@ export class UpdateCompanyDto {
 
   @IsOptional()
   @IsNumber()
+  @Type(() => Number)
   sriEnvironment?: number;
+
+  @IsOptional()
+  @IsString()
+  sriPassword?: string;
 }

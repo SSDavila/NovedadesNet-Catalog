@@ -5,6 +5,7 @@ import { FaBuilding } from 'react-icons/fa';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '@/lib/constants';
 import CompanyForm from './components/CompanyForm';
+import { useNotification } from '@/components/Notifications/NotificationContext';
 
 export interface Company {
   id: number;
@@ -13,6 +14,8 @@ export interface Company {
   companyRuc: string;
   companyAddress: string;
   sriEnvironment: number;
+  sriPassword?: string;
+  sriCert?: File | null;
 }
 
 const initialCompanyState: Company = {
@@ -22,10 +25,14 @@ const initialCompanyState: Company = {
   companyRuc: '',
   companyAddress: '',
   sriEnvironment: 1,
+  sriPassword: '',
+  sriCert: null,
 };
 
 export default function CompanyPage() {
   const [companyData, setCompanyData] = useState<Company>(initialCompanyState);
+  const [file, setFile] = useState<File | null>(null);
+  const { addNotification } = useNotification();
   const queryClient = useQueryClient();
 
   const { data, isLoading, isError, error } = useQuery<Company>({
@@ -41,26 +48,23 @@ export default function CompanyPage() {
   });
 
   const updateCompanyMutation = useMutation({
-    mutationFn: async (updatedData: Partial<Company>) => {
+    mutationFn: async (formData: FormData) => {
       const response = await fetch(`${API_BASE_URL}/company`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedData),
+        body: formData,
       });
       if (!response.ok) {
-        const errorData = await response.json();
+        const errorData = await response.json().catch(() => ({ message: 'Error al guardar los cambios.' }));
         throw new Error(errorData.message || 'Error al guardar los cambios.');
       }
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companyInfo'] });
-
-      alert('¡Información guardada con éxito!');
+      addNotification('¡Información guardada con éxito!', 'success');
     },
     onError: (err: Error) => {
-      console.error('Error al guardar:', err);
-      alert(`Error: ${err.message}`);
+      addNotification(err.message, 'error');
     },
   });
 
@@ -71,16 +75,56 @@ export default function CompanyPage() {
   }, [data]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { id, value } = e.target;
+    const { id, value, type } = e.target;
 
-    const processedValue = id === 'sriEnvironment' ? parseInt(value, 10) : value;
-    setCompanyData(prev => ({ ...prev, [id]: processedValue }));
+    if (type === 'file') {
+      const files = (e.target as HTMLInputElement).files;
+      if (files && files.length > 0) {
+        const selectedFile = files[0];
+        if (!selectedFile.name.endsWith('.p12')) {
+          addNotification('Archivo subido no válido. Por favor, seleccione un archivo con la extensión .p12', 'error');
+          (e.target as HTMLInputElement).value = '';
+          setFile(null);
+        } else {
+          setFile(selectedFile);
+        }
+      } else {
+        setFile(null);
+      }
+    } else {
+      const processedValue = id === 'sriEnvironment' ? parseInt(value, 10) : value;
+      setCompanyData(prev => ({ ...prev, [id]: processedValue }));
+    }
   };
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    const { id, ...updateData } = companyData;
-    updateCompanyMutation.mutate(updateData);
+
+    // Signature file and password validation
+    if (file && (!companyData.sriPassword || companyData.sriPassword.trim() === '')) {
+      addNotification('Si sube un archivo de firma electrónica, debe proporcionar la contraseña.', 'warning');
+      return; // Stops form submission
+    }
+
+    if (companyData.sriPassword && companyData.sriPassword.trim() !== '' && !file) {
+      addNotification('Si proporciona una contraseña para la firma, también debe subir el archivo .p12 correspondiente.', 'warning');
+      return; // Stops form submission
+    }
+    
+    const formData = new FormData();
+    formData.append('companyName', companyData.companyName);
+    formData.append('companyTradeName', companyData.companyTradeName);
+    formData.append('companyRuc', companyData.companyRuc);
+    formData.append('companyAddress', companyData.companyAddress);
+    formData.append('sriEnvironment', String(companyData.sriEnvironment));
+    if (companyData.sriPassword) {
+      formData.append('sriPassword', companyData.sriPassword);
+    }
+    if (file) {
+      formData.append('sriCert', file);
+    }
+
+    updateCompanyMutation.mutate(formData);
   };
 
   if (isLoading) {
