@@ -7,10 +7,10 @@ import NewProductModal from './components/NewProductModal';
 import EditProductModal from './components/EditProductModal';
 import ProductDetailModal from './components/ProductDetailModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import { Product } from './components/ProductCard';
 import ProductGrid from './components/ProductGrid';
 import { API_BASE_URL } from '@/lib/constants';
 import { useNotification } from '@/components/Notifications/NotificationContext';
+import { Product } from '@/interfaces';
 
 export default function AdminProductsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -142,7 +142,7 @@ export default function AdminProductsPage() {
           onClose={closeDetailModal}
           product={selectedProduct}
           onEdit={handleEdit}
-          onDelete={() => handleDeleteClick(selectedProduct.prodId)}
+          onDelete={() => handleDeleteClick(selectedProduct.productId)}
         />
       )}
 
@@ -159,13 +159,13 @@ export default function AdminProductsPage() {
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
         initialData={selectedProduct ? {
-          prodId: selectedProduct.prodId,
-          prodName: selectedProduct.prodName, 
-          prodDescription: selectedProduct.prodDescription, 
-          prodPrice: selectedProduct.prodPrice.toString(), 
-          prodStock: selectedProduct.prodStock.toString(), 
+          productId: selectedProduct.productId,
+          productName: selectedProduct.productName, 
+          productDescription: selectedProduct.productDescription, 
+          productPrice: selectedProduct.productPrice.toString(), 
+          productStock: selectedProduct.productStock.toString(), 
           categoryId: selectedProduct.categoryId, 
-          images: selectedProduct.prodImages
+          images: selectedProduct.images
         } : { productId: '', productName: '', productDescription: '', productPrice: '', productStock: '', categoryId: '', images: [] }}
         onProductUpdated={handleProductUpdated}
       /> 

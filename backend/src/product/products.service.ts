@@ -27,6 +27,20 @@ export class ProductsService {
       );
     }
 
+    const uploadedImages: {
+      secure_url: string;
+      public_id: string;
+    }[] = [];
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const uploadResult = await this.cloudinary.uploadFile(file);
+        if ('error' in uploadResult) {
+          throw new BadRequestException(`Error al subir la imagen ${file.originalname}: ${uploadResult.error.message}`);
+        }
+        uploadedImages.push(uploadResult);
+      }
+    }
+
     const newProduct = await this.prisma.$transaction(async (tx) => {
       const category = await tx.category.findUnique({
         where: { categoryId: productDetails.categoryId },
@@ -47,23 +61,13 @@ export class ProductsService {
 
       const newProductId = `pt-${categoryAbbreviation}-${nextIdNumber}`;
 
-      const imageUrls: {
-        productImageId: string;
-        productImageUrl: string;
-        productImagePublicId: string;
-      }[] = [];
-      if (files && files.length > 0) {
-        for (const [index, file] of files.entries()) {
-          const { secure_url, public_id } = await this.cloudinary.uploadFile(
-            file,
-          );
-          imageUrls.push({
-            productImageId: `${newProductId}-IMG-${index + 1}`,
-            productImageUrl: secure_url,
-            productImagePublicId: public_id,
-          });
-        }
-      }
+      const imageUrls = uploadedImages.map((upload, index) => {
+        return {
+          productImageId: `${newProductId}-IMG-${index + 1}`,
+          productImageUrl: upload.secure_url,
+          productImagePublicId: upload.public_id,
+        };
+      });
 
       const createdProduct = await tx.product.create({
         data: {

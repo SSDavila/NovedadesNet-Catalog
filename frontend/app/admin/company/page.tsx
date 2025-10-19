@@ -6,17 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '@/lib/constants';
 import CompanyForm from './components/CompanyForm';
 import { useNotification } from '@/components/Notifications/NotificationContext';
-
-export interface Company {
-  id: number;
-  companyName: string;
-  companyTradeName: string;
-  companyRuc: string;
-  companyAddress: string;
-  sriEnvironment: number;
-  sriPassword?: string;
-  sriCert?: File | null;
-}
+import { Company } from '@/interfaces';
 
 const initialCompanyState: Company = {
   id: 1,

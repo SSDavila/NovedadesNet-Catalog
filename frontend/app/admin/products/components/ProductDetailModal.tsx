@@ -3,7 +3,7 @@
 import { useState, useEffect, MouseEvent } from 'react';
 import { FaTimes, FaChevronLeft, FaChevronRight, FaWhatsapp, FaEdit, FaTrash, FaImage } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Product } from './ProductCard';
+import { Product } from '@/interfaces';
 
 interface ProductDetailModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export default function ProductDetailModal({
   const [activeIndex, setActiveIndex] = useState(0);
   const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '593963988846';
 
-  const imageUrls = product.prodImages?.map(image => image.prodImageUrl) || [];
+  const imageUrls = product.images?.map(image => image.productImageUrl) || [];
   const hasImages = imageUrls.length > 0;
   const displayImages = hasImages ? imageUrls : ['/placeholder.png'];
 
@@ -64,7 +64,7 @@ export default function ProductDetailModal({
     return { dot: 'bg-red-500', bg: 'bg-red-100', text: 'text-red-800' };
   };
 
-  const stockNumber = Number(product.prodStock) || 0;
+  const stockNumber = Number(product.productStock) || 0;
   const stockClasses = getStockClasses(stockNumber);
 
   useEffect(() => {
@@ -75,7 +75,7 @@ export default function ProductDetailModal({
 
   const handleWhatsAppClick = (e: MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    const message = `Hola, estoy interesado/a en el producto: ${product.prodName}.`;
+    const message = `Hola, estoy interesado/a en el producto: ${product.productName}.`;
     const whatsappUrl = `https://api.whatsapp.com/send?phone=${WHATSAPP_NUMBER}&text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -101,7 +101,7 @@ export default function ProductDetailModal({
                       <motion.img
                         key={image + index}
                         src={image}
-                        alt={`${product.prodName} - Imagen ${index + 1}`}
+                        alt={`${product.productName} - Imagen ${index + 1}`}
                         className="absolute h-full w-full object-contain cursor-grab active:cursor-grabbing"
                         initial={{ x: `${position * 50}%`, scale: isCenter ? 1 : 0.7, opacity: isCenter ? 1 : 0.5, filter: isCenter ? 'blur(0px)' : 'blur(2px)', zIndex: displayImages.length - Math.abs(position) }}
                         animate={{ x: `${position * 50}%`, scale: isCenter ? 1 : 0.7, opacity: isCenter ? 1 : 0.5, filter: isCenter ? 'blur(0px)' : 'blur(2px)', zIndex: displayImages.length - Math.abs(position) }}
@@ -135,15 +135,15 @@ export default function ProductDetailModal({
           <div className="p-6 flex-grow flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 border-t border-gray-200">
             <div className="flex justify-between items-start">
               <h2 className="text-2xl font-bold text-gray-900 break-words w-full pr-4">
-                {product.prodName}
+                {product.productName}
               </h2>
               <div className="text-2xl font-semibold text-green-600 whitespace-nowrap">
-                ${product.prodPrice.toFixed(2)}
+                ${product.productPrice.toFixed(2)}
               </div>
             </div>
 
             <div className="mt-2 flex items-center gap-3 text-sm text-gray-900">
-              <span><span className="font-semibold">Categoría:</span> <span className="font-normal">{product.prodCategory || 'N/A'}</span></span>
+              <span><span className="font-semibold">Categoría:</span> <span className="font-normal">{product.category?.categoryName || 'N/A'}</span></span>
               <span className="text-gray-300">|</span>
               <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold ${stockClasses.bg} ${stockClasses.text}`}>
                 <div className={`h-2 w-2 rounded-full ${stockClasses.dot}`}></div>
@@ -153,7 +153,7 @@ export default function ProductDetailModal({
 
             <div className="mt-4 text-gray-600 prose prose-sm max-w-none flex-grow">
               <p className="whitespace-pre-line">
-                {product.prodDescription || 'Este producto no tiene una descripción detallada.'}
+                {product.productDescription || 'Este producto no tiene una descripción detallada.'}
               </p>
             </div>
 
@@ -169,7 +169,7 @@ export default function ProductDetailModal({
                   <button onClick={() => onEdit(product)} className="p-3 bg-blue-100 rounded-full text-blue-600 hover:bg-blue-200 hover:scale-110 transition-all" title="Editar producto">
                     <FaEdit size={18} />
                   </button>
-                  <button onClick={() => onDelete(product.prodId)} className="p-3 bg-red-100 rounded-full text-red-600 hover:bg-red-200 hover:scale-110 transition-all" title="Eliminar producto">
+                  <button onClick={() => onDelete(product.productId)} className="p-3 bg-red-100 rounded-full text-red-600 hover:bg-red-200 hover:scale-110 transition-all" title="Eliminar producto">
                     <FaTrash size={18} />
                   </button>
                 </div>

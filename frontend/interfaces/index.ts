@@ -1,0 +1,42 @@
+export interface ProductImage {
+  productImageId: string;
+  productImageUrl: string;
+  productImagePublicId: string;
+}
+
+export interface Category {
+  categoryId: string;
+  categoryName: string;
+}
+
+export interface Product {
+  productId: string;
+  productName: string;
+  productDescription: string;
+  productPrice: number;
+  productStock: number;
+  categoryId: string;
+  category: {
+    categoryName: string;
+  };
+  images: ProductImage[];
+}
+
+export interface User {
+  userId: number;
+  userName: string;
+  userEmail: string;
+  userRole: string;
+  userIsActive: boolean;
+}
+
+export interface Company {
+  id: number;
+  companyName: string;
+  companyTradeName: string;
+  companyRuc: string;
+  companyAddress: string;
+  sriEnvironment: number;
+  sriPassword?: string;
+  sriCert?: File | null;
+}

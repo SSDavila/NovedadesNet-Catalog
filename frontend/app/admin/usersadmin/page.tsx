@@ -8,14 +8,7 @@ import { FaPlus, FaUsers } from 'react-icons/fa';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '@/lib/constants';
 import { useNotification } from '@/components/Notifications/NotificationContext';
-
-export interface User {
-  userId: number;
-  userName: string;
-  userEmail: string;
-  userRole: string;
-  userIsActive: boolean;
-}
+import { User } from '@/interfaces';
 
 export default function UsersAdminPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);

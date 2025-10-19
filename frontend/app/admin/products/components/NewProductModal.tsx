@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, FormEvent } from 'react';
-import Notification from '@/components/Notifications/Notification';
-import { FaSpinner, FaTimes, FaMagic } from 'react-icons/fa';
+import { useNotification } from '@/components/Notifications/NotificationContext';
+import { FaSpinner, FaTimes } from 'react-icons/fa';
 import NewProductForm from './NewProductForm';
 import ProductPreview from './ProductPreview';
 
@@ -14,32 +14,31 @@ interface NewProductModalProps {
 
 export default function NewProductModal({ isOpen, onClose, onProductAdded }: NewProductModalProps) {
   const [productData, setProductData] = useState({
-    prodName: '',
-    prodDescription: '',
-    prodPrice: '',
-    prodPreviousPrice: '0',
-    prodStock: '',
-    prodCategory: '',
+    productName: '',
+    productDescription: '',
+    productPrice: '',
+    productPreviousPrice: '0',
+    productStock: '',
+    categoryId: '',
   });
   const [images, setImages] = useState<File[]>([]);
   const [imagePreviews, setImagePreviews] = useState<string[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const { addNotification } = useNotification();
 
   const handleClose = () => {
 
     setProductData({
-      prodName: '',
-      prodDescription: '',
-      prodPrice: '',
-      prodPreviousPrice: '0',
-      prodStock: '',
-      prodCategory: '',
+      productName: '',
+      productDescription: '',
+      productPrice: '',
+      productPreviousPrice: '0',
+      productStock: '',
+      categoryId: '',
     });
     setImages([]);
     setImagePreviews([]);
-    setError(null);
     setIsSubmitting(false);
     setIsGenerating(false);
     onClose();
@@ -50,8 +49,8 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
   }
 
   const handleGenerateDescription = async () => {
-    if (!productData.prodName) {
-      alert('Por favor, ingresa un nombre de producto primero.');
+    if (!productData.productName) {
+      addNotification('Por favor, ingresa un nombre de producto primero.', 'warning');
       return;
     }
     setIsGenerating(true);
@@ -59,16 +58,16 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-description`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productName: productData.prodName }),
+        body: JSON.stringify({ productName: productData.productName }),
       });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error en la respuesta de la IA');
       }
       const data = await response.json();
-      setProductData(prev => ({ ...prev, prodDescription: data.description }));
+      setProductData(prev => ({ ...prev, productDescription: data.description }));
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      addNotification(err.message, 'error');
     } finally {
       setIsGenerating(false);
     }
@@ -76,26 +75,25 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!productData.prodName || !productData.prodPrice || !productData.prodStock || !productData.prodCategory) {
-        setError('Por favor, completa todos los campos requeridos.');
+    if (!productData.productName || !productData.productPrice || !productData.productStock || !productData.categoryId) {
+        addNotification('Por favor, completa todos los campos requeridos.', 'warning');
         return;
       }
       if (images.length === 0) {
-        setError('Debes subir al menos una imagen.');
+        addNotification('Debes subir al menos una imagen.', 'warning');
         return;
       }
     setIsSubmitting(true);
-    setError(null);
 
     const formData = new FormData();
-    formData.append('prodName', productData.prodName.trim());
-    formData.append('prodDescription', productData.prodDescription.trim());
-    formData.append('prodPrice', productData.prodPrice.trim());
-    formData.append('prodPreviousPrice', productData.prodPreviousPrice.trim() || '0');
-    formData.append('prodStock', productData.prodStock.trim());
-    formData.append('prodCategory', productData.prodCategory.trim());
+    formData.append('productName', productData.productName.trim());
+    formData.append('productDescription', productData.productDescription.trim());
+    formData.append('productPrice', productData.productPrice.trim());
+    formData.append('productPreviousPrice', productData.productPreviousPrice.trim() || '0');
+    formData.append('productStock', productData.productStock.trim());
+    formData.append('categoryId', productData.categoryId.trim());
     images.forEach((image) => {
-      formData.append('prodImages', image);
+      formData.append('images', image);
     });
 
     try {
@@ -113,8 +111,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
       onProductAdded();
       handleClose();
     } catch (err: any) {
-      setError(err.message);
-      console.error(err);
+      addNotification(err.message, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -146,11 +143,6 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
                   onGenerateDescription={handleGenerateDescription}
                 />
               </div>
-              {error && (
-                <div className="mt-4">
-                  <Notification message={error} type="error" onClose={() => setError(null)} />
-                </div>
-              )}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-4">
                 <button type="button" onClick={handleClose} disabled={isSubmitting} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition font-semibold disabled:opacity-50">Cancelar</button>
                 <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-blue-400 flex items-center gap-2">
@@ -161,12 +153,12 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
           </div>
           <div className="hidden md:flex flex-col overflow-hidden h-full">
             <ProductPreview 
-              nombre={productData.prodName} 
-              precio={productData.prodPrice} 
-              precioAnterior={productData.prodPreviousPrice}
-              descripcion={productData.prodDescription} 
-              stock={productData.prodStock} 
-              categoria={productData.prodCategory} 
+              nombre={productData.productName} 
+              precio={productData.productPrice} 
+              precioAnterior={productData.productPreviousPrice}
+              descripcion={productData.productDescription} 
+              stock={productData.productStock} 
+              categoria={productData.categoryId} 
               imagenes={imagePreviews} />
           </div>
         </div>

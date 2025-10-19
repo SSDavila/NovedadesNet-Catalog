@@ -1,22 +1,5 @@
 'use client';
-
-import { FaEdit, FaTrash } from 'react-icons/fa';
-
-export interface ProductImage {
-  prodImageId: string;
-  prodImageUrl: string;
-  prodImagePublicid: string;
-}
-
-export interface Product {
-  prodId: string;
-  prodName: string;
-  prodDescription: string;
-  prodPrice: number;
-  prodStock: number;
-  prodCategory: string;
-  prodImages: ProductImage[];
-}
+import { Product } from '@/interfaces';
 
 interface ProductCardProps {
   product: Product;
@@ -24,9 +7,8 @@ interface ProductCardProps {
   onDelete: (productId: string) => void;
   onClick: (product: Product) => void;
 }
-
 export default function ProductCard({ product, onEdit, onDelete, onClick }: ProductCardProps) {
-  const imageUrl = product.prodImages?.[0]?.prodImageUrl || 'https://via.placeholder.com/400';
+  const imageUrl = product.images?.[0]?.productImageUrl || 'https://via.placeholder.com/400';
 
   const getStockClasses = (stock: number) => {
     if (stock > 5) {
@@ -53,7 +35,7 @@ export default function ProductCard({ product, onEdit, onDelete, onClick }: Prod
     return { dot: 'bg-red-500', bg: 'bg-red-100', text: 'text-red-800' };
   };
 
-  const stockClasses = getStockClasses(product.prodStock);
+  const stockClasses = getStockClasses(product.productStock);
 
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300">
@@ -63,23 +45,23 @@ export default function ProductCard({ product, onEdit, onDelete, onClick }: Prod
       >
         <img
           src={imageUrl}
-          alt={product.prodName}
+          alt={product.productName}
           className="h-full w-full object-cover object-center"
         />       
       </div>
       <div className="flex flex-1 flex-col justify-between p-4">
         <div>
-          <h3 className="text-base font-bold text-gray-800 truncate" title={product.prodName}>
+          <h3 className="text-base font-bold text-gray-800 truncate" title={product.productName}>
             <span aria-hidden="true" className="absolute inset-0" onClick={() => onClick(product)} />
-            {product.prodName}
+            {product.productName}
           </h3>
-          <p className="mt-1 text-xs font-medium text-gray-500">{product.prodCategory}</p>
+          <p className="mt-1 text-xs font-medium text-gray-500">{product.category?.categoryName}</p>
         </div>
         <div className="mt-3 flex items-baseline justify-between">
-          <p className="text-lg font-bold text-green-600">${product.prodPrice.toFixed(2)}</p>
+          <p className="text-lg font-bold text-green-600">${product.productPrice.toFixed(2)}</p>
           <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold ${stockClasses.bg} ${stockClasses.text}`}>
             <div className={`h-2 w-2 rounded-full ${stockClasses.dot}`}></div>
-            {product.prodStock > 0 ? `${product.prodStock} en Stock` : 'Agotado'}
+            {product.productStock > 0 ? `${product.productStock} en Stock` : 'Agotado'}
           </div>
         </div>
       </div>

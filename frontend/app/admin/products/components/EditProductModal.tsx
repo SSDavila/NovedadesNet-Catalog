@@ -2,18 +2,18 @@
 
 import { useEffect, useState, FormEvent, useCallback } from 'react';
 import EditProductForm from './EditProductForm'; 
-import { ProductImage } from './ProductCard';
 import { FaTimes, FaSpinner } from 'react-icons/fa';
 import ProductPreview from './ProductPreview';
-import Notification from '@/components/Notifications/Notification';
+import { ProductImage } from '@/interfaces';
+import { useNotification } from '@/components/Notifications/NotificationContext';
 
 interface InitialData {
-  prodId: string;
-  prodName: string;
-  prodDescription: string;
-  prodPrice: string;
-  prodStock: string;
-  prodCategory: string;
+  productId: string;
+  productName: string;
+  productDescription: string;
+  productPrice: string;
+  productStock: string;
+  categoryId: string;
   images: ProductImage[];
 }
 
@@ -31,11 +31,11 @@ export default function EditProductModal({
   onProductUpdated,
 }: EditProductModalProps) {
   const [productData, setProductData] = useState({
-    prodName: '',
-    prodDescription: '',
-    prodPrice: '',
-    prodStock: '',
-    prodCategory: '',
+    productName: '',
+    productDescription: '',
+    productPrice: '',
+    productStock: '',
+    categoryId: '',
   });
 
   const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
@@ -44,34 +44,33 @@ export default function EditProductModal({
   const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { addNotification } = useNotification();
 
   useEffect(() => {
     if (initialData && isOpen) {
       setProductData({
-        prodName: initialData.prodName || '',
-        prodDescription: initialData.prodDescription || '',
-        prodPrice: initialData.prodPrice || '',
-        prodStock: initialData.prodStock || '',
-        prodCategory: initialData.prodCategory || '',
+        productName: initialData.productName || '',
+        productDescription: initialData.productDescription || '',
+        productPrice: initialData.productPrice || '',
+        productStock: initialData.productStock || '',
+        categoryId: initialData.categoryId || '',
       });
       setExistingImages(initialData.images || []);
       setImagesToDelete([]);
       setNewImages([]);
       setNewImagePreviews([]);
-      setError(null);
       setIsGenerating(false);
       setIsSubmitting(false);
     }
   }, [initialData, isOpen]);
 
   const handleRemoveExistingImage = useCallback((imageId: string) => {
-    const imageToRemove = existingImages.find(img => img.prodImageId === imageId);
+    const imageToRemove = existingImages.find(img => img.productImageId === imageId);
     if (!imageToRemove) return;
 
     // Guardamos el public_id para enviarlo al backend y borrarlo de Cloudinary
-    setImagesToDelete(current => [...current, imageToRemove.prodImagePublicid]);
-    setExistingImages(current => current.filter(img => img.prodImageId !== imageId));
+    setImagesToDelete(current => [...current, imageToRemove.productImagePublicId]);
+    setExistingImages(current => current.filter(img => img.productImageId !== imageId));
   }, [existingImages, imagesToDelete]);
 
   const handleRemoveNewImage = useCallback((indexToRemove: number) => {
@@ -103,8 +102,8 @@ export default function EditProductModal({
   if (!isOpen) return null;
 
   const handleGenerateDescription = async () => {
-    if (!productData.prodName) {
-      alert('Por favor, ingresa un nombre de producto primero.');
+    if (!productData.productName) {
+      addNotification('Por favor, ingresa un nombre de producto primero.', 'warning');
       return;
     }
     setIsGenerating(true);
@@ -112,16 +111,16 @@ export default function EditProductModal({
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/ai/generate-description`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productName: productData.prodName }),
+        body: JSON.stringify({ productName: productData.productName }),
       });
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || 'Error en la respuesta de la IA');
       }
       const data = await response.json();
-      setProductData(prev => ({ ...prev, prodDescription: data.description }));
+      setProductData(prev => ({ ...prev, productDescription: data.description }));
     } catch (err: any) {
-      alert(`Error: ${err.message}`);
+      addNotification(`Error: ${err.message}`, 'error');
     } finally {
       setIsGenerating(false);
     }
@@ -130,33 +129,32 @@ export default function EditProductModal({
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (
-      !productData.prodName ||
-      !productData.prodPrice ||
-      !productData.prodStock ||
-      !productData.prodCategory
+      !productData.productName ||
+      !productData.productPrice ||
+      !productData.productStock ||
+      !productData.categoryId
     ) {
-      setError('Por favor, completa todos los campos requeridos.');
+      addNotification('Por favor, completa todos los campos requeridos.', 'warning');
       return;
     }
     if (existingImages.length + newImages.length === 0) {
-      setError('Debes subir al menos una imagen.');
+      addNotification('Debes subir al menos una imagen.', 'warning');
       return;
     }
     setIsSubmitting(true);
-    setError(null);
 
     try {
       const productUpdateData = {
-        prodName: productData.prodName.trim(),
-        prodDescription: productData.prodDescription.trim(),
-        prodPrice: productData.prodPrice.trim(),
-        prodStock: productData.prodStock.trim(),
-        prodCategory: productData.prodCategory.trim(),
+        productName: productData.productName.trim(),
+        productDescription: productData.productDescription.trim(),
+        productPrice: productData.productPrice.trim(),
+        productStock: productData.productStock.trim(),
+        categoryId: productData.categoryId.trim(),
         imagesToDelete: imagesToDelete,
       };
 
       const productUpdateResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/products/${initialData.prodId}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/products/${initialData.productId}`,
         {
           method: 'PATCH',
           headers: {
@@ -177,11 +175,11 @@ export default function EditProductModal({
       if (newImages.length > 0) {
         const imageFormData = new FormData();
         newImages.forEach(image => {
-          imageFormData.append('prodImages', image);
+          imageFormData.append('images', image);
         });
 
         const imageResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/products/${initialData.prodId}/upload-images`,
+          `${process.env.NEXT_PUBLIC_API_URL}/products/${initialData.productId}/upload-images`,
           {
             method: 'POST',
             body: imageFormData,
@@ -196,8 +194,7 @@ export default function EditProductModal({
       onProductUpdated();
       onClose();
     } catch (err: any) {
-      setError(err.message);
-      console.error(err);
+      addNotification(err.message, 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -234,11 +231,6 @@ export default function EditProductModal({
                   onGenerateDescription={handleGenerateDescription}
                 />
               </div>
-              {error && (
-                <div className="mt-4">
-                  <Notification message={error} type="error" onClose={() => setError(null)} />
-                </div>
-              )}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-200 mt-4">
                 <button type="button" onClick={onClose} disabled={isSubmitting} className="px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300 transition font-semibold disabled:opacity-50">Cancelar</button>
                 <button type="submit" disabled={isSubmitting} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-semibold disabled:bg-blue-400 flex items-center gap-2">
@@ -249,12 +241,12 @@ export default function EditProductModal({
           </div>
           <div className="hidden md:flex flex-col overflow-hidden h-full">
             <ProductPreview 
-              nombre={productData.prodName} 
-              precio={productData.prodPrice} 
-              descripcion={productData.prodDescription} 
-              stock={productData.prodStock} 
-              categoria={productData.prodCategory} 
-              imagenes={[...existingImages.map(img => img.prodImageUrl), ...newImagePreviews]} 
+              nombre={productData.productName} 
+              precio={productData.productPrice} 
+              descripcion={productData.productDescription} 
+              stock={productData.productStock} 
+              categoria={productData.categoryId} // Esto debería ser el nombre, pero lo ajustaremos si es necesario
+              imagenes={[...existingImages.map(img => img.productImageUrl), ...newImagePreviews]} 
             />
           </div>
         </div>

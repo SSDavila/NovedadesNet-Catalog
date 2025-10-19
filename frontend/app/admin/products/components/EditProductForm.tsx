@@ -3,22 +3,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { FaImage, FaTimes, FaSpinner, FaMagic, FaPlus } from 'react-icons/fa';
-import { ProductImage } from './ProductCard';
+import { Product, ProductImage, Category } from '@/interfaces';
 
-interface Categoria {
-  categoryId: string;
-  categoryName: string;
-}
+type ProductFormData = Pick<Product, 'productName' | 'productDescription' | 'categoryId'> & {
+  productPrice: string;
+  productStock: string;
+};
 
 interface EditProductFormProps {
-  productData: {
-    prodName: string;
-    prodDescription: string;
-    prodPrice: string;
-    prodStock: string;
-    prodCategory: string;
-  };
-  onProductDataChange: (data: EditProductFormProps['productData']) => void;
+  productData: ProductFormData;
+  onProductDataChange: (data: ProductFormData) => void;
   newImages: File[];
   newImagePreviews: string[];
   existingImages: ProductImage[];
@@ -41,14 +35,14 @@ export default function EditProductForm({
   onRemoveNewImage,
   onDropNewImages,
 }: EditProductFormProps) {
-  const [categorias, setCategorias] = useState<Categoria[]>([]);
+  const [categorias, setCategorias] = useState<Category[]>([]);
 
   useEffect(() => {
     const fetchCategorias = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
         if (!response.ok) throw new Error('No se pudieron cargar las categorías');
-        const data: Categoria[] = await response.json();
+        const data: Category[] = await response.json();
         setCategorias(data);
       } catch (error) {
         console.error(error);
@@ -58,8 +52,8 @@ export default function EditProductForm({
   }, []);
 
   useEffect(() => {
-    if (categorias.length > 0 && !productData.prodCategory) {
-      onProductDataChange({ ...productData, prodCategory: categorias[0].categoryName });
+    if (categorias.length > 0 && !productData.categoryId) {
+      onProductDataChange({ ...productData, categoryId: String(categorias[0].categoryId) });
     }
   }, [categorias, productData, onProductDataChange]);
 
@@ -79,16 +73,16 @@ export default function EditProductForm({
     <div className="space-y-4">
       <div>
         <label
-          htmlFor="prodName"
+          htmlFor="productName"
           className="block text-sm font-semibold text-gray-800 mb-1"
         >
           Nombre del Producto
         </label>
         <input
           type="text"
-          id="prodName"
-          value={productData.prodName}
-          onChange={e => handleChange('prodName', e.target.value)}
+          id="productName"
+          value={productData.productName}
+          onChange={e => handleChange('productName', e.target.value)}
           required
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg text-gray-900"
         />
@@ -97,16 +91,16 @@ export default function EditProductForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label
-            htmlFor="prodPrice"
+            htmlFor="productPrice"
             className="block text-sm font-semibold text-gray-800 mb-1"
           >
             Precio
           </label>
           <input
             type="number"
-            id="prodPrice"
-            value={productData.prodPrice}
-            onChange={e => handleChange('prodPrice', e.target.value)} 
+            id="productPrice"
+            value={productData.productPrice}
+            onChange={e => handleChange('productPrice', e.target.value)} 
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg text-black font-normal"
           />
@@ -114,16 +108,16 @@ export default function EditProductForm({
 
         <div>
           <label
-            htmlFor="prodStock"
+            htmlFor="productStock"
             className="block text-sm font-semibold text-gray-800 mb-1"
           >
             Stock
           </label>
           <input
             type="number"
-            id="prodStock"
-            value={productData.prodStock}
-            onChange={e => handleChange('prodStock', e.target.value)}
+            id="productStock"
+            value={productData.productStock}
+            onChange={e => handleChange('productStock', e.target.value)}
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
           />
@@ -132,20 +126,20 @@ export default function EditProductForm({
 
       <div>
         <label
-          htmlFor="prodCategory"
+          htmlFor="categoryId"
           className="block text-sm font-semibold text-gray-800 mb-1"
         >
           Categoría
         </label>
         <select
-          id="prodCategory"
-          value={productData.prodCategory}
-          onChange={e => handleChange('prodCategory', e.target.value)}
+          id="categoryId"
+          value={productData.categoryId}
+          onChange={e => handleChange('categoryId', e.target.value)}
           required
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white transition"
         >
           {categorias.map(cat => (
-            <option key={cat.categoryId} value={cat.categoryName}>
+            <option key={cat.categoryId} value={cat.categoryId}>
               {cat.categoryName}
             </option>
           ))}
@@ -155,7 +149,7 @@ export default function EditProductForm({
       <div>
         <div className="flex justify-between items-center mb-1">
           <label
-            htmlFor="prodDescription"
+            htmlFor="productDescription"
             className="block text-sm font-semibold text-gray-800"
           >
             Descripción
@@ -163,7 +157,7 @@ export default function EditProductForm({
           <button
             type="button"
             onClick={onGenerateDescription}
-            disabled={isGenerating || !productData.prodName}
+            disabled={isGenerating || !productData.productName}
             className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {isGenerating ? <FaSpinner className="animate-spin" /> : <FaMagic />}{' '}
@@ -171,9 +165,9 @@ export default function EditProductForm({
           </button>
         </div>
         <textarea
-          id="prodDescription"
-          value={productData.prodDescription}
-          onChange={e => handleChange('prodDescription', e.target.value)}
+          id="productDescription"
+          value={productData.productDescription}
+          onChange={e => handleChange('productDescription', e.target.value)}
           rows={8}
           required
           className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-gray-700"
@@ -186,15 +180,15 @@ export default function EditProductForm({
         </label>
         <div className="mt-2 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
           {existingImages.map((image, index) => (
-            <div key={`existing-${image.prodImageUrl}-${index}`} className="relative group aspect-square">
+            <div key={`existing-${image.productImageUrl}-${index}`} className="relative group aspect-square">
               <img
-                src={image.prodImageUrl}
-                alt={`Imagen existente ${image.prodImageId}`}
+                src={image.productImageUrl}
+                alt={`Imagen existente ${image.productImageId}`}
                 className="h-full w-full object-cover rounded-md shadow-sm"
               />
               <button
                 type="button"
-                onClick={() => onRemoveExistingImage(image.prodImageId)}
+                onClick={() => onRemoveExistingImage(image.productImageId)}
                 className="absolute top-0 right-0 -mt-2 -mr-2 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100 outline-none z-10"
               >
                 <FaTimes size={12} />
