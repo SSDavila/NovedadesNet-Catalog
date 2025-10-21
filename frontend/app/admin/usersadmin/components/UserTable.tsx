@@ -1,10 +1,10 @@
-import { User } from '../page';
+import { User } from '@/interfaces';
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
 interface UserTableProps {
   users: User[];
   onEdit: (user: User) => void;
-  onDelete: (userId: number) => void;
+  onDelete: (user: User) => void;
 }
 
 const roleClasses: Record<string, string> = {
@@ -67,7 +67,10 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                     <button onClick={() => onEdit(user)} className="text-blue-600 hover:text-blue-900 transition-colors">
                       <FaEdit size={16} />
                     </button>
-                    <button onClick={() => onDelete(user.userId)} className="text-red-600 hover:text-red-900 transition-colors">
+                    <button
+                      onClick={() => onDelete(user)}
+                      className="text-red-600 hover:text-red-900 transition-colors"
+                    >
                       <FaTrash size={15} />
                     </button>
                   </div>

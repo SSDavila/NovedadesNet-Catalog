@@ -4,6 +4,7 @@ import { useState } from 'react';
 import UserTable from './components/UserTable';
 import EditUserModal from './components/EditUserModal';
 import AddUserModal from './components/AddUserModal';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { FaPlus, FaUsers } from 'react-icons/fa';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '@/lib/constants';
@@ -13,6 +14,8 @@ import { User } from '@/interfaces';
 export default function UsersAdminPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const { addNotification } = useNotification();
 
   const queryClient = useQueryClient();
@@ -91,17 +94,23 @@ export default function UsersAdminPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['users'] });
       addNotification('Usuario eliminado correctamente', 'info');
+      setIsDeleteModalOpen(false);
+      setSelectedUser(null);
     },
     onError: (err: Error) => {
       addNotification(err.message, 'error');
     }
   });
 
-  const handleEditUser = (user: User) => setSelectedUser(user);
+  const openEditModal = (user: User) => {
+    setSelectedUser(user);
+    setIsEditModalOpen(true);
+  };
 
   const handleCloseModal = () => {
     setSelectedUser(null);
     setIsAddModalOpen(false);
+    setIsEditModalOpen(false);
   };
 
   const handleSaveUser = (userToSave: User & { userPassword?: string }) => {
@@ -112,10 +121,13 @@ export default function UsersAdminPage() {
     createUserMutation.mutate(newUser);
   };
 
-  const handleDeleteUser = async (userId: number) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
-      deleteUserMutation.mutate(userId);
-    }
+  const openDeleteModal = (user: User) => {
+    setSelectedUser(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = () => {
+    if (selectedUser) deleteUserMutation.mutate(selectedUser.userId);
   };
 
   if (isLoading) return <div className="p-8 text-center">Cargando usuarios...</div>;
@@ -138,10 +150,10 @@ export default function UsersAdminPage() {
       </header>
 
       <main>
-        <UserTable users={users} onEdit={handleEditUser} onDelete={handleDeleteUser} />
+        <UserTable users={users} onEdit={openEditModal} onDelete={openDeleteModal} />
       </main>
 
-      {selectedUser && (
+      {isEditModalOpen && selectedUser && (
         <EditUserModal
           user={selectedUser}
           onClose={handleCloseModal}
@@ -152,6 +164,14 @@ export default function UsersAdminPage() {
       {isAddModalOpen && (
         <AddUserModal onClose={handleCloseModal} onSave={handleCreateUser} />
       )}
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        title="Confirmar Eliminación"
+        message={`¿Estás seguro de que deseas eliminar al usuario "${selectedUser?.userName}"? Esta acción no se puede deshacer.`}
+        isConfirming={deleteUserMutation.isPending}
+      />
     </div>
   );
 }
