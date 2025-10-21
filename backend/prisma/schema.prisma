@@ -57,7 +57,7 @@ model Company {
 // ==============================================================================
 
 model Customer {
-  customerId                   Int      @id @default(autoincrement())
+  customerId                   String   @id
   customerIdentificationType   String   @default("CONSUMIDOR_FINAL")
   customerIdentificationNumber String   @unique
   customerName                 String
@@ -143,7 +143,7 @@ model SaleNote {
   saleNoteCreatedAt DateTime @default(now())
   saleNoteUpdatedAt DateTime @updatedAt
 
-  customerId         Int
+  customerId         String
   customer           Customer            @relation(fields: [customerId], references: [customerId])
   sellerId           Int
   seller             User                @relation(fields: [sellerId], references: [userId])
@@ -182,7 +182,7 @@ model Invoice {
   invoiceCreatedAt        DateTime @default(now())
   invoiceUpdatedAt        DateTime @updatedAt
 
-  customerId         Int
+  customerId         String
   customer           Customer            @relation(fields: [customerId], references: [customerId])
   sellerId           Int
   seller             User                @relation(fields: [sellerId], references: [userId])

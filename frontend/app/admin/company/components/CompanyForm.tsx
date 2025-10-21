@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import { FaSave, FaSpinner, FaEye, FaEyeSlash } from 'react-icons/fa';
-import { Company } from '../page';
+import { Company } from '@/interfaces';
 
 interface CompanyFormProps {
   companyData: Company;

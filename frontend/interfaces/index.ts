@@ -40,3 +40,15 @@ export interface Company {
   sriPassword?: string;
   sriCert?: File | null;
 }
+
+export interface Customer {
+  customerId: string;
+  customerIdentificationType?: string;
+  customerIdentificationNumber: string;
+  customerName: string;
+  customerEmail: string;
+  customerPhone?: string;
+  customerAddress?: string;
+  customerCreatedAt: string;
+  customerUpdatedAt: string;
+}

@@ -10,6 +10,7 @@ import { ProductsModule } from './product/products.module';
 import { AiController } from './ai/ai.controller';
 import { UsersModule } from './user/users.module';
 import { CompanyModule } from './company/company.module';
+import { CustomersModule } from './customer/customers.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { CompanyModule } from './company/company.module';
     ProductsModule,
     UsersModule,
     CompanyModule,
+    CustomersModule
   ],
   controllers: [AiController]
 })
