@@ -5,11 +5,11 @@ import { FaEdit, FaTrash } from 'react-icons/fa';
 
 interface CustomerTableProps {
   customers: Customer[];
-  // onEdit: (customer: Customer) => void;
-  // onDelete: (customerId: string) => void;
+  onEdit: (customer: Customer) => void;
+  onDelete: (customer: Customer) => void;
 }
 
-export default function CustomerTable({ customers }: CustomerTableProps) {
+export default function CustomerTable({ customers, onEdit, onDelete }: CustomerTableProps) {
   return (
     <div className="overflow-x-auto bg-white rounded-lg shadow">
       <table className="min-w-full text-sm text-left text-gray-700">
@@ -47,14 +47,14 @@ export default function CustomerTable({ customers }: CustomerTableProps) {
               </td>
               <td className="px-6 py-4 text-right flex justify-end gap-2">
                 <button
-                  // onClick={() => onEdit(customer)}
+                   onClick={() => onEdit(customer)}
                   className="p-2 text-blue-600 hover:text-blue-800 disabled:text-gray-300"
                   title="Editar"
                 >
                   <FaEdit />
                 </button>
                 <button
-                  // onClick={() => onDelete(customer.customerId)}
+                   onClick={() => onDelete(customer)}
                   className="p-2 text-red-600 hover:text-red-800 disabled:text-gray-300"
                   title="Eliminar"
                 >
