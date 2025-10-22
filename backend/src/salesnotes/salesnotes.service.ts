@@ -14,11 +14,12 @@ export class SaleNotesService {
   async create(createSaleNoteDto: CreateSaleNoteDto) {
     const { customerId, items } = createSaleNoteDto;
 
+    // TODO: Reemplazar con el ID del usuario autenticado desde el request (AuthGuard)
     const sellerId = 1;
 
     return this.prisma.$transaction(async (prisma) => {
-
-        const customer = await prisma.customer.findUnique({
+      // 1. Validar que el cliente y el vendedor existan.
+      const customer = await prisma.customer.findUnique({
         where: { customerId },
       });
       if (!customer) {
@@ -33,7 +34,37 @@ export class SaleNotesService {
       }
 
       const productIds = items.map((item) => item.productId);
+      const products = await prisma.product.findMany({
+        where: { productId: { in: productIds } },
+      });
 
+      if (products.length !== productIds.length) {
+        throw new NotFoundException('Uno o más productos no fueron encontrados.');
+      }
+
+      let total = 0;
+      const saleNoteItemsData = [];
+
+      // 2. Validar stock y calcular total
+      for (const item of items) {
+        const product = products.find((p) => p.productId === item.productId);
+        if (product.productStock < item.quantity) {
+          throw new BadRequestException(
+            `Stock insuficiente para el producto: ${product.productName}. Stock actual: ${product.productStock}`,
+          );
+        }
+        const subtotal = product.productPrice.toNumber() * item.quantity;
+        total += subtotal;
+
+        saleNoteItemsData.push({
+          productId: item.productId,
+          saleNoteItemQuantity: item.quantity,
+          saleNoteItemUnitPrice: product.productPrice,
+          saleNoteItemSubtotal: subtotal,
+        });
+      }
+
+      // 3. Generar número de secuencia para la nota de venta
       const sequence = await prisma.sequenceControl.upsert({
         where: {
           documentType_establishmentCode_emissionPointCode: {
@@ -43,7 +74,12 @@ export class SaleNotesService {
           },
         },
         update: { currentNumber: { increment: 1 } },
-        create: { documentType: 'SALE_NOTE', currentNumber: 1, establishmentCode: '001', emissionPointCode: '001' },
+        create: {
+          documentType: 'SALE_NOTE',
+          currentNumber: 1,
+          establishmentCode: '001',
+          emissionPointCode: '001',
+        },
       });
 
       const now = new Date();
@@ -55,6 +91,29 @@ export class SaleNotesService {
       const saleNoteNumber = `NS-${datePart}-${sequence.currentNumber
         .toString()
         .padStart(6, '0')}`;
+
+      // 4. Crear la nota de venta y sus items
+      const saleNote = await prisma.saleNote.create({
+        data: {
+          saleNoteNumber,
+          saleNoteTotal: total,
+          customerId,
+          sellerId,
+          items: {
+            create: saleNoteItemsData,
+          },
+        },
+      });
+
+      // 5. Actualizar el stock de los productos
+      for (const item of items) {
+        await prisma.product.update({
+          where: { productId: item.productId },
+          data: { productStock: { decrement: item.quantity } },
+        });
+      }
+
+      return saleNote;
     });
   }
 

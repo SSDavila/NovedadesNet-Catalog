@@ -1,15 +1,71 @@
 'use client';
 
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FaFileAlt, FaPlus } from 'react-icons/fa';
 import SaleNoteList from './components/SaleNoteList';
-
-const mockSaleNotes = [
-  { id: '1', noteNumber: 'NV-0001', customerName: 'Juan Pérez', total: 560.50, status: 'COMPLETADA', date: '2024-05-19' },
-  { id: '2', noteNumber: 'NV-0002', customerName: 'Empresa XYZ', total: 1200.00, status: 'PENDIENTE', date: '2024-05-22' },
-  { id: '3', noteNumber: 'NV-0003', customerName: 'María Rodríguez', total: 75.20, status: 'CANCELADA', date: '2024-05-20' },
-];
+import NewSaleNoteModal from './components/NewSaleNoteModal';
+import { SaleNoteFormData } from './components/NewSaleNoteForm';
+import { SaleNote } from '@/interfaces';
+import { API_BASE_URL } from '@/lib/constants';
+import { useNotification } from '@/components/Notifications/NotificationContext';
 
 export default function SaleNotesPage() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const queryClient = useQueryClient();
+  const { addNotification } = useNotification();
+
+  const { data: saleNotes = [], isLoading, isError, error } = useQuery<SaleNote[]>({
+    queryKey: ['saleNotes'],
+    queryFn: async () => {
+      const response = await fetch(`${API_BASE_URL}/sale-notes`);
+      if (!response.ok) {
+        throw new Error('No se pudieron cargar las notas de venta.');
+      }
+      return response.json();
+    },
+  });
+
+  const createSaleNoteMutation = useMutation({
+    mutationFn: async (data: SaleNoteFormData) => {
+      if (!data.customer) throw new Error('Cliente no seleccionado');
+
+      const payload = {
+        customerId: data.customer.value,
+        items: data.items.map(item => ({
+          productId: item.productId,
+          quantity: Number(item.quantity),
+        })),
+      };
+
+      const response = await fetch(`${API_BASE_URL}/sale-notes`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al crear la nota de venta');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      addNotification('Nota de Venta creada con éxito', 'success');
+      queryClient.invalidateQueries({ queryKey: ['saleNotes'] });
+      setIsModalOpen(false);
+    },
+    onError: (error: Error) => {
+      addNotification(error.message, 'error');
+    },
+  });
+
+  const handleCreateSaleNote = async (data: SaleNoteFormData) => {
+    await createSaleNoteMutation.mutateAsync(data);
+  };
+
+  if (isError) return <div className="p-8 text-center text-red-600">Error: {error.message}</div>;
+
   return (
     <div className="p-6 sm:p-8">
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
@@ -20,16 +76,28 @@ export default function SaleNotesPage() {
           </h1>
           <p className="text-gray-600 mt-1">Crea cotizaciones o pre-facturas para tus clientes.</p>
         </div>
-        <button className="mt-4 sm:mt-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="mt-4 sm:mt-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+        >
           <FaPlus />
           Nueva Nota de Venta
         </button>
       </header>
 
       <main>
-        <SaleNoteList saleNotes={mockSaleNotes} />
+        {isLoading ? (
+          <div className="text-center p-8">Cargando notas de venta...</div>
+        ) : (
+          <SaleNoteList saleNotes={saleNotes} />
+        )}
       </main>
+      <NewSaleNoteModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateSaleNote}
+        isSubmitting={createSaleNoteMutation.isPending}
+      />
     </div>
   );
 }
-

@@ -88,9 +88,36 @@ export class ProductsService {
     return newProduct;
   }
 
-  findAll() {
+  findAll(searchTerm?: string) {
+    const includeRelations = {
+      images: true,
+      category: true,
+    };
+
+    if (searchTerm) {
+      return this.prisma.product.findMany({
+        where: {
+          OR: [
+            {
+              productName: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
+            },
+            {
+              productSku: {
+                contains: searchTerm,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        },
+        include: includeRelations,
+      });
+    }
+
     return this.prisma.product.findMany({
-      include: { images: true },
+      include: includeRelations,
     });
   }
 

@@ -1,65 +1,63 @@
-import { FaEye, FaFileInvoice, FaTrash } from 'react-icons/fa';
-import Link from 'next/link';
+'use client';
 
-interface SaleNote {
-  id: string;
-  noteNumber: string;
-  customerName: string;
-  total: number;
-  status: 'COMPLETADA' | 'PENDIENTE' | 'CANCELADA';
-  date: string;
-}
+import { SaleNote } from '@/interfaces';
+import { FaEye } from 'react-icons/fa';
 
 interface SaleNoteListProps {
   saleNotes: SaleNote[];
 }
 
-const statusClasses = {
-  COMPLETADA: 'bg-blue-100 text-blue-800',
+const statusClasses: { [key: string]: string } = {
   PENDIENTE: 'bg-yellow-100 text-yellow-800',
-  CANCELADA: 'bg-gray-100 text-gray-800',
+  COMPLETADA: 'bg-green-100 text-green-800',
+  CANCELADA: 'bg-red-100 text-red-800',
 };
 
 export default function SaleNoteList({ saleNotes }: SaleNoteListProps) {
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Nota</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th scope="col" className="relative px-6 py-3"><span className="sr-only">Acciones</span></th>
+    <div className="overflow-x-auto bg-white rounded-lg shadow">
+      <table className="min-w-full text-sm text-left text-gray-700">
+        <thead className="bg-gray-100 text-xs text-gray-800 uppercase font-semibold">
+          <tr>
+            <th scope="col" className="px-6 py-3">N° Nota</th>
+            <th scope="col" className="px-6 py-3">Cliente</th>
+            <th scope="col" className="px-6 py-3">Fecha</th>
+            <th scope="col" className="px-6 py-3 text-right">Total</th>
+            <th scope="col" className="px-6 py-3 text-center">Estado</th>
+            <th scope="col" className="px-6 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {saleNotes.map((note) => (
+            <tr key={note.saleNoteId} className="bg-white border-b hover:bg-gray-50">
+              <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                {note.saleNoteNumber}
+              </th>
+              <td className="px-6 py-4">{note.customer.customerName}</td>
+              <td className="px-6 py-4">
+                {new Date(note.saleNoteCreatedAt).toLocaleDateString()}
+              </td>
+              <td className="px-6 py-4 text-right font-mono">
+                ${note.saleNoteTotal.toFixed(2)}
+              </td>
+              <td className="px-6 py-4 text-center">
+                <span
+                  className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    statusClasses[note.saleNoteStatus] || 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  {note.saleNoteStatus}
+                </span>
+              </td>
+              <td className="px-6 py-4 text-right">
+                <button className="p-2 text-gray-500 hover:text-blue-600" title="Ver Detalle">
+                  <FaEye />
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {saleNotes.map((note) => (
-              <tr key={note.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">{note.noteNumber}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{note.customerName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(note.date).toLocaleDateString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-800">${note.total.toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[note.status]}`}>
-                    {note.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-3">
-                    <Link href={`/admin/sales-notes/${note.id}`} className="text-blue-600 hover:text-blue-900"><FaEye /></Link>
-                    <button className="text-green-600 hover:text-green-900" title="Facturar"><FaFileInvoice /></button>
-                    <button className="text-red-600 hover:text-red-900"><FaTrash /></button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
-

@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseInterceptors,
+  Query,
   UploadedFiles,
   ParseFilePipe,
   MaxFileSizeValidator,
@@ -34,8 +35,8 @@ export class ProductsController {
   }
 
   @Get()
-  findAll() {
-    return this.productsService.findAll();
+  findAll(@Query('search') searchTerm?: string) {
+    return this.productsService.findAll(searchTerm);
   }
 
   @Get(':id')

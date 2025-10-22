@@ -52,3 +52,17 @@ export interface Customer {
   customerCreatedAt: string;
   customerUpdatedAt: string;
 }
+
+export interface SaleNote {
+  saleNoteId: number;
+  saleNoteNumber: string;
+  saleNoteStatus: string;
+  saleNoteTotal: number;
+  saleNoteCreatedAt: string;
+  customer: {
+    customerName: string;
+  };
+  seller: {
+    userName: string;
+  };
+}
