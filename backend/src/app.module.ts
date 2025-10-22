@@ -11,6 +11,7 @@ import { AiController } from './ai/ai.controller';
 import { UsersModule } from './user/users.module';
 import { CompanyModule } from './company/company.module';
 import { CustomersModule } from './customer/customers.module';
+import { SaleNotesModule } from './salesnotes/salesnotes.module';
 
 @Module({
   imports: [
@@ -26,7 +27,8 @@ import { CustomersModule } from './customer/customers.module';
     ProductsModule,
     UsersModule,
     CompanyModule,
-    CustomersModule
+    CustomersModule,
+    SaleNotesModule
   ],
   controllers: [AiController]
 })

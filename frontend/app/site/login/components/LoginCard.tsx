@@ -11,12 +11,11 @@ export default function LoginCard() {
 
   return (
     <div className="w-full max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden grid md:grid-cols-2 min-h-[500px]">
-      {/* Left Row */}
+
       <div className="bg-blue-600">
         <LoginIntro mode={mode} setMode={setMode} />
       </div>
 
-      {/* Right Row */}
       <div className="p-8 md:p-12 flex flex-col justify-center relative overflow-hidden">
         <AnimatePresence mode="wait">
           <motion.div

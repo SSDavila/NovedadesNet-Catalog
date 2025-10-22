@@ -233,4 +233,6 @@ model SequenceControl {
   emissionPointCode String // Ej: "001"
   currentNumber     Int      @default(1)
   updatedAt         DateTime @updatedAt
+
+  @@unique([documentType, establishmentCode, emissionPointCode])
 }

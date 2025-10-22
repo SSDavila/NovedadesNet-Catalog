@@ -1,20 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import Notification from '@/components/Notification';
+import { useNotification } from '@/components/Notifications/NotificationContext';
 
 export default function RegisterForm() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const { addNotification } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     setIsLoading(true);
 
     try {
@@ -36,14 +33,14 @@ export default function RegisterForm() {
         throw new Error(data.error || 'Ocurrió un error al registrar la cuenta.');
       }
 
-      setSuccess('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.');
+      addNotification('¡Cuenta creada con éxito! Ahora puedes iniciar sesión.', 'success');
       
       setName('');
       setEmail('');
       setPassword('');
 
     } catch (err: any) {
-      setError(err.message);
+      addNotification(err.message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -51,16 +48,6 @@ export default function RegisterForm() {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      {(error || success) && (
-        <Notification
-          message={error || success}
-          type={error ? 'error' : 'success'}
-          onClose={() => {
-            setError(null);
-            setSuccess(null);
-          }}
-        />
-      )}
       <div className="space-y-4">
         <div>
           <label htmlFor="name" className="sr-only">Nombre</label>

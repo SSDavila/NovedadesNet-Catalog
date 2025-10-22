@@ -1,21 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import Notification from '@/components/Notification';
+import { useState } from 'react';
+import { useNotification } from '@/components/Notifications/NotificationContext';
 
 export default function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { addNotification } = useNotification();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
     setIsLoading(true);
 
     try {
@@ -36,13 +33,13 @@ export default function LoginForm() {
         throw new Error(data.message || 'Ocurrió un error al iniciar sesión.');
       }
 
-      setSuccess(`¡Bienvenido, ${data.user.userName}!`);
+      addNotification(`¡Bienvenido, ${data.user.userName}!`, 'success');
       setTimeout(() => {
         router.push('/admin');
       }, 1500);
 
     } catch (err: any) {
-      setError(err.message);
+      addNotification(err.message, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -50,16 +47,6 @@ export default function LoginForm() {
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit}>
-      {(error || success) && (
-        <Notification
-          message={error || success}
-          type={error ? 'error' : 'success'}
-          onClose={() => {
-            setError(null);
-            setSuccess(null);
-          }}
-        />
-      )}
       <div className="space-y-4">
         <div>
           <label htmlFor="email-address" className="sr-only">Correo electrónico</label>
