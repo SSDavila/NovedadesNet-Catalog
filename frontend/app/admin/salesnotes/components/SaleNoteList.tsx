@@ -38,7 +38,7 @@ export default function SaleNoteList({ saleNotes }: SaleNoteListProps) {
                 {new Date(note.saleNoteCreatedAt).toLocaleDateString()}
               </td>
               <td className="px-6 py-4 text-right font-mono">
-                ${note.saleNoteTotal.toFixed(2)}
+                ${Number(note.saleNoteTotal).toFixed(2)}
               </td>
               <td className="px-6 py-4 text-center">
                 <span

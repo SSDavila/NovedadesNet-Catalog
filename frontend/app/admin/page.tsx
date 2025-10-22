@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { IconType } from 'react-icons';
 import { FaDollarSign, FaUsers, FaBox, FaChartBar, FaClockRotateLeft, FaStar, FaArrowTrendUp, FaArrowTrendDown } from 'react-icons/fa6';
 
@@ -55,7 +56,7 @@ const SalesChart = () => {
             <div
               className="w-full bg-indigo-200 rounded-t-lg hover:bg-indigo-400 transition-all duration-300"
               style={{ height: `${(data.value / maxSale) * 100}%` }}
-              title={`$${data.value.toLocaleString()}`}
+              title={`$${data.value}`}
             ></div>
             <span className="text-xs font-medium text-gray-500">{data.name}</span>
           </div>
@@ -104,6 +105,16 @@ const TopProducts = () => {
     { id: 3, name: 'Teclado Mecánico RGB', sales: 74, image: '/placeholder.png' },
   ];
 
+  // Solución para el error de hidratación: generar precios solo en el cliente
+  const [randomPrices, setRandomPrices] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Este código solo se ejecuta en el navegador, después del renderizado inicial
+    setRandomPrices(
+      products.map(() => (Math.random() * 100 + 50).toFixed(2))
+    );
+  }, []); // El array vacío asegura que se ejecute solo una vez
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100">
       <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
@@ -111,14 +122,16 @@ const TopProducts = () => {
         Top Productos
       </h3>
       <ul className="mt-4 space-y-3">
-        {products.map(product => (
+        {products.map((product, index) => (
           <li key={product.id} className="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-50">
             <img src={product.image} alt={product.name} className="w-12 h-12 rounded-md object-cover bg-gray-200" />
             <div className="flex-1">
               <p className="text-sm font-semibold text-gray-800 truncate">{product.name}</p>
               <p className="text-xs text-gray-500">{product.sales} ventas</p>
             </div>
-            <p className="text-sm font-bold text-gray-900">${(Math.random() * 100 + 50).toFixed(2)}</p>
+            <p className="text-sm font-bold text-gray-900">
+              {randomPrices[index] ? `$${randomPrices[index]}` : '...'}
+            </p>
           </li>
         ))}
       </ul>

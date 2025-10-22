@@ -18,7 +18,13 @@ export default function SaleNotesPage() {
   const { data: saleNotes = [], isLoading, isError, error } = useQuery<SaleNote[]>({
     queryKey: ['saleNotes'],
     queryFn: async () => {
-      const response = await fetch(`${API_BASE_URL}/sale-notes`);
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_BASE_URL}/sale-notes`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
       if (!response.ok) {
         throw new Error('No se pudieron cargar las notas de venta.');
       }
@@ -38,9 +44,13 @@ export default function SaleNotesPage() {
         })),
       };
 
+      const token = localStorage.getItem('access_token');
       const response = await fetch(`${API_BASE_URL}/sale-notes`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
         body: JSON.stringify(payload),
       });
 

@@ -33,6 +33,11 @@ export default function LoginForm() {
         throw new Error(data.message || 'Ocurrió un error al iniciar sesión.');
       }
 
+      // Guardamos el token en el almacenamiento local del navegador
+      if (data.access_token) {
+        localStorage.setItem('access_token', data.access_token);
+      }
+
       addNotification(`¡Bienvenido, ${data.user.userName}!`, 'success');
       setTimeout(() => {
         router.push('/admin');
