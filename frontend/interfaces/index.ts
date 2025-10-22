@@ -65,4 +65,13 @@ export interface SaleNote {
   seller: {
     userName: string;
   };
+  items?: {
+    saleNoteItemId: number;
+    saleNoteItemQuantity: number;
+    saleNoteItemUnitPrice: number;
+    product: {
+      productName: string;
+      productSku: string | null;
+    };
+  }[];
 }

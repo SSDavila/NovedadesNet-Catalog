@@ -5,6 +5,7 @@ import { FaEye } from 'react-icons/fa';
 
 interface SaleNoteListProps {
   saleNotes: SaleNote[];
+  onViewDetails: (saleNoteId: number) => void;
 }
 
 const statusClasses: { [key: string]: string } = {
@@ -13,7 +14,7 @@ const statusClasses: { [key: string]: string } = {
   CANCELADA: 'bg-red-100 text-red-800',
 };
 
-export default function SaleNoteList({ saleNotes }: SaleNoteListProps) {
+export default function SaleNoteList({ saleNotes, onViewDetails }: SaleNoteListProps) {
   return (
     <div className="overflow-x-auto bg-white rounded-lg shadow">
       <table className="min-w-full text-sm text-left text-gray-700">
@@ -50,7 +51,11 @@ export default function SaleNoteList({ saleNotes }: SaleNoteListProps) {
                 </span>
               </td>
               <td className="px-6 py-4 text-right">
-                <button className="p-2 text-gray-500 hover:text-blue-600" title="Ver Detalle">
+                <button
+                  onClick={() => onViewDetails(note.saleNoteId)}
+                  className="p-2 text-gray-500 hover:text-blue-600"
+                  title="Ver Detalle"
+                >
                   <FaEye />
                 </button>
               </td>

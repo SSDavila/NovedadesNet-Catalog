@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FaFileAlt, FaPlus } from 'react-icons/fa';
 import SaleNoteList from './components/SaleNoteList';
 import NewSaleNoteModal from './components/NewSaleNoteModal';
+import SaleNoteDetailModal from './components/SaleNoteDetailModal';
 import { SaleNoteFormData } from './components/NewSaleNoteForm';
 import { SaleNote } from '@/interfaces';
 import { API_BASE_URL } from '@/lib/constants';
@@ -12,6 +13,8 @@ import { useNotification } from '@/components/Notifications/NotificationContext'
 
 export default function SaleNotesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedSaleNoteId, setSelectedSaleNoteId] = useState<number | null>(null);
   const queryClient = useQueryClient();
   const { addNotification } = useNotification();
 
@@ -74,6 +77,11 @@ export default function SaleNotesPage() {
     await createSaleNoteMutation.mutateAsync(data);
   };
 
+  const handleViewDetails = (saleNoteId: number) => {
+    setSelectedSaleNoteId(saleNoteId);
+    setIsDetailModalOpen(true);
+  };
+
   if (isError) return <div className="p-8 text-center text-red-600">Error: {error.message}</div>;
 
   return (
@@ -99,7 +107,7 @@ export default function SaleNotesPage() {
         {isLoading ? (
           <div className="text-center p-8">Cargando notas de venta...</div>
         ) : (
-          <SaleNoteList saleNotes={saleNotes} />
+          <SaleNoteList saleNotes={saleNotes} onViewDetails={handleViewDetails} />
         )}
       </main>
       <NewSaleNoteModal
@@ -107,6 +115,11 @@ export default function SaleNotesPage() {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateSaleNote}
         isSubmitting={createSaleNoteMutation.isPending}
+      />
+      <SaleNoteDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        saleNoteId={selectedSaleNoteId}
       />
     </div>
   );
