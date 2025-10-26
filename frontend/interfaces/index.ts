@@ -75,3 +75,13 @@ export interface SaleNote {
     };
   }[];
 }
+
+export interface ProductStock {
+  productId: string;
+  productName: string;
+  productSku: string | null;
+  productStock: number;
+  category: {
+    categoryName: string;
+  } | null;
+}

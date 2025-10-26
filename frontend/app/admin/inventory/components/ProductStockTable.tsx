@@ -1,64 +1,61 @@
-import { FaPlus, FaMinus } from 'react-icons/fa';
+'use client';
 
-interface Product {
-  id: string;
-  name: string;
-  sku: string;
-  stock: number;
-  lowStockThreshold: number;
-  category: string;
-}
+import { ProductStock } from '@/interfaces';
+import { FaEdit } from 'react-icons/fa';
 
 interface ProductStockTableProps {
-  products: Product[];
+  products: ProductStock[];
+  onAdjustStock: (product: ProductStock) => void;
 }
 
-const getStockStatus = (stock: number, threshold: number) => {
-  if (stock === 0) return { text: 'Sin Stock', className: 'bg-red-100 text-red-800 ring-1 ring-inset ring-red-600/20' };
-  if (stock <= threshold) return { text: 'Bajo Stock', className: 'bg-yellow-100 text-yellow-800 ring-1 ring-inset ring-yellow-600/20' };
-  return { text: 'En Stock', className: 'bg-green-100 text-green-800 ring-1 ring-inset ring-green-600/20' };
+const getStockClass = (stock: number) => {
+  if (stock === 0) return 'text-red-600 font-bold';
+  if (stock > 0 && stock <= 10) return 'text-yellow-600 font-semibold';
+  return 'text-gray-800';
 };
 
-export default function ProductStockTable({ products }: ProductStockTableProps) {
+export default function ProductStockTable({ products, onAdjustStock }: ProductStockTableProps) {
+  if (products.length === 0) {
+    return <div className="text-center py-12 text-gray-500">No se encontraron productos.</div>;
+  }
+
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Producto</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">SKU</th>
-              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Stock Actual</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th scope="col" className="relative px-6 py-3"><span className="sr-only">Ajustar</span></th>
+    <div className="overflow-x-auto bg-white rounded-lg shadow">
+      <table className="min-w-full text-sm text-left text-gray-700">
+        <thead className="bg-gray-100 text-xs text-gray-800 uppercase font-semibold">
+          <tr>
+            <th scope="col" className="px-6 py-3">Producto</th>
+            <th scope="col" className="px-6 py-3">SKU</th>
+            <th scope="col" className="px-6 py-3">Categoría</th>
+            <th scope="col" className="px-6 py-3 text-center">Stock Actual</th>
+            <th scope="col" className="px-6 py-3 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {products.map((product) => (
+            <tr key={product.productId} className="bg-white border-b hover:bg-gray-50">
+              <th scope="row" className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                {product.productName}
+              </th>
+              <td className="px-6 py-4 font-mono">{product.productSku || '-'}</td>
+              <td className="px-6 py-4">{product.category?.categoryName || 'Sin categoría'}</td>
+              <td className={`px-6 py-4 text-center text-lg ${getStockClass(product.productStock)}`}>
+                {product.productStock}
+              </td>
+              <td className="px-6 py-4 text-right">
+                <button
+                  onClick={() => onAdjustStock(product)}
+                  className="flex items-center gap-2 ml-auto bg-gray-200 text-gray-700 px-3 py-1 rounded-md hover:bg-gray-300 transition-colors text-xs font-semibold"
+                  title="Ajustar Stock"
+                >
+                  <FaEdit />
+                  Ajustar
+                </button>
+              </td>
             </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((product) => {
-              const status = getStockStatus(product.stock, product.lowStockThreshold);
-              return (
-                <tr key={product.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.sku}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-800">{product.stock}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${status.className}`}>
-                      {status.text}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex items-center justify-end gap-2">
-                      <button className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600"><FaMinus size={12} /></button>
-                      <button className="p-2 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600"><FaPlus size={12} /></button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
-
