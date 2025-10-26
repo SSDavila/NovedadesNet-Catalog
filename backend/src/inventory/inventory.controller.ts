@@ -21,6 +21,12 @@ export class InventoryController {
     return this.inventoryService.findAllStock();
   }
 
+  @Get('movements')
+  @UseGuards(JwtAuthGuard)
+  findAllMovements() {
+    return this.inventoryService.findAllMovements();
+  }
+
   @Post('adjust')
   @UseGuards(JwtAuthGuard)
   adjustStock(

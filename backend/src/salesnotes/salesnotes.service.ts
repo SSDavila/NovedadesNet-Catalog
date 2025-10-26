@@ -106,6 +106,20 @@ export class SaleNotesService {
         });
       }
 
+      // 5. Registrar los movimientos de inventario por la venta
+      const inventoryMovementsData = items.map((item) => ({
+        productId: item.productId,
+        userId: sellerId,
+        saleNoteId: saleNote.saleNoteId,
+        inventoryMovementType: 'SALE',
+        inventoryMovementQuantity: -item.quantity, // Negativo porque es una salida
+        inventoryMovementReason: `Venta en nota #${saleNote.saleNoteNumber}`,
+      }));
+
+      await prisma.inventoryMovement.createMany({
+        data: inventoryMovementsData,
+      });
+
       return saleNote;
     });
   }

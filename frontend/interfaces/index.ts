@@ -85,3 +85,18 @@ export interface ProductStock {
     categoryName: string;
   } | null;
 }
+
+export interface InventoryMovement {
+  inventoryMovementId: number;
+  inventoryMovementType: string;
+  inventoryMovementQuantity: number;
+  inventoryMovementReason: string | null;
+  inventoryMovementCreatedAt: string;
+  product: {
+    productName: string;
+    productSku: string | null;
+  };
+  user: {
+    userName: string;
+  };
+}

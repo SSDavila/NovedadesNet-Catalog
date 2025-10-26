@@ -5,18 +5,21 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { FaWarehouse, FaSearch } from 'react-icons/fa';
 import ProductStockTable from './components/ProductStockTable';
 import AdjustStockModal from './components/AdjustStockModal';
-import { ProductStock } from '@/interfaces';
+import { ProductStock, InventoryMovement } from '@/interfaces';
 import { API_BASE_URL } from '@/lib/constants';
 import { useNotification } from '@/components/Notifications/NotificationContext';
+import InventoryTabs from './components/InventoryTabs';
+import InventoryMovementsTable from './components/InventoryMovementsTable';
 
 export default function InventoryPage() {
+  const [activeTab, setActiveTab] = useState<'stock' | 'movements'>('stock');
   const [searchTerm, setSearchTerm] = useState('');
   const [isAdjustModalOpen, setIsAdjustModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<ProductStock | null>(null);
   const queryClient = useQueryClient();
   const { addNotification } = useNotification();
 
-  const { data: products = [], isLoading, isError, error } = useQuery<ProductStock[]>({
+  const { data: products = [], isLoading: isLoadingStock, isError: isErrorStock, error: errorStock } = useQuery<ProductStock[]>({
     queryKey: ['productStock'],
     queryFn: async () => {
       const token = localStorage.getItem('access_token');
@@ -24,6 +27,18 @@ export default function InventoryPage() {
         headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('No se pudo cargar el stock de productos.');
+      return response.json();
+    },
+  });
+
+  const { data: movements = [], isLoading: isLoadingMovements, isError: isErrorMovements, error: errorMovements } = useQuery<InventoryMovement[]>({
+    queryKey: ['inventoryMovements'],
+    queryFn: async () => {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_BASE_URL}/inventory/movements`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error('No se pudo cargar el historial de movimientos.');
       return response.json();
     },
   });
@@ -48,6 +63,7 @@ export default function InventoryPage() {
     onSuccess: () => {
       addNotification('Stock ajustado con éxito', 'success');
       queryClient.invalidateQueries({ queryKey: ['productStock'] });
+      queryClient.invalidateQueries({ queryKey: ['inventoryMovements'] });
       setIsAdjustModalOpen(false);
     },
     onError: (error: Error) => {
@@ -72,7 +88,11 @@ export default function InventoryPage() {
     );
   }, [products, searchTerm]);
 
-  if (isError) return <div className="p-8 text-center text-red-600">Error: {error.message}</div>;
+  const isLoading = isLoadingStock || isLoadingMovements;
+  const isError = isErrorStock || isErrorMovements;
+  const error = errorStock || errorMovements;
+
+  if (isError) return <div className="p-8 text-center text-red-600">Error: {error?.message}</div>;
 
   return (
     <div className="p-6 sm:p-8">
@@ -84,23 +104,25 @@ export default function InventoryPage() {
           </h1>
           <p className="text-gray-600 mt-1">Monitoriza y ajusta el stock de tus productos.</p>
         </div>
-        <div className="relative mt-4 sm:mt-0">
-          <input
-            type="text"
-            placeholder="Buscar producto por nombre o SKU..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-4 py-2 border rounded-lg w-full sm:w-64"
-          />
-          <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-        </div>
+        {activeTab === 'stock' && (
+          <div className="relative mt-4 sm:mt-0">
+            <input
+              type="text"
+              placeholder="Buscar producto por nombre o SKU..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 pr-4 py-2 border rounded-lg w-full sm:w-64"
+            />
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          </div>
+        )}
       </header>
 
+      <InventoryTabs activeTab={activeTab} onTabChange={setActiveTab} />
+
       <main>
-        {isLoading ? (
-          <div className="text-center p-8">Cargando inventario...</div>
-        ) : (
-          <ProductStockTable products={filteredProducts} onAdjustStock={handleOpenAdjustModal} />
+        {isLoading ? <div className="text-center p-8">Cargando...</div> : (
+          activeTab === 'stock' ? <ProductStockTable products={filteredProducts} onAdjustStock={handleOpenAdjustModal} /> : <InventoryMovementsTable movements={movements} />
         )}
       </main>
 

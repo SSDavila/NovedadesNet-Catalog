@@ -29,6 +29,27 @@ export class InventoryService {
     });
   }
 
+  findAllMovements() {
+    return this.prisma.inventoryMovement.findMany({
+      include: {
+        product: {
+          select: {
+            productName: true,
+            productSku: true,
+          },
+        },
+        user: {
+          select: {
+            userName: true,
+          },
+        },
+      },
+      orderBy: {
+        inventoryMovementCreatedAt: 'desc',
+      },
+    });
+  }
+
   async adjustStock(items: AdjustStockDto[], userId: number) {
     return this.prisma.$transaction(async (tx) => {
       for (const item of items) {
