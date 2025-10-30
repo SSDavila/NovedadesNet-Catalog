@@ -31,7 +31,7 @@ export class CompanyController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: 100000 }),
-          new FileTypeValidator({ fileType: 'application/x-pkcs12' }),
+          new FileTypeValidator({ fileType: new RegExp('application/x-pkcs12') }),
         ],
         fileIsRequired: false,
       }),

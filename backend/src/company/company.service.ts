@@ -1,8 +1,6 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { UpdateCompanyDto } from './dto/update-company.dto';
-import { Company } from '@prisma/client';
-import { Express } from 'express';
 import * as forge from 'node-forge';
 import * as fs from 'fs';
 
@@ -10,13 +8,13 @@ import * as fs from 'fs';
 export class CompanyService {
   constructor(private prisma: PrismaService) {}
 
-  async find(): Promise<Company | null> {    
+  async find() {
     return this.prisma.company.findUnique({
       where: { companyId: 1 },
     });
   }
 
-  async upsert(updateCompanyDto: UpdateCompanyDto, file?: Express.Multer.File): Promise<Company> {
+  async upsert(updateCompanyDto: UpdateCompanyDto, file?: Express.Multer.File) {
 
     if (file && updateCompanyDto.sriPassword) {
       try {

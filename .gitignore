@@ -18,6 +18,7 @@ frontend/.env*.local
 backend/node_modules
 backend/dist
 backend/.env
+backend/uploads/certs/
 
 # Prisma
 backend/prisma/generated
