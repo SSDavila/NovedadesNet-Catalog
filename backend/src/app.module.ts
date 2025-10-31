@@ -13,6 +13,7 @@ import { CompanyModule } from './company/company.module';
 import { CustomersModule } from './customer/customers.module';
 import { SaleNotesModule } from './salesnotes/salesnotes.module';
 import { InventoryModule } from './inventory/inventory.module';
+import { InvoicesModule } from './invoice/invoice.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { InventoryModule } from './inventory/inventory.module';
     CompanyModule,
     CustomersModule,
     SaleNotesModule,
-    InventoryModule
+    InventoryModule,
+    InvoicesModule
   ],
   controllers: [AiController]
 })
