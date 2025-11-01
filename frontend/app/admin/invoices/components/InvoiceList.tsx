@@ -42,7 +42,7 @@ export default function InvoiceList({ invoices, onView }: InvoiceListProps) {
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">{invoice.invoiceNumber}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.customerName}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{invoice.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-800">${invoice.total.toFixed(2)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-800">${Number(invoice.total).toFixed(2)}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-center">
                   <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[invoice.status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800'}`}>
                     {invoice.status}

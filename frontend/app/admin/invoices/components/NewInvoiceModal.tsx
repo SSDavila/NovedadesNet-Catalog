@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { FaTimes, FaTrash } from 'react-icons/fa';
 import AsyncSelect from 'react-select/async';
@@ -56,12 +56,21 @@ export default function NewInvoiceModal({
   onSubmit,
   isSubmitting,
 }: NewInvoiceModalProps) {
-  if (!isOpen) return null;
+  const [modalClasses, setModalClasses] = useState('opacity-0 scale-95');
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => setModalClasses('opacity-100 scale-100'), 10);
+    } else {
+      setModalClasses('opacity-0 scale-95');
+    }
+  }, [isOpen]);
 
   const { register, control, handleSubmit, watch, setValue } = useForm<InvoiceFormData>({
     defaultValues: {
       customer: null,
-      items: [],
+      items: [{ product: null, productId: '', quantity: 1, unitPrice: 0, discount: 0, subtotal: 0 }],
     },
   });
 
@@ -89,8 +98,8 @@ export default function NewInvoiceModal({
   }, [watchedItems, setValue]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4">
-      <div className="bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+    <div ref={modalRef} className={`fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-center items-center p-4 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      <div className={`bg-white rounded-lg shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col transform transition-all duration-300 ${modalClasses}`}>
         <header className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-800">Nueva Factura</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800">

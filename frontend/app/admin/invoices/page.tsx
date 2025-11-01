@@ -19,7 +19,7 @@ export default function InvoicesPage() {
   const { data: invoices = [], isLoading, isError, error } = useQuery<Invoice[]>({
     queryKey: ['invoices'],
     queryFn: async () => {
-      // Usamos 'access_token' como en tu componente de salesnotes
+
       const token = localStorage.getItem('access_token');
       if (!token) {
         throw new Error('No estás autenticado. Por favor, inicia sesión.');
@@ -50,7 +50,6 @@ export default function InvoicesPage() {
         items: data.items.map(item => ({
           productId: item.productId,
           quantity: Number(item.quantity),
-          unitPrice: Number(item.unitPrice),
           discount: Number(item.discount),
         })),
       };
