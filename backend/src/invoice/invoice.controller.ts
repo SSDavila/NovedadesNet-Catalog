@@ -10,6 +10,7 @@ import {
   Req,
   ParseIntPipe,
   ValidationPipe,
+  Res,
 } from '@nestjs/common';
 import { InvoicesService } from './invoice.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -38,6 +39,23 @@ export class InvoicesController {
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.invoicesService.findOne(id);
+  }
+
+  @Post(':id/authorize')
+  authorize(@Param('id', ParseIntPipe) id: number) {
+    return this.invoicesService.authorize(id);
+  }
+
+  @Get(':id/print')
+  async print(@Param('id', ParseIntPipe) id: number, @Res() res) {
+    const pdfBuffer = await this.invoicesService.print(id);
+
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename=factura-${id}.pdf`,
+    });
+
+    res.send(pdfBuffer);
   }
 
   @Patch(':id')

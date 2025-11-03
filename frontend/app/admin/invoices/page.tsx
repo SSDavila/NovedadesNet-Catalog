@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, useIsMutating } from '@tanstack/react-query';
 import { Invoice } from '@/interfaces/invoice';
 import { FaFileInvoiceDollar, FaPlus } from 'react-icons/fa';
 import InvoiceList from './components/InvoiceList';
@@ -15,6 +15,9 @@ export default function InvoicesPage() {
   const [isNewInvoiceModalOpen, setIsNewInvoiceModalOpen] = useState(false);
   const queryClient = useQueryClient();
   const { addNotification } = useNotification();
+  const isAuthorizing = useIsMutating({ mutationKey: ['authorizeInvoice'] }) > 0;
+  const isPrinting = useIsMutating({ mutationKey: ['printInvoice'] }) > 0;
+
 
   const { data: invoices = [], isLoading, isError, error } = useQuery<Invoice[]>({
     queryKey: ['invoices'],
@@ -80,6 +83,67 @@ export default function InvoicesPage() {
     },
   });
 
+  const authorizeInvoiceMutation = useMutation({
+    mutationKey: ['authorizeInvoice'],
+    mutationFn: async (invoiceId: string) => {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${invoiceId}/authorize`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al autorizar la factura');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      addNotification('Factura autorizada correctamente.', 'success');
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+    },
+    onError: (error: Error) => {
+      addNotification(error.message, 'error');
+    },
+  });
+
+  const printInvoiceMutation = useMutation({
+    mutationKey: ['printInvoice'],
+    mutationFn: async (invoiceId: string) => {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${invoiceId}/print`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al generar el PDF de la factura');
+      }
+
+      const blob = await response.blob();
+      const pdfUrl = URL.createObjectURL(blob);
+      window.open(pdfUrl, '_blank');
+    },
+    onSuccess: () => {
+      addNotification('PDF de la factura generado.', 'info');
+    },
+    onError: (error: Error) => {
+      addNotification(error.message, 'error');
+    },
+  });
+
+  const handleAuthorizeInvoice = (invoiceId: string) => {
+    authorizeInvoiceMutation.mutate(invoiceId);
+  };
+
+  const handlePrintInvoice = (invoiceId: string) => {
+    printInvoiceMutation.mutate(invoiceId);
+  };
+
   const handleViewInvoice = (invoiceId: string) => {
     const invoice = invoices.find(inv => inv.invoiceId.toString() === invoiceId);
     setSelectedInvoice(invoice || null);
@@ -119,7 +183,11 @@ export default function InvoicesPage() {
               status: inv.invoiceStatus,
               date: new Date(inv.invoiceCreatedAt).toLocaleDateString(),
             }))}
-            onView={(invoice) => handleViewInvoice(invoice.id)}
+            onView={(invoice) => handleViewInvoice(invoice.id.toString())}
+            onAuthorize={(invoice) => handleAuthorizeInvoice(invoice.id.toString())}
+            onPrint={(invoice) => handlePrintInvoice(invoice.id.toString())}
+            isAuthorizing={isAuthorizing}
+            isPrinting={isPrinting}
           />
         )}
       </main>

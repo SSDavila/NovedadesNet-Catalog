@@ -1,4 +1,4 @@
-import { FaEye, FaPrint, FaShare } from 'react-icons/fa';
+import { FaEye, FaFilePdf, FaPaperPlane, FaSpinner } from 'react-icons/fa';
 
 interface Invoice {
   id: string;
@@ -12,6 +12,10 @@ interface Invoice {
 interface InvoiceListProps {
   invoices: Invoice[];
   onView: (invoice: Invoice) => void;
+  onAuthorize: (invoice: Invoice) => void;
+  onPrint: (invoice: Invoice) => void;
+  isAuthorizing: boolean;
+  isPrinting: boolean;
 }
 
 const statusClasses = {
@@ -21,7 +25,14 @@ const statusClasses = {
   RECHAZADA: 'bg-red-100 text-red-800',
 };
 
-export default function InvoiceList({ invoices, onView }: InvoiceListProps) {
+export default function InvoiceList({
+  invoices,
+  onView,
+  onAuthorize,
+  onPrint,
+  isAuthorizing,
+  isPrinting,
+}: InvoiceListProps) {
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -50,9 +61,20 @@ export default function InvoiceList({ invoices, onView }: InvoiceListProps) {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-3">
-                    <button onClick={() => onView(invoice)} className="text-blue-600 hover:text-blue-900"><FaEye /></button>
-                    <button className="text-gray-500 hover:text-gray-800"><FaPrint /></button>
-                    <button className="text-gray-500 hover:text-gray-800"><FaShare /></button>
+                    <button onClick={() => onView(invoice)} className="text-blue-600 hover:text-blue-900" title="Ver Detalle">
+                      <FaEye />
+                    </button>
+                    <button onClick={() => onAuthorize(invoice)} className="text-purple-600 hover:text-purple-900 disabled:text-gray-400 disabled:cursor-not-allowed" disabled={isAuthorizing} title="Autorizar en SRI">
+                      {isAuthorizing ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
+                    </button>
+                    <button
+                      onClick={() => onPrint(invoice)}
+                      className="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      disabled={isPrinting}
+                      title="Imprimir PDF (RIDE)"
+                    >
+                      {isPrinting ? <FaSpinner className="animate-spin" /> : <FaFilePdf />}
+                    </button>
                   </div>
                 </td>
               </tr>
