@@ -14,6 +14,8 @@ import { CustomersModule } from './customer/customers.module';
 import { SaleNotesModule } from './salesnotes/salesnotes.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { InvoicesModule } from './invoice/invoice.module';
+import { SriModule } from './sri/sri.module';
+import { PdfModule } from './pdf/pdf.module';
 
 @Module({
   imports: [
@@ -32,7 +34,9 @@ import { InvoicesModule } from './invoice/invoice.module';
     CustomersModule,
     SaleNotesModule,
     InventoryModule,
-    InvoicesModule
+    InvoicesModule,
+    SriModule,
+    PdfModule
   ],
   controllers: [AiController]
 })

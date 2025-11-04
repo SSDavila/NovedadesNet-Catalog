@@ -16,11 +16,17 @@ import { InvoicesService } from './invoice.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { SriService } from 'src/sri/sri.service';
+import { PdfService } from 'src/pdf/pdf.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('invoices')
 export class InvoicesController {
-  constructor(private readonly invoicesService: InvoicesService) {}
+  constructor(
+    private readonly invoicesService: InvoicesService,
+    private readonly sriService: SriService,
+    private readonly pdfService: PdfService,
+  ) {}
 
   @Post()
   create(
@@ -42,13 +48,28 @@ export class InvoicesController {
   }
 
   @Post(':id/authorize')
-  authorize(@Param('id', ParseIntPipe) id: number) {
-    return this.invoicesService.authorize(id);
+  async authorize(@Param('id', ParseIntPipe) id: number) {
+    const invoice = await this.invoicesService.findOne(id);
+    const company = await this.invoicesService.findCompany();
+
+    const authResult = await this.sriService.authorizeInvoice(invoice, company);
+
+    return this.invoicesService.update(id, {
+      invoiceStatus: authResult.status,
+      invoiceSriAuthorization: authResult.authorizationNumber,
+      invoiceSriResponse: authResult.responseXml,
+    });
   }
 
   @Get(':id/print')
   async print(@Param('id', ParseIntPipe) id: number, @Res() res) {
-    const pdfBuffer = await this.invoicesService.print(id);
+    const invoice = await this.invoicesService.findOne(id);
+    const company = await this.invoicesService.findCompany();
+
+    if (!company) {
+      throw new Error('Datos de la empresa no configurados.');
+    }
+    const pdfBuffer = await this.pdfService.generateInvoicePdf(invoice, company);
 
     res.set({
       'Content-Type': 'application/pdf',
