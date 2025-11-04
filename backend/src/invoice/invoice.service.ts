@@ -5,6 +5,7 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { randomBytes } from 'crypto';
@@ -149,10 +150,47 @@ export class InvoicesService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(
+    id: number,
+  ): Promise<
+    Prisma.InvoiceGetPayload<{
+      select: {
+        invoiceId: true;
+        invoiceNumber: true;
+        invoiceAccessKey: true;
+        invoiceStatus: true;
+        invoiceSubtotal: true;
+        invoiceTotal: true;
+        invoiceSriAuthorization: true;
+        invoiceSriResponse: true;
+        invoiceSignedXml: true;
+        invoiceCreatedAt: true;
+        customer: true;
+        seller: true;
+        items: {
+          include: {
+            product: {
+              select: { productName: true; productSku: true };
+            };
+          };
+        };
+        payments: true;
+      };
+    }>
+  > {
     const invoice = await this.prisma.invoice.findUnique({
       where: { invoiceId: id },
-      include: {
+      select: {
+        invoiceId: true,
+        invoiceNumber: true,
+        invoiceAccessKey: true,
+        invoiceStatus: true,
+        invoiceSubtotal: true,
+        invoiceTotal: true,
+        invoiceSriAuthorization: true,
+        invoiceSriResponse: true,
+        invoiceSignedXml: true,
+        invoiceCreatedAt: true,
         customer: true,
         seller: true,
         items: {
@@ -178,6 +216,21 @@ export class InvoicesService {
     return this.prisma.invoice.update({
       where: { invoiceId: id },
       data: updateInvoiceDto,
+      include: {
+        customer: true,
+        seller: true,
+        items: {
+          include: {
+            product: {
+              select: {
+                productName: true,
+                productSku: true,
+              },
+            },
+          },
+        },
+        payments: true,
+      },
     });
   }
 
@@ -191,6 +244,21 @@ export class InvoicesService {
     return this.prisma.invoice.update({
       where: { invoiceId: id },
       data: { invoiceStatus: 'ANULADA' },
+      include: {
+        customer: true,
+        seller: true,
+        items: {
+          include: {
+            product: {
+              select: {
+                productName: true,
+                productSku: true,
+              },
+            },
+          },
+        },
+        payments: true,
+      },
     });
   }
 

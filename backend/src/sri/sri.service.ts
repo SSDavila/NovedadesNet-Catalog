@@ -19,7 +19,7 @@ export class SriService {
     };
   }
 
-  async authorizeInvoice(invoiceData: any, companyData: any): Promise<{ status: string; authorizationNumber?: string; responseXml?: string }> {
+  async authorizeInvoice(invoiceData: any, companyData: any): Promise<{ status: string; authorizationNumber?: string; responseXml?: string; signedXml?: string }> {
     const invoiceDate = new Date(invoiceData.invoiceCreatedAt);
     const formattedDate = `${invoiceDate.getDate().toString().padStart(2, '0')}/${(invoiceDate.getMonth() + 1).toString().padStart(2, '0')}/${invoiceDate.getFullYear()}`;
 
@@ -32,7 +32,9 @@ export class SriService {
 
     await this.sendToReception(signedXml, endpoints.reception);
 
-    return this.checkAuthorization(invoiceData.invoiceAccessKey, endpoints.authorization);
+    const authResult = await this.checkAuthorization(invoiceData.invoiceAccessKey, endpoints.authorization);
+
+    return { ...authResult, signedXml };
   }
 
   private buildInvoiceXml(invoice: any, company: any, formattedDate: string) {
@@ -118,12 +120,39 @@ export class SriService {
       const signature = privateKey.sign(md);
       const signatureB64 = forge.util.encode64(signature);
 
-      const signatureXml = create({  }).end();
+      const signatureXml = this.buildSignatureXml(signatureB64, certB64, forge.util.encode64(md.digest().bytes()));
       return xmlToSign.replace('</factura>', `${signatureXml}</factura>`);
     } catch (error) {
       console.error('Error al firmar el XML:', error);
       throw new InternalServerErrorException('Error al firmar el documento. Verifique la contraseña y la ruta de la firma electrónica.');
     }
+  }
+
+  private buildSignatureXml(signatureB64: string, certB64: string, digestB64: string) {
+    return create({
+      'ds:Signature': {
+        '@xmlns:ds': 'http://www.w3.org/2000/09/xmldsig#',
+        '@Id': 'Signature666',
+        'ds:SignedInfo': {
+          'ds:CanonicalizationMethod': { '@Algorithm': 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315' },
+          'ds:SignatureMethod': { '@Algorithm': 'http://www.w3.org/2000/09/xmldsig#rsa-sha1' },
+          'ds:Reference': {
+            '@URI': '#comprobante',
+            'ds:Transforms': {
+              'ds:Transform': { '@Algorithm': 'http://www.w3.org/2000/09/xmldsig#enveloped-signature' },
+            },
+            'ds:DigestMethod': { '@Algorithm': 'http://www.w3.org/2000/09/xmldsig#sha1' },
+            'ds:DigestValue': digestB64,
+          },
+        },
+        'ds:SignatureValue': signatureB64,
+        'ds:KeyInfo': {
+          'ds:X509Data': {
+            'ds:X509Certificate': certB64,
+          },
+        },
+      },
+    }).end();
   }
 
   private async sendToReception(signedXml: string, endpoint: string): Promise<void> {
@@ -176,5 +205,39 @@ export class SriService {
       console.error('Error en la autorización del SRI:', error.response?.data || error.message);
       throw new InternalServerErrorException('Fallo la comunicación con el servicio de autorización del SRI.');
     }
+  }
+
+  async cancelInvoice(invoice: any, company: any) {
+    if (invoice.invoiceStatus !== 'AUTORIZADA') {
+      throw new BadRequestException('Solo se pueden anular facturas autorizadas.');
+    }
+
+    const cancellationXmlObject = {
+      anulacion: {
+        infoTributaria: {
+          ambiente: parseInt(company.sriEnvironment, 10),
+          tipoEmision: 1,
+          razonSocial: company.companyName,
+          ruc: company.companyRuc,
+          claveAcceso: invoice.invoiceAccessKey,
+          codDoc: '04', // Anulación
+          estab: invoice.invoiceNumber.substring(0, 3),
+          ptoEmi: invoice.invoiceNumber.substring(4, 7),
+          secuencial: invoice.invoiceNumber.substring(8, 17),
+          dirMatriz: company.companyAddress,
+        },
+        infoAnulacion: {
+          fechaAnulacion: new Date().toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+          comprobanteAnular: '01', // Factura
+          secuencialAnular: invoice.invoiceNumber,
+          autorizacionAnular: invoice.invoiceSriAuthorization,
+          motivoAnulacion: 'ANULACION SOLICITADA POR EL USUARIO',
+        },
+      },
+    };
+    const cancellationXmlString = create(cancellationXmlObject).end({ prettyPrint: true });
+    const signedCancellationXml = await this.signXml(cancellationXmlString, company.sriCertificatePath, company.sriCertificatePassword);
+    const endpoints = this.getSriEndpoints(company.sriEnvironment);
+    await this.sendToReception(signedCancellationXml, endpoints.reception);
   }
 }

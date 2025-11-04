@@ -11,6 +11,8 @@ import {
   ParseIntPipe,
   ValidationPipe,
   Res,
+  BadRequestException,
+  NotFoundException
 } from '@nestjs/common';
 import { InvoicesService } from './invoice.service';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
@@ -18,6 +20,7 @@ import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { SriService } from 'src/sri/sri.service';
 import { PdfService } from 'src/pdf/pdf.service';
+import { EmailService } from 'src/email/email.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('invoices')
@@ -26,6 +29,7 @@ export class InvoicesController {
     private readonly invoicesService: InvoicesService,
     private readonly sriService: SriService,
     private readonly pdfService: PdfService,
+    private readonly emailService: EmailService,
   ) {}
 
   @Post()
@@ -57,6 +61,7 @@ export class InvoicesController {
     return this.invoicesService.update(id, {
       invoiceStatus: authResult.status,
       invoiceSriAuthorization: authResult.authorizationNumber,
+      invoiceSignedXml: authResult.signedXml,
       invoiceSriResponse: authResult.responseXml,
     });
   }
@@ -79,6 +84,49 @@ export class InvoicesController {
     res.send(pdfBuffer);
   }
 
+  @Get(':id/download-xml')
+  async downloadXml(@Param('id', ParseIntPipe) id: number, @Res() res) {
+    const invoice = await this.invoicesService.findOne(id);
+
+    if (!invoice.invoiceSignedXml) {
+      throw new NotFoundException('El XML firmado para esta factura no está disponible.');
+    }
+
+    res.set({
+      'Content-Type': 'application/xml',
+      'Content-Disposition': `attachment; filename=factura-${invoice.invoiceNumber}.xml`,
+    });
+
+    res.send(invoice.invoiceSignedXml);
+  }
+
+  @Post(':id/send-email')
+  async sendEmail(@Param('id', ParseIntPipe) id: number) {
+    const invoice = await this.invoicesService.findOne(id);
+    const company = await this.invoicesService.findCompany();
+
+    if (invoice.invoiceStatus !== 'AUTORIZADA') {
+      throw new BadRequestException('Solo se pueden enviar por correo las facturas autorizadas.');
+    }
+    if (!invoice.customer.customerEmail) {
+      throw new BadRequestException('El cliente no tiene una dirección de correo electrónico registrada.');
+    }
+
+    const pdfBuffer = await this.pdfService.generateInvoicePdf(invoice, company);
+
+    await this.emailService.sendInvoiceEmail(
+      invoice.customer.customerEmail,
+      `Factura Electrónica ${invoice.invoiceNumber} de ${company.companyName}`,
+      `<p>Estimado/a ${invoice.customer.customerName},</p><p>Adjuntamos su factura electrónica N° ${invoice.invoiceNumber}.</p><p>Gracias por su compra.</p>`,
+      [
+        { filename: `factura-${invoice.invoiceNumber}.pdf`, content: pdfBuffer, contentType: 'application/pdf' },
+        { filename: `factura-${invoice.invoiceNumber}.xml`, content: invoice.invoiceSignedXml, contentType: 'application/xml' },
+      ]
+    );
+
+    return { message: 'Correo enviado con éxito.' };
+  }
+
   @Patch(':id')
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -88,7 +136,14 @@ export class InvoicesController {
   }
 
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.invoicesService.remove(id);
+  async remove(@Param('id', ParseIntPipe) id: number) {
+    const invoice = await this.invoicesService.findOne(id);
+    const company = await this.invoicesService.findCompany();
+
+    await this.sriService.cancelInvoice(invoice, company);
+
+    await this.invoicesService.update(id, { invoiceStatus: 'ANULADA' });
+
+    return this.invoicesService.findOne(id);
   }
 }

@@ -1,4 +1,4 @@
-import { FaEye, FaFilePdf, FaPaperPlane, FaSpinner } from 'react-icons/fa';
+import { FaEye, FaFilePdf, FaPaperPlane, FaSpinner, FaEnvelope, FaFileCode } from 'react-icons/fa';
 
 interface Invoice {
   id: string;
@@ -14,8 +14,12 @@ interface InvoiceListProps {
   onView: (invoice: Invoice) => void;
   onAuthorize: (invoice: Invoice) => void;
   onPrint: (invoice: Invoice) => void;
+  onDownloadXml: (invoice: Invoice) => void;
+  onSendEmail: (invoice: Invoice) => void;
   isAuthorizing: boolean;
   isPrinting: boolean;
+  isDownloadingXml: boolean;
+  isSendingEmail: boolean;
 }
 
 const statusClasses = {
@@ -30,8 +34,12 @@ export default function InvoiceList({
   onView,
   onAuthorize,
   onPrint,
+  onDownloadXml,
+  onSendEmail,
   isAuthorizing,
   isPrinting,
+  isDownloadingXml,
+  isSendingEmail,
 }: InvoiceListProps) {
   return (
     <div className="bg-white shadow-md rounded-lg overflow-hidden">
@@ -64,16 +72,32 @@ export default function InvoiceList({
                     <button onClick={() => onView(invoice)} className="text-blue-600 hover:text-blue-900" title="Ver Detalle">
                       <FaEye />
                     </button>
-                    <button onClick={() => onAuthorize(invoice)} className="text-purple-600 hover:text-purple-900 disabled:text-gray-400 disabled:cursor-not-allowed" disabled={isAuthorizing} title="Autorizar en SRI">
+                    <button onClick={() => onAuthorize(invoice)} className="text-purple-600 hover:text-purple-900 disabled:text-gray-400 disabled:cursor-not-allowed" disabled={isAuthorizing || invoice.status !== 'PENDIENTE'} title="Autorizar en SRI">
                       {isAuthorizing ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
                     </button>
                     <button
                       onClick={() => onPrint(invoice)}
                       className="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed"
-                      disabled={isPrinting}
+                      disabled={isPrinting || invoice.status === 'PENDIENTE'}
                       title="Imprimir PDF (RIDE)"
                     >
                       {isPrinting ? <FaSpinner className="animate-spin" /> : <FaFilePdf />}
+                    </button>
+                    <button
+                      onClick={() => onDownloadXml(invoice)}
+                      className="text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      disabled={isDownloadingXml || invoice.status !== 'AUTORIZADA'}
+                      title="Descargar XML"
+                    >
+                      {isDownloadingXml ? <FaSpinner className="animate-spin" /> : <FaFileCode />}
+                    </button>
+                    <button
+                      onClick={() => onSendEmail(invoice)}
+                      className="text-green-600 hover:text-green-900 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      disabled={isSendingEmail || invoice.status !== 'AUTORIZADA'}
+                      title="Enviar por Correo"
+                    >
+                      {isSendingEmail ? <FaSpinner className="animate-spin" /> : <FaEnvelope />}
                     </button>
                   </div>
                 </td>

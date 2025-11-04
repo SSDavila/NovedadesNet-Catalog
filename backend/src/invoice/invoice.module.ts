@@ -5,9 +5,10 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { AuthModule } from 'src/auth/auth.module';
 import { SriModule } from 'src/sri/sri.module';
 import { PdfModule } from 'src/pdf/pdf.module';
+import { EmailModule } from 'src/email/email.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, SriModule, PdfModule],
+  imports: [PrismaModule, AuthModule, SriModule, PdfModule, EmailModule],
   controllers: [InvoicesController],
   providers: [InvoicesService],
 })

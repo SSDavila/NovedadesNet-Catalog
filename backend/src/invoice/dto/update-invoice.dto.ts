@@ -1,10 +1,9 @@
-import { IsIn, IsNotEmpty, IsString, IsOptional } from 'class-validator';
+import { IsString, IsOptional } from 'class-validator';
 
 export class UpdateInvoiceDto {
   @IsString()
-  @IsNotEmpty()
-  @IsIn(['PAGADA', 'ANULADA'])
-  invoiceStatus: string;
+  @IsOptional()
+  invoiceStatus?: string;
 
   @IsString()
   @IsOptional()
@@ -13,4 +12,8 @@ export class UpdateInvoiceDto {
   @IsString()
   @IsOptional()
   invoiceSriResponse?: string;
+
+  @IsString()
+  @IsOptional()
+  invoiceSignedXml?: string;
 }

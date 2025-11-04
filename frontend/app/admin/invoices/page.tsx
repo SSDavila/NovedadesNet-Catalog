@@ -17,6 +17,8 @@ export default function InvoicesPage() {
   const { addNotification } = useNotification();
   const isAuthorizing = useIsMutating({ mutationKey: ['authorizeInvoice'] }) > 0;
   const isPrinting = useIsMutating({ mutationKey: ['printInvoice'] }) > 0;
+  const isDownloadingXml = useIsMutating({ mutationKey: ['downloadXml'] }) > 0;
+  const isSendingEmail = useIsMutating({ mutationKey: ['sendEmail'] }) > 0;
 
 
   const { data: invoices = [], isLoading, isError, error } = useQuery<Invoice[]>({
@@ -136,12 +138,74 @@ export default function InvoicesPage() {
     },
   });
 
+  const downloadXmlMutation = useMutation({
+    mutationKey: ['downloadXml'],
+    mutationFn: async (invoiceId: string) => {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${invoiceId}/download-xml`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al descargar el XML');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `factura-${invoiceId}.xml`; // Nombre de archivo genérico, puedes mejorarlo con el número de factura
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    },
+    onSuccess: () => addNotification('XML descargado correctamente.', 'success'),
+    onError: (error: Error) => addNotification(error.message, 'error'),
+  });
+
+  const sendEmailMutation = useMutation({
+    mutationKey: ['sendEmail'],
+    mutationFn: async (invoiceId: string) => {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${invoiceId}/send-email`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al enviar el correo');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      addNotification('Correo enviado correctamente.', 'success');
+    },
+    onError: (error: Error) => {
+      addNotification(error.message, 'error');
+    },
+  });
+
   const handleAuthorizeInvoice = (invoiceId: string) => {
     authorizeInvoiceMutation.mutate(invoiceId);
   };
 
   const handlePrintInvoice = (invoiceId: string) => {
     printInvoiceMutation.mutate(invoiceId);
+  };
+
+  const handleDownloadXml = (invoiceId: string) => {
+    downloadXmlMutation.mutate(invoiceId);
+  };
+
+  const handleSendEmail = (invoiceId: string) => {
+    sendEmailMutation.mutate(invoiceId);
   };
 
   const handleViewInvoice = (invoiceId: string) => {
@@ -186,8 +250,12 @@ export default function InvoicesPage() {
             onView={(invoice) => handleViewInvoice(invoice.id.toString())}
             onAuthorize={(invoice) => handleAuthorizeInvoice(invoice.id.toString())}
             onPrint={(invoice) => handlePrintInvoice(invoice.id.toString())}
+            onDownloadXml={(invoice) => handleDownloadXml(invoice.id.toString())}
+            onSendEmail={(invoice) => handleSendEmail(invoice.id.toString())}
             isAuthorizing={isAuthorizing}
             isPrinting={isPrinting}
+            isDownloadingXml={isDownloadingXml}
+            isSendingEmail={isSendingEmail}
           />
         )}
       </main>

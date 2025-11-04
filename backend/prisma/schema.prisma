@@ -184,6 +184,7 @@ model Invoice {
   invoiceTotal            Decimal  @db.Decimal(10, 2)
   invoiceSriAuthorization String?
   invoiceSriResponse      String?
+  invoiceSignedXml        String?  @db.Text
   invoiceCreatedAt        DateTime @default(now())
   invoiceUpdatedAt        DateTime @updatedAt
 

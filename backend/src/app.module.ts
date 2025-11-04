@@ -16,6 +16,7 @@ import { InventoryModule } from './inventory/inventory.module';
 import { InvoicesModule } from './invoice/invoice.module';
 import { SriModule } from './sri/sri.module';
 import { PdfModule } from './pdf/pdf.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -36,7 +37,8 @@ import { PdfModule } from './pdf/pdf.module';
     InventoryModule,
     InvoicesModule,
     SriModule,
-    PdfModule
+    PdfModule,
+    EmailModule
   ],
   controllers: [AiController]
 })
