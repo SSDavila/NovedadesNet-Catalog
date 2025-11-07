@@ -14,6 +14,7 @@ const initialCompanyState: Company = {
   companyTradeName: '',
   companyRuc: '',
   companyAddress: '',
+  companyObligedToAccount: 'NO',
   sriEnvironment: 1,
   sriPassword: '',
   sriCert: null,
@@ -90,15 +91,14 @@ export default function CompanyPage() {
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
 
-    // Signature file and password validation
     if (file && (!companyData.sriPassword || companyData.sriPassword.trim() === '')) {
       addNotification('Si sube un archivo de firma electrónica, debe proporcionar la contraseña.', 'warning');
-      return; // Stops form submission
+      return; 
     }
 
     if (companyData.sriPassword && companyData.sriPassword.trim() !== '' && !file) {
       addNotification('Si proporciona una contraseña para la firma, también debe subir el archivo .p12 correspondiente.', 'warning');
-      return; // Stops form submission
+      return; 
     }
     
     const formData = new FormData();
@@ -106,6 +106,7 @@ export default function CompanyPage() {
     formData.append('companyTradeName', companyData.companyTradeName);
     formData.append('companyRuc', companyData.companyRuc);
     formData.append('companyAddress', companyData.companyAddress);
+    formData.append('companyObligedToAccount', companyData.companyObligedToAccount);
     formData.append('sriEnvironment', String(companyData.sriEnvironment));
     if (companyData.sriPassword) {
       formData.append('sriPassword', companyData.sriPassword);

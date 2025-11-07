@@ -19,6 +19,10 @@ export class UpdateCompanyDto {
   companyAddress?: string;
 
   @IsOptional()
+  @IsString()
+  companyObligedToAccount?: string;
+
+  @IsOptional()
   @IsNumber()
   @Type(() => Number)
   sriEnvironment?: number;

@@ -36,6 +36,7 @@ export interface Company {
   companyTradeName: string;
   companyRuc: string;
   companyAddress: string;
+  companyObligedToAccount: string;
   sriEnvironment: number;
   sriPassword?: string;
   sriCert?: File | null;

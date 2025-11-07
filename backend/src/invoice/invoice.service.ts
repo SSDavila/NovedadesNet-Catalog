@@ -8,7 +8,6 @@ import { PrismaService } from '../../prisma/prisma.service';
 import { Prisma } from '@prisma/client';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
-import { randomBytes } from 'crypto';
 import { SriService } from 'src/sri/sri.service';
 import { PdfService } from 'src/pdf/pdf.service';
 
@@ -28,6 +27,13 @@ export class InvoicesService {
     }
 
     return this.prisma.$transaction(async (prisma) => {
+
+      const company = await prisma.company.findFirst();
+      if (!company) {
+        throw new InternalServerErrorException('Datos de la empresa no configurados.');
+      }
+      const establishmentCode = company.companyEstablishmentCode || '002'; // <-- Cambio aquí
+      const emissionPointCode = company.companyEmissionPointCode || '001'; // Ajusta si también es diferente
 
       const customer = await prisma.customer.findUnique({
         where: { customerId },
@@ -73,24 +79,32 @@ export class InvoicesService {
         where: {
           documentType_establishmentCode_emissionPointCode: {
             documentType: 'INVOICE',
-            establishmentCode: '001',
-            emissionPointCode: '001',
+            establishmentCode,
+            emissionPointCode,
           },
         },
         update: { currentNumber: { increment: 1 } },
         create: {
           documentType: 'INVOICE',
-          establishmentCode: '001',
-          emissionPointCode: '001',
+          establishmentCode,
+          emissionPointCode,
           currentNumber: 1,
         },
       });
 
-      const invoiceNumber = `001-001-${sequence.currentNumber
+      const invoiceNumber = `${establishmentCode}-${emissionPointCode}-${sequence.currentNumber
         .toString()
         .padStart(9, '0')}`;
-      const accessKey = randomBytes(24).toString('hex') + '1'; 
-
+      
+      const accessKey = this.sriService.generateAccessKey(
+        new Date(),
+        '01', 
+        company.companyRuc,
+        company.sriEnvironment,
+        `${establishmentCode}${emissionPointCode}`,
+        sequence.currentNumber.toString().padStart(9, '0')
+      );
+      
       const invoice = await prisma.invoice.create({
         data: {
           invoiceNumber,
@@ -161,6 +175,8 @@ export class InvoicesService {
         invoiceStatus: true;
         invoiceSubtotal: true;
         invoiceTotal: true;
+        invoiceTax: true;
+        invoiceDiscountTotal: true;
         invoiceSriAuthorization: true;
         invoiceSriResponse: true;
         invoiceSignedXml: true;
@@ -187,6 +203,8 @@ export class InvoicesService {
         invoiceStatus: true,
         invoiceSubtotal: true,
         invoiceTotal: true,
+        invoiceTax: true,
+        invoiceDiscountTotal: true,
         invoiceSriAuthorization: true,
         invoiceSriResponse: true,
         invoiceSignedXml: true,
@@ -196,7 +214,7 @@ export class InvoicesService {
         items: {
           include: {
             product: {
-              select: { productName: true, productSku: true },
+              select: { productName: true, productSku: true, productIvaRate: true },
             },
           },
         },

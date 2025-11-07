@@ -42,6 +42,7 @@ export class CompanyService {
         companyTradeName: updateCompanyDto.companyTradeName ?? '',
         companyRuc: updateCompanyDto.companyRuc ?? '',
         companyAddress: updateCompanyDto.companyAddress ?? '',
+        companyObligedToAccount: updateCompanyDto.companyObligedToAccount ?? 'NO',
         sriEnvironment: String(updateCompanyDto.sriEnvironment ?? '1'),
         sriCertificatePassword: updateCompanyDto.sriPassword,
       };

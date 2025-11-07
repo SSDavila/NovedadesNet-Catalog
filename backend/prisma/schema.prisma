@@ -44,11 +44,14 @@ model Company {
   companyAddress         String
   companyPhone           String?
   companyEmail           String?
+  companyObligedToAccount String   @default("NO")
   companyLogoUrl         String?
   sriEnvironment         String   @default("1") // 1 = Pruebas, 2 = Producción
   sriEmissionType        String   @default("1") // 1 = Normal, 2 = Contingencia
   sriCertificatePath     String? // Path to .p12 certificate file
   sriCertificatePassword String? // Electronic signature password
+  companyEstablishmentCode String?  @default("001")
+  companyEmissionPointCode String?  @default("001")
   companyCreatedAt       DateTime @default(now())
   companyUpdatedAt       DateTime @updatedAt
 }
@@ -88,6 +91,7 @@ model Product {
   productPreviousPrice     Decimal? @db.Decimal(10, 2)
   productCost              Decimal? @db.Decimal(10, 2)
   productStock             Int      @default(0)
+  productIvaRate           String   @default("0")
   productLowStockThreshold Int?     @default(5)
   productCreatedAt         DateTime @default(now())
   productUpdatedAt         DateTime @updatedAt

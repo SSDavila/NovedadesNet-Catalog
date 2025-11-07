@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<factura id="comprobante" version="1.1.0">
+  <infoTributaria>
+    <ambiente>1</ambiente>
+    <tipoEmision>1</tipoEmision>
+    <razonSocial>Novedades NETEC</razonSocial>
+    <nombreComercial>Novedades NET</nombreComercial>
+    <ruc>1713480232001</ruc>
+    <claveAcceso>0611202501171348023200110010010000000046794940312</claveAcceso>
+    <codDoc>01</codDoc>
+    <estab>001</estab>
+    <ptoEmi>001</ptoEmi>
+    <secuencial>000000004</secuencial>
+    <dirMatriz>Av. Jaime Roldós Aguilera y E 10</dirMatriz>
+  </infoTributaria>
+  <infoFactura>
+    <fechaEmision>06/11/2025</fechaEmision>
+    <dirEstablecimiento>Av. Jaime Roldós Aguilera y E 10</dirEstablecimiento>
+    <obligadoContabilidad>NO</obligadoContabilidad>
+    <tipoIdentificacionComprador>05</tipoIdentificacionComprador>
+    <razonSocialComprador>Yo</razonSocialComprador>
+    <identificacionComprador>1753682978</identificacionComprador>
+    <totalSinImpuestos>3375.00</totalSinImpuestos>
+    <totalDescuento>0.00</totalDescuento>
+    <totalConImpuestos>
+      <totalImpuesto>
+        <codigo>2</codigo>
+        <codigoPorcentaje>0</codigoPorcentaje>
+        <baseImponible>3375.00</baseImponible>
+        <tarifa>0.00</tarifa>
+        <valor>0.00</valor>
+      </totalImpuesto>
+    </totalConImpuestos>
+    <propina>0.00</propina>
+    <importeTotal>3375.00</importeTotal>
+    <moneda>DOLAR</moneda>
+  </infoFactura>
+  <detalles>
+    <detalle>
+      <codigoPrincipal>pt-CLS-1</codigoPrincipal>
+      <descripcion>Celular Xiaomi</descripcion>
+      <cantidad>3</cantidad>
+      <precioUnitario>1125.00</precioUnitario>
+      <descuento>0.00</descuento>
+      <precioTotalSinImpuesto>3375.00</precioTotalSinImpuesto>
+      <impuestos>
+        <impuesto>
+          <codigo>2</codigo>
+          <codigoPorcentaje>0</codigoPorcentaje>
+          <tarifa>0.00</tarifa>
+          <baseImponible>3375.00</baseImponible>
+          <valor>0.00</valor>
+        </impuesto>
+      </impuestos>
+    </detalle>
+  </detalles>
+  <infoAdicional>
+    <campoAdicional nombre="Email">ss.davila.ag@gmail.com</campoAdicional>
+  </infoAdicional>
+<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="Signature666"><ds:SignedInfo><ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"/><ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"/><ds:Reference URI="#comprobante"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/></ds:Transforms><ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/><ds:DigestValue>AwZVHlLf3OkaT4mMfa13uj0jxgA=</ds:DigestValue></ds:Reference></ds:SignedInfo><ds:SignatureValue>esUwMF/R2LkXUd3Srwr7PG6uT5EHOx4TT903dPsl9r8NNeHHDW598McGx6VNWj/hXbakAtvEdnpWccReC3I/woXPFHuPSkW0UyaEFkDBVb6vzZ+57SPOCRUI7xOxn3EemtI+jjjuIiypCYXtFKsgXrasMb+BTPiib6UAMlfxMvG4g6WAwroGNUhRfSz+UUaCZ5+olvPSj9m8Y6XDhYzVOzgV58bL96MzExe+qD+Hnvnesz8R1jS6CsoD7wHzdVlvZvaRELqkOA163pu3MuHiETMWIE6veS4yfxyrYiP5Jao7P7ycOuBtB3UgLyAm2i7+PYsMTob51J2kyxbA1DJczg==</ds:SignatureValue><ds:KeyInfo><ds:X509Data><ds:X509Certificate>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</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature></factura>

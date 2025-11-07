@@ -1,18 +1,19 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
 export class EmailService {
   private transporter: nodemailer.Transporter;
 
-  constructor() {
+  constructor(private configService: ConfigService) {
     this.transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST,
-      port: parseInt(process.env.EMAIL_PORT, 10),
-      secure: process.env.EMAIL_SECURE === 'true',
+      host: 'smtp.gmail.com', // Servidor SMTP de Gmail
+      port: 465, // Puerto para SSL/TLS
+      secure: true, // Usar SSL/TLS
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
+        user: this.configService.get<string>('EMAIL_USER'),
+        pass: this.configService.get<string>('EMAIL_PASS'),
       },
     });
   }
@@ -20,7 +21,7 @@ export class EmailService {
   async sendInvoiceEmail(to: string, subject: string, html: string, attachments: { filename: string; content: Buffer | string; contentType: string }[]) {
     try {
       await this.transporter.sendMail({
-        from: process.env.EMAIL_FROM,
+        from: this.configService.get<string>('EMAIL_FROM'),
         to,
         subject,
         html,

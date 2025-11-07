@@ -5,6 +5,7 @@ import { PrismaModule } from '../../prisma/prisma.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from 'src/user/users.module';
 
 @Module({
@@ -12,9 +13,13 @@ import { UsersModule } from 'src/user/users.module';
     PrismaModule,
     PassportModule,
     UsersModule,
-    JwtModule.register({
-      secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '8h' },
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        secret: configService.get<string>('JWT_SECRET'),
+        signOptions: { expiresIn: '8h' },
+      }),
+      inject: [ConfigService],
     }),
   ],
   controllers: [AuthController],

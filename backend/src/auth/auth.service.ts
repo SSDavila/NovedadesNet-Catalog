@@ -38,7 +38,6 @@ export class AuthService {
       },
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { userPassword: _, ...userWithoutPassword } = newUser;
     return {
       message: 'Usuario creado exitosamente.',
@@ -57,7 +56,6 @@ export class AuthService {
     }
 
     const payload = { email: user.userEmail, sub: user.userId };
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { userPassword: __, ...userWithoutPassword } = user;
     return {
       access_token: this.jwtService.sign(payload),
