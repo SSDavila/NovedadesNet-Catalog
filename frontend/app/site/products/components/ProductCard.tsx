@@ -1,89 +1,44 @@
-'use client';
-import { useState } from 'react';
-import { FaExpand } from 'react-icons/fa';
-import { AnimatePresence } from 'framer-motion';
-import ProductDetailModal from './ProductDetailModal';
-import { Product } from '@/interfaces/product';
+import { motion } from 'framer-motion';
+import { Product } from '@/interfaces/index';
 
-export default function ProductCard({ product }: { product: Product }) {
-  const [modalOpen, setModalOpen] = useState(false);
+interface ProductCardProps {
+  product: Product;
+}
 
-  const imageUrl = product.prodImages?.[0]?.prodImageUrl || '/placeholder.png';
-
-  const getStockClasses = (stock: number) => {
-    if (stock > 5) {
-      return {
-        dot: 'bg-green-500',
-        bg: 'bg-green-100',
-        text: 'text-green-800',
-      };
-    }
-    if (stock >= 3) {
-      return {
-        dot: 'bg-yellow-500',
-        bg: 'bg-yellow-100',
-        text: 'text-yellow-800',
-      };
-    }
-    if (stock >= 1) {
-      return {
-        dot: 'bg-orange-500',
-        bg: 'bg-orange-100',
-        text: 'text-orange-800',
-      };
-    }
-    return { dot: 'bg-red-500', bg: 'bg-red-100', text: 'text-red-800' };
+export default function ProductCard({ product }: ProductCardProps) {
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('es-EC', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
   };
 
   return (
-    <>
-      <div
-        className="group relative flex flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer"
-        onClick={() => setModalOpen(true)}
-      >
-        <div className="relative h-60 w-full overflow-hidden bg-gray-200">
-          <img
-            src={imageUrl}
-            alt={product.prodName}
-            className="h-full w-full object-cover object-center"
-          />
-
-          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-            <div className="p-2 bg-white/80 rounded-full text-gray-800 backdrop-blur-sm">
-              <FaExpand size={20} />
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-1 flex-col justify-between p-4">
-          <div>
-            <h3 className="text-base font-bold text-gray-800 truncate" title={product.prodName}>
-              <span aria-hidden="true" className="absolute inset-0" />
-              {product.prodName}
-            </h3>
-            <p className="mt-1 text-xs font-medium text-gray-500">{product.prodCategory}</p>
-          </div>
-          <div className="mt-3 flex items-baseline justify-between">
-            <div className="text-green-600">
-              <span className="text-lg font-bold">${Math.trunc(product.prodPrice)}</span>
-              <span className="text-sm font-semibold">.{(product.prodPrice % 1).toFixed(2).substring(2)}</span>
-            </div>
-            <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold ${getStockClasses(product.prodStock).bg} ${getStockClasses(product.prodStock).text}`}>
-              <div className={`h-2 w-2 rounded-full ${getStockClasses(product.prodStock).dot}`}></div>
-                {product.prodStock > 0 ? `${product.prodStock} en Stock` : 'Agotado'}
-            </div>
-          </div>
-        </div>
+    <motion.div
+      className="group relative flex flex-col h-full bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-300"
+      whileHover={{ y: -5 }}
+    >
+      <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden">
+        <img
+          src={product.images?.[0]?.productImageUrl || 'https://via.placeholder.com/300'}
+          alt={product.productName}
+          className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+        />
       </div>
-
-      <AnimatePresence>
-        {modalOpen && (
-          <ProductDetailModal
-            onClose={() => setModalOpen(false)}
-            isOpen={modalOpen}
-            product={product}
-          />
-        )}
-      </AnimatePresence>
-    </>
+      <div className="p-4 flex flex-col flex-grow">
+        <p className="text-xs font-medium text-purple-600 uppercase tracking-wider">
+          {product.category?.categoryName}
+        </p>
+        <h3 className="mt-2 text-base font-semibold text-gray-800 flex-grow">
+          <a href={`/site/products/${product.productId}`}>
+            <span aria-hidden="true" className="absolute inset-0" />
+            {product.productName}
+          </a>
+        </h3>
+        <p className="mt-3 text-lg font-bold text-gray-900">
+          {formatPrice(product.productPrice)}
+        </p>
+      </div>
+    </motion.div>
   );
 }

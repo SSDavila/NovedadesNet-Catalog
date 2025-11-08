@@ -1,69 +1,19 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
-import ProductCard from './components/ProductCard';
-import CategoryFilterCarousel from './components/CategoryFilterCarousel';
-import { Product } from '@/interfaces/product';
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-    },
-  },
-};
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.5,
-    },
-  },
-};
+import { useProducts } from './hooks/useProducts';
+import CategorySidebar from './components/CategorySidebar';
+import ProductGrid from './components/ProductGrid';
+import LoadingSpinner from './components/LoadingSpinner';
+import ErrorMessage from './components/ErrorMessage';
+import { containerVariants, itemVariants } from './animations/variants';
 
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      setError(null);
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/products`);
-        if (!response.ok) {
-          throw new Error('No se pudieron cargar los productos desde el servidor.');
-        }
-        const data: any[] = await response.json();
-        
-        const formattedProducts: Product[] = data.map(p => ({
-          ...p,
-          prodPrice: Number(p.prodPrice)
-        }));
-
-        setProducts(formattedProducts);
-      } catch (err: any) {
-        setError(err.message || 'Ocurrió un error inesperado.');
-        console.error(err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProducts();
-  }, []);
+  const { products, isLoading, error } = useProducts();
 
   const filteredProducts = selectedCategory
-    ? products.filter(p => p.prodCategory === selectedCategory)
+    ? products.filter(p => p.category?.categoryName === selectedCategory)
     : products;
 
   return (
@@ -85,7 +35,7 @@ export default function ProductsPage() {
         animate="visible"
         variants={containerVariants}
       >
-        <motion.div className="text-center mb-4" variants={itemVariants}>
+        <motion.div className="text-center mb-12" variants={itemVariants}>
           <h1
             className="text-4xl md:text-5xl font-extrabold tracking-tight bg-gradient-to-r from-purple-600 to-yellow-500 text-transparent bg-clip-text pb-4"
             style={{ backgroundImage: 'linear-gradient(to right, #7c3aed, #eab308)' }}
@@ -96,44 +46,20 @@ export default function ProductsPage() {
             Explora nuestra colección de productos únicos e innovadores.
           </p>
         </motion.div>
-        
-        <motion.div variants={itemVariants}>
-          <CategoryFilterCarousel
-            selectedCategory={selectedCategory}
-            onSelect={setSelectedCategory}
-          />
-        </motion.div>
 
-        {isLoading && (
-          <div className="text-center py-16">
-            <FaSpinner className="mx-auto text-purple-600 text-4xl animate-spin" />
-            <p className="mt-4 text-lg text-gray-600">Cargando productos...</p>
-          </div>
-        )}
-        {error && (
-          <div className="text-center py-16 bg-red-50 rounded-lg">
-            <FaExclamationTriangle className="mx-auto text-red-500 text-4xl" />
-            <p className="mt-4 text-lg text-red-700">Error: {error}</p>
-          </div>
-        )}
-        {!isLoading && !error && (
-          <>
-            {filteredProducts.length > 0 ? (
-              <motion.div
-                className="mt-10 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8"
-                variants={containerVariants}
-              >
-                {filteredProducts.map(product => (
-                  <motion.div key={product.prodId} variants={itemVariants}>
-                    <ProductCard product={product} />
-                  </motion.div>
-                ))}
-              </motion.div>
-            ) : (
-              <p className="text-center text-gray-500 mt-16 text-lg">No hay productos en esta categoría.</p>
-            )}
-          </>
-        )}
+        <div className="flex flex-col lg:flex-row lg:space-x-8">
+          {!isLoading && !error && products.length > 0 && (
+            <CategorySidebar
+              selectedCategory={selectedCategory}
+              onSelectCategory={setSelectedCategory}
+            />
+          )}
+          <main className="flex-1 min-w-0">
+            {isLoading && <LoadingSpinner />}
+            {error && <ErrorMessage message={error} />}
+            {!isLoading && !error && <ProductGrid products={filteredProducts} />}
+          </main>
+        </div>
       </motion.div>
     </div>
   );
