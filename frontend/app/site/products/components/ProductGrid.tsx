@@ -5,9 +5,10 @@ import { containerVariants, itemVariants } from '../animations/variants';
 
 interface ProductGridProps {
   products: Product[];
+  onProductClick: (product: Product) => void;
 }
 
-export default function ProductGrid({ products }: ProductGridProps) {
+export default function ProductGrid({ products, onProductClick }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <motion.p className="text-center text-gray-500 mt-16 text-lg" variants={itemVariants}>
@@ -23,7 +24,7 @@ export default function ProductGrid({ products }: ProductGridProps) {
     >
       {products.map(product => (
         <motion.div key={product.productId} variants={itemVariants}>
-          <ProductCard product={product} />
+          <ProductCard product={product} onCardClick={onProductClick} />
         </motion.div>
       ))}
     </motion.div>

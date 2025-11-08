@@ -6,10 +6,13 @@ import CategorySidebar from './components/CategorySidebar';
 import ProductGrid from './components/ProductGrid';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
+import ProductModal from './components/ProductModal';
 import { containerVariants, itemVariants } from './animations/variants';
+import { Product } from '@/interfaces/index';
 
 export default function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { products, isLoading, error } = useProducts();
 
   const filteredProducts = selectedCategory
@@ -57,10 +60,18 @@ export default function ProductsPage() {
           <main className="flex-1 min-w-0">
             {isLoading && <LoadingSpinner />}
             {error && <ErrorMessage message={error} />}
-            {!isLoading && !error && <ProductGrid products={filteredProducts} />}
+            {!isLoading && !error && (
+              <ProductGrid
+                products={filteredProducts}
+                onProductClick={setSelectedProduct}
+              />
+            )}
           </main>
         </div>
       </motion.div>
+      
+      <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />
+
     </div>
   );
 }
