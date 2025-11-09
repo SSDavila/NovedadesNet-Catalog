@@ -17,6 +17,7 @@ import { InvoicesModule } from './invoice/invoice.module';
 import { SriModule } from './sri/sri.module';
 import { PdfModule } from './pdf/pdf.module';
 import { EmailModule } from './email/email.module';
+import { BIDashboardModule } from './bi-dashboard/bi-dashboard.module';
 
 @Module({
   imports: [
@@ -38,7 +39,8 @@ import { EmailModule } from './email/email.module';
     InvoicesModule,
     SriModule,
     PdfModule,
-    EmailModule
+    EmailModule,
+    BIDashboardModule,
   ],
   controllers: [AiController]
 })
