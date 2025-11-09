@@ -4,6 +4,7 @@ import { FaBoxOpen, FaPlus } from 'react-icons/fa';
 import { AdminProductCard } from './components/AdminProductCard';
 import ConfirmationModal from '@/components/ConfirmationModal';
 import { useProducts } from './useProducts';
+import NewProductModal from './components/NewProductModal';
 
 export default function AdminProductsPage() {
   const {
@@ -12,6 +13,10 @@ export default function AdminProductsPage() {
     isError,
     error,
     handleDeleteClick,
+    handleOpenNewModal,
+    isNewModalOpen,
+    handleCloseNewModal,
+    createProductMutation,
     confirmModalProps,
   } = useProducts();
 
@@ -30,7 +35,7 @@ export default function AdminProductsPage() {
           </p>
         </div>
         <button
-          // onClick={() => setIsModalOpen(true)} // Esto sería para un modal
+          onClick={handleOpenNewModal}
           className="mt-4 sm:mt-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
           <FaPlus />
@@ -55,6 +60,11 @@ export default function AdminProductsPage() {
         )}
       </main>
       <ConfirmationModal {...confirmModalProps} />
+      <NewProductModal
+        isOpen={isNewModalOpen}
+        onClose={handleCloseNewModal}
+        createProductMutation={createProductMutation}
+      />
     </div>
   );
 }

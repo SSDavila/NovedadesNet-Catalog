@@ -11,6 +11,7 @@ export function useProducts() {
   const { addNotification } = useNotification();
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isNewModalOpen, setIsNewModalOpen] = useState(false);
 
   const {
     data: products = [],
@@ -32,6 +33,37 @@ export function useProducts() {
       return response.json();
     },
   });
+
+  const createProductMutation = useMutation({
+    mutationFn: async (formData: FormData) => {
+      const token = localStorage.getItem('access_token');
+      const response = await fetch(`${API_BASE_URL}/products`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        const message = Array.isArray(errorData.message) ? errorData.message.join(', ') : errorData.message;
+        throw new Error(message || 'Error al crear el producto');
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      addNotification('Producto creado con éxito', 'success');
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      setIsNewModalOpen(false);
+    },
+    onError: (error: Error) => {
+      addNotification(error.message, 'error');
+    },
+  });
+
+  const handleOpenNewModal = () => setIsNewModalOpen(true);
+  const handleCloseNewModal = () => setIsNewModalOpen(false);
 
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
@@ -77,6 +109,10 @@ export function useProducts() {
     isError,
     error,
     handleDeleteClick,
+    handleOpenNewModal,
+    isNewModalOpen,
+    handleCloseNewModal,
+    createProductMutation,
     confirmModalProps: {
       isOpen: isConfirmModalOpen,
       onClose: () => setIsConfirmModalOpen(false),
