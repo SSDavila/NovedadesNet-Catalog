@@ -18,6 +18,7 @@ export interface Product {
   productStock: number;
   categoryId: string;
   category: {
+    categoryId: string;
     categoryName: string;
   };
   images: ProductImage[];

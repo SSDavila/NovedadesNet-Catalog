@@ -3,8 +3,9 @@
 import { FaBoxOpen, FaPlus } from 'react-icons/fa';
 import { AdminProductCard } from './components/AdminProductCard';
 import ConfirmationModal from '@/components/ConfirmationModal';
-import { useProducts } from './useProducts';
+import { useProducts } from './hooks/useProducts';
 import NewProductModal from './components/NewProductModal';
+import EditProductModal from './components/EditProductModal';
 
 export default function AdminProductsPage() {
   const {
@@ -17,10 +18,15 @@ export default function AdminProductsPage() {
     isNewModalOpen,
     handleCloseNewModal,
     createProductMutation,
+    productToEdit,
+    isEditModalOpen,
+    handleEditClick,
+    handleCloseEditModal,
+    updateProductMutation,
     confirmModalProps,
   } = useProducts();
 
-  if (isError) return <div className="p-8 text-center text-red-600">Error: {error.message}</div>;
+  if (isError) return <div className="p-8 text-center text-red-600">Error: {error?.message || 'Ocurrió un error desconocido'}</div>;
 
   return (
     <div className="p-6 sm:p-8">
@@ -52,7 +58,7 @@ export default function AdminProductsPage() {
               <AdminProductCard
                 key={product.productId}
                 product={product} 
-                onEdit={(p) => console.log('Edit:', p.productId)}
+                onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
               />
             ))}
@@ -64,6 +70,12 @@ export default function AdminProductsPage() {
         isOpen={isNewModalOpen}
         onClose={handleCloseNewModal}
         createProductMutation={createProductMutation}
+      />
+      <EditProductModal
+        product={productToEdit}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        updateProductMutation={updateProductMutation}
       />
     </div>
   );

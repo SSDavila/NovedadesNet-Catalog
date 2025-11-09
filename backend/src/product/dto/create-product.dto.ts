@@ -3,9 +3,10 @@ import {
   IsInt,
   IsNumber,
   IsOptional,
-  IsPositive,
   IsString,
   MinLength,
+  Min,
+  IsPositive,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -21,7 +22,7 @@ export class CreateProductDto {
 
   @IsNumber({ maxDecimalPlaces: 2 })
   @Type(() => Number)
-  @IsPositive()
+  @Min(0)
   @IsOptional()
   productOfferPrice?: number;
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Product } from '@/interfaces';
 import { API_BASE_URL } from '@/lib/constants';
@@ -12,6 +12,8 @@ export function useProducts() {
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isNewModalOpen, setIsNewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [productToEdit, setProductToEdit] = useState<Product | null>(null);
 
   const {
     data: products = [],
@@ -65,6 +67,51 @@ export function useProducts() {
   const handleOpenNewModal = () => setIsNewModalOpen(true);
   const handleCloseNewModal = () => setIsNewModalOpen(false);
 
+  const updateProductMutation = useMutation({
+    mutationFn: async ({ productId, formData }: { productId: string; formData: FormData }) => {
+      const token = localStorage.getItem('access_token');
+      if (!token) throw new Error('No estás autenticado.');
+
+      console.log('--- DEBUG: Enviando petición PATCH para actualizar ---');
+      console.log('ID del Producto:', productId);
+
+      for (let [key, value] of formData.entries()) {
+        console.log(`FormData: ${key}:`, value);
+      }
+
+      const updateResponse = await fetch(`${API_BASE_URL}/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!updateResponse.ok) {
+        const errorData = await updateResponse.json();
+        const message = Array.isArray(errorData.message) ? errorData.message.join(', ') : errorData.message;
+        throw new Error(message || 'Error al actualizar el producto.');
+      }
+
+      return updateResponse.json();
+    },
+    onSuccess: () => {
+      addNotification('Producto actualizado con éxito', 'success');
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      setIsEditModalOpen(false);
+    },
+    onError: (error: Error) => {
+      addNotification(error.message, 'error');
+    },
+  });
+
+  const handleEditClick = useCallback((product: Product) => {
+    setProductToEdit(product);
+    setIsEditModalOpen(true);
+  }, []);
+
+  const handleCloseEditModal = useCallback(() => setIsEditModalOpen(false), []);
+
   const deleteProductMutation = useMutation({
     mutationFn: async (productId: string) => {
       const token = localStorage.getItem('access_token');
@@ -113,6 +160,11 @@ export function useProducts() {
     isNewModalOpen,
     handleCloseNewModal,
     createProductMutation,
+    productToEdit,
+    isEditModalOpen,
+    handleEditClick,
+    handleCloseEditModal,
+    updateProductMutation,
     confirmModalProps: {
       isOpen: isConfirmModalOpen,
       onClose: () => setIsConfirmModalOpen(false),

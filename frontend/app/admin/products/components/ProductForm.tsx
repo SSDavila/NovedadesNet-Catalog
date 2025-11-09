@@ -2,22 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { Combobox, Transition } from '@headlessui/react';
-import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragEndEvent,
-} from '@dnd-kit/core';
+import { Combobox } from '@headlessui/react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, rectSortingStrategy, sortableKeyboardCoordinates } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { FaTrash, FaWandMagicSparkles, FaSpinner, FaTags, FaPlus } from 'react-icons/fa6';
 import { FaTimes } from 'react-icons/fa';
 import { HiChevronUpDown, HiCheck } from 'react-icons/hi2';
-import { Category } from '@/interfaces/index';
+import { Category, ProductImage as ProductImageType } from '@/interfaces/index';
+import { ImageState } from './EditProductModal';
 
 function classNames(...classes: (string | boolean)[]) {
   return classes.filter(Boolean).join(' ');
@@ -26,10 +19,8 @@ function classNames(...classes: (string | boolean)[]) {
 interface ProductFormProps {
   productData: any;
   onProductDataChange: (data: any) => void;
-  images: File[];
-  onImagesChange: (images: File[]) => void;
-  imagePreviews: string[];
-  onImagePreviewsChange: (previews: string[]) => void;
+  currentImages: ImageState[];
+  onCurrentImagesChange: React.Dispatch<React.SetStateAction<ImageState[]>>;
   isGenerating: boolean;
   onGenerateDescription: () => void;
   categories: Category[];
@@ -73,10 +64,8 @@ function SortableImage({ id, preview, index, onRemove }: SortableImageProps) {
 export default function ProductForm({
   productData,
   onProductDataChange,
-  images,
-  onImagesChange,
-  imagePreviews,
-  onImagePreviewsChange,
+  currentImages,
+  onCurrentImagesChange,
   isGenerating,
   onGenerateDescription,
   categories,
@@ -92,20 +81,26 @@ export default function ProductForm({
   }, [productData.productOfferPrice]);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
-    const newPreviews = acceptedFiles.map(file => URL.createObjectURL(file));
-    onImagesChange([...images, ...acceptedFiles]);
-    onImagePreviewsChange([...imagePreviews, ...newPreviews]);
-  }, [images, imagePreviews, onImagesChange, onImagePreviewsChange]);
+    const newImageStates: ImageState[] = acceptedFiles.map(file => ({ file }));
+    onCurrentImagesChange(prev => [...prev, ...newImageStates]);
+  }, [onCurrentImagesChange]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { 'image/*': ['.jpeg', '.png', '.jpg', '.gif', '.webp'] },
   });
 
+  const imagePreviews = currentImages.map(img => 
+    img.file ? URL.createObjectURL(img.file) : img.existingImage!.productImageUrl
+  );
+
   const handleRemoveImage = (index: number) => {
-    URL.revokeObjectURL(imagePreviews[index]);
-    onImagesChange(images.filter((_, i) => i !== index));
-    onImagePreviewsChange(imagePreviews.filter((_, i) => i !== index));
+    const imageToRemove = currentImages[index];
+
+    if (imageToRemove.file) {
+      URL.revokeObjectURL(URL.createObjectURL(imageToRemove.file));
+    }
+    onCurrentImagesChange(currentImages.filter((_, i) => i !== index));
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -125,21 +120,26 @@ export default function ProductForm({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
-    if (active.id !== over.id) {
-      const oldIndex = imagePreviews.findIndex(p => p === active.id);
-      const newIndex = imagePreviews.findIndex(p => p === over.id);
-      onImagePreviewsChange(arrayMove(imagePreviews, oldIndex, newIndex));
-      onImagesChange(arrayMove(images, oldIndex, newIndex));
+    if (over && active.id !== over.id) {
+      const oldIndex = imagePreviews.findIndex(preview => preview === active.id);
+      const newIndex = imagePreviews.findIndex(preview => preview === over.id);
+      if (oldIndex !== -1 && newIndex !== -1) {
+        onCurrentImagesChange(arrayMove(currentImages, oldIndex, newIndex));
+      }
     }
   };
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
-  const selectedCategory = categories.find(c => c.categoryId === productData.categoryId);
+  const selectedCategory = categories.find(c => c.categoryId === productData.categoryId) || null;
 
   const filteredCategories =
     categoryQuery === ''

@@ -45,9 +45,16 @@ export class ProductsController {
   }
 
   @Patch(':id')
+  @UseInterceptors(FilesInterceptor('images', 10))
   @UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
-  update(@Param('id') id: string, @Body() updateProductDto: UpdateProductDto) {
-    return this.productsService.update(id, updateProductDto);
+  update(
+    @Param('id') id: string,
+    @Body() updateProductDto: UpdateProductDto,
+    @UploadedFiles() files: Array<Express.Multer.File>,
+  ) {
+    console.log(`--- DEBUG: Petición PATCH a /products/${id} recibida ---`);
+    console.log('Body (updateProductDto):', JSON.stringify(updateProductDto, null, 2));
+    return this.productsService.update(id, updateProductDto, files);
   }
 
   @Post(':id/upload-images')
@@ -64,6 +71,8 @@ export class ProductsController {
     )
     files: Array<Express.Multer.File>,
   ) {
+    console.log(`--- DEBUG: Petición POST a /products/${id}/images recibida ---`);
+    console.log('Número de archivos recibidos:', files.length);
     return this.productsService.uploadImages(id, files);
   }
 
