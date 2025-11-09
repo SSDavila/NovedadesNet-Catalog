@@ -27,7 +27,6 @@ export default function ProductPreview({
   const hasImages = imagenes.length > 0;
 
   useEffect(() => {
-    // Reset index if images change and current index is out of bounds
     if (hasImages && activeIndex >= imagenes.length) {
       setActiveIndex(0);
     }
@@ -135,14 +134,18 @@ export default function ProductPreview({
           <h2 className="text-2xl font-bold text-gray-900 break-words w-full pr-4">
             {nombre || 'Nombre del producto'}
           </h2>
-          <div className="flex flex-col items-end whitespace-nowrap">
-            <span className="text-2xl font-bold text-green-600">
-              ${precio ? Number(precio).toFixed(2) : '0.00'}
-            </span>
-            {precioAnterior && Number(precioAnterior) > 0 && (
-              <span className="text-sm text-gray-500 line-through">
-                ${Number(precioAnterior).toFixed(2)}
-              </span>
+          <div className="flex items-baseline gap-2 whitespace-nowrap ml-4">
+            {precioAnterior && Number(precioAnterior) > 0 && Number(precioAnterior) < Number(precio) ? (
+              <>
+                <p className="text-2xl font-bold text-red-600">
+                  ${Number(precioAnterior).toFixed(2)}
+                </p>
+                <p className="text-lg text-gray-500 line-through">
+                  ${Number(precio).toFixed(2)}
+                </p>
+              </>
+            ) : (
+              <p className="text-2xl font-bold text-green-600">${precio ? Number(precio).toFixed(2) : '0.00'}</p>
             )}
           </div>
         </div>

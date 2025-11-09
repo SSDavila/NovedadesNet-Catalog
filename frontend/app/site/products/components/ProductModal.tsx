@@ -43,16 +43,24 @@ const formatPrice = (price: number) => {
 };
 
 export default function ProductModal({ product, onClose }: ProductModalProps) {
-  const [selectedImage, setSelectedImage] = useState<string>('');
-  
-  useEffect(() => {
-    if (product?.images && product.images.length > 0) {
-      setSelectedImage(product.images[0].productImageUrl);
-    } else if (product) {
-      setSelectedImage('https://via.placeholder.com/600');
-    }
-  }, [product]);
+  const [userSelectedImage, setUserSelectedImage] = useState<string | null>(null);
 
+  const getStockColors = (stock: number) => {
+    if (stock > 5) {
+      return { dot: 'bg-green-500', container: 'bg-green-100', text: 'text-green-800' };
+    }
+    if (stock >= 3) {
+      return { dot: 'bg-yellow-500', container: 'bg-yellow-100', text: 'text-yellow-800' };
+    }
+    if (stock >= 1) {
+      return { dot: 'bg-orange-500', container: 'bg-orange-100', text: 'text-orange-800' };
+    }
+    return { dot: 'bg-red-500', container: 'bg-red-100', text: 'text-red-800' };
+  };
+
+  const primaryImageUrl = product?.images?.[0]?.productImageUrl || 'https://via.placeholder.com/600';
+  const selectedImage = userSelectedImage || primaryImageUrl;
+  
   const handleWhatsAppClick = () => {
     const phoneNumber = '593963988846'; 
     const message = `¡Hola! Estoy interesado/a en el producto: ${product?.productName}`;
@@ -64,6 +72,8 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
     return null;
   }
 
+  const stockColors = getStockColors(product.productStock);
+
   return (
     <AnimatePresence>
       {product && (
@@ -73,7 +83,6 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           animate="visible"
           exit="hidden"
           variants={backdropVariants}
-          onClick={onClose}
         >
           <motion.div
             className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col md:flex-row"
@@ -90,7 +99,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                   <div
                     key={image.productImageId}
                     className={`aspect-square rounded-md overflow-hidden cursor-pointer border-2 ${selectedImage === image.productImageUrl ? 'border-purple-600' : 'border-transparent'}`}
-                    onClick={() => setSelectedImage(image.productImageUrl)}
+                    onClick={() => setUserSelectedImage(image.productImageUrl)}
                   >
                     <img src={image.productImageUrl} alt="" className="w-full h-full object-cover" />
                   </div>
@@ -108,17 +117,34 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                 </button>
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mt-2">{product.productName}</h2>
-              <p className="text-3xl font-extrabold text-gray-800 mt-4 mb-4">
-                {formatPrice(product.productPrice)}
-              </p>
-              <div className="text-gray-600 text-sm leading-relaxed flex-grow">
-                <p>{product.productDescription}</p>
+              <div className="flex items-baseline gap-3 mt-4 mb-4">
+                {product.productOfferPrice && product.productOfferPrice > 0 && product.productOfferPrice < product.productPrice ? (
+                  <>
+                    <p className="text-3xl font-extrabold text-gray-900">
+                      {formatPrice(product.productOfferPrice)}
+                    </p>
+                    <p className="text-xl text-gray-500 line-through">
+                      {formatPrice(product.productPrice)}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-3xl font-extrabold text-gray-800">{formatPrice(product.productPrice)}</p>
+                )}
+              </div>
+              <div className="mb-4">
+                <span className={`inline-flex items-center px-3 py-1 text-sm font-semibold rounded-full ${stockColors.container} ${stockColors.text}`}>
+                  <div className={`w-2.5 h-2.5 rounded-full mr-2 ${stockColors.dot}`}></div>
+                  {product.productStock > 0 ? `${product.productStock} unidades en stock` : 'Agotado'}
+                </span>
+              </div>
+              <div className="text-gray-600 text-sm leading-relaxed flex-grow prose prose-sm max-w-none">
+                <p className="whitespace-pre-wrap">{product.productDescription}</p>
               </div>
               <button
                 onClick={handleWhatsAppClick}
                 className="mt-6 w-full flex items-center justify-center bg-green-500 text-white font-bold py-3 px-6 rounded-lg hover:bg-green-600 transition-colors duration-300 shadow-lg"
               >
-                <FaWhatsapp className="mr-2" />
+                <FaWhatsapp size={30} className="mr-3" />
                 Pedir por WhatsApp
               </button>
             </div>

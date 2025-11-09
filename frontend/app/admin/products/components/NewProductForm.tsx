@@ -8,7 +8,7 @@ import { Product, Category } from '@/interfaces';
 type NewProductFormData = Pick<Product, 'productName' | 'productDescription' | 'categoryId'> & {
   productPrice: string;
   productStock: string;
-  productPreviousPrice: string;
+  productOfferPrice: string;
 };
 
 interface NewProductFormProps {
@@ -57,7 +57,7 @@ export default function NewProductForm({
 
   useEffect(() => {
     if (!isPreviousPriceEnabled) {
-      onProductDataChange({ ...productData, productPreviousPrice: '0' });
+      onProductDataChange({ ...productData, productOfferPrice: '0' });
     }
   }, [isPreviousPriceEnabled]);
 
@@ -105,7 +105,7 @@ export default function NewProductForm({
         </div>
         <div className="flex flex-col">
             <div className="flex items-center justify-between mb-1">
-                <label htmlFor="productPreviousPrice" className="block text-sm font-semibold text-gray-800">Precio Anterior (Oferta)</label>
+                <label htmlFor="productOfferPrice" className="block text-sm font-semibold text-gray-800">Precio de Oferta</label>
                 <div className="flex items-center">
                     <input type="checkbox" id="enablePreviousPrice" checked={isPreviousPriceEnabled} onChange={(e) => setIsPreviousPriceEnabled(e.target.checked)} className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" />
                     <label htmlFor="enablePreviousPrice" className="ml-2 text-sm text-gray-600">Habilitar</label>
@@ -113,9 +113,9 @@ export default function NewProductForm({
             </div>
             <input 
               type="number" 
-              id="productPreviousPrice" 
-              value={productData.productPreviousPrice} 
-              onChange={(e) => handleChange('productPreviousPrice', e.target.value)} 
+              id="productOfferPrice" 
+              value={productData.productOfferPrice} 
+              onChange={(e) => handleChange('productOfferPrice', e.target.value)} 
               disabled={!isPreviousPriceEnabled} 
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition text-lg text-gray-500 disabled:bg-gray-100 disabled:cursor-not-allowed" />
         </div>

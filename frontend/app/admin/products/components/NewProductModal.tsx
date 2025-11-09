@@ -17,7 +17,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
     productName: '',
     productDescription: '',
     productPrice: '',
-    productPreviousPrice: '0',
+    productOfferPrice: '0',
     productStock: '',
     categoryId: '',
   });
@@ -33,7 +33,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
       productName: '',
       productDescription: '',
       productPrice: '',
-      productPreviousPrice: '0',
+      productOfferPrice: '0',
       productStock: '',
       categoryId: '',
     });
@@ -89,7 +89,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
     formData.append('productName', productData.productName.trim());
     formData.append('productDescription', productData.productDescription.trim());
     formData.append('productPrice', productData.productPrice.trim());
-    formData.append('productPreviousPrice', productData.productPreviousPrice.trim() || '0');
+    formData.append('productOfferPrice', productData.productOfferPrice.trim() || '0');
     formData.append('productStock', productData.productStock.trim());
     formData.append('categoryId', productData.categoryId.trim());
     images.forEach((image) => {
@@ -155,7 +155,7 @@ export default function NewProductModal({ isOpen, onClose, onProductAdded }: New
             <ProductPreview 
               nombre={productData.productName} 
               precio={productData.productPrice} 
-              precioAnterior={productData.productPreviousPrice}
+              precioAnterior={productData.productOfferPrice}
               descripcion={productData.productDescription} 
               stock={productData.productStock} 
               categoria={productData.categoryId} 

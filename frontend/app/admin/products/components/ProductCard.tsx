@@ -12,25 +12,13 @@ export default function ProductCard({ product, onEdit, onDelete, onClick }: Prod
 
   const getStockClasses = (stock: number) => {
     if (stock > 5) {
-      return {
-        dot: 'bg-green-500',
-        bg: 'bg-green-100',
-        text: 'text-green-800',
-      };
+      return { dot: 'bg-green-500', bg: 'bg-green-100', text: 'text-green-800' };
     }
     if (stock >= 3) {
-      return {
-        dot: 'bg-yellow-500',
-        bg: 'bg-yellow-100',
-        text: 'text-yellow-800',
-      };
+      return { dot: 'bg-yellow-500', bg: 'bg-yellow-100', text: 'text-yellow-800' };
     }
     if (stock >= 1) {
-      return {
-        dot: 'bg-orange-500',
-        bg: 'bg-orange-100',
-        text: 'text-orange-800',
-      };
+      return { dot: 'bg-orange-500', bg: 'bg-orange-100', text: 'text-orange-800' };
     }
     return { dot: 'bg-red-500', bg: 'bg-red-100', text: 'text-red-800' };
   };

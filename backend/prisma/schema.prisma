@@ -88,7 +88,7 @@ model Product {
   productSku               String?  @unique
   productBarcode           String?  @unique
   productPrice             Decimal  @db.Decimal(10, 2)
-  productPreviousPrice     Decimal? @db.Decimal(10, 2)
+  productOfferPrice        Decimal? @db.Decimal(10, 2)
   productCost              Decimal? @db.Decimal(10, 2)
   productStock             Int      @default(0)
   productIvaRate           String   @default("0")

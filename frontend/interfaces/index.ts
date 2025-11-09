@@ -14,6 +14,7 @@ export interface Product {
   productName: string;
   productDescription: string;
   productPrice: number;
+  productOfferPrice: number;
   productStock: number;
   categoryId: string;
   category: {

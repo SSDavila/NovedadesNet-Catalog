@@ -76,8 +76,8 @@ export class ProductsService {
           productPrice: +productDetails.productPrice,
           productStock: +productDetails.productStock,
           images: { create: imageUrls },
-          productPreviousPrice: productDetails.productPreviousPrice
-            ? +productDetails.productPreviousPrice
+          productOfferPrice: productDetails.productOfferPrice
+            ? +productDetails.productOfferPrice
             : undefined,
         },
       });
@@ -134,15 +134,16 @@ export class ProductsService {
     const dataToUpdate: any = { ...productDetails };
 
     if (productDetails.productPrice) {
-      const currentProduct = await this.findOne(id);
-      if (
-        currentProduct &&
-        +productDetails.productPrice !== currentProduct.productPrice.toNumber()
-      ) {
-        dataToUpdate.productPreviousPrice = currentProduct.productPrice;
-      }
+      dataToUpdate.productPrice = +productDetails.productPrice;
+    }
+    if (productDetails.productOfferPrice) {
+      dataToUpdate.productPrice = +productDetails.productPrice;
     }
 
+    if (productDetails.productOfferPrice) {
+      dataToUpdate.productOfferPrice = +productDetails.productOfferPrice;
+    }
+    
     if (imagesToDelete && imagesToDelete.length > 0) {
 
       const deletePromises = imagesToDelete.map((public_id) =>
