@@ -27,6 +27,7 @@ export default function ProductCard({ product, onCardClick }: ProductCardProps) 
     }
     return { dot: 'bg-red-500', container: 'bg-red-100', text: 'text-red-800' };
   };
+  
   const stockColors = getStockColors();
 
   return (
