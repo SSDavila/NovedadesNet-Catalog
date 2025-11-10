@@ -1,9 +1,11 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { FaTimes, FaSpinner, FaUser, FaBox, FaCalendarAlt, FaHashtag, FaDollarSign } from 'react-icons/fa';
+import { FaTimes, FaSpinner, FaFileAlt } from 'react-icons/fa';
 import { SaleNote } from '@/interfaces';
 import { API_BASE_URL } from '@/lib/constants';
+import { SaleNotePreview } from './SaleNotePreview';
 
 interface SaleNoteDetailModalProps {
   isOpen: boolean;
@@ -28,6 +30,25 @@ export default function SaleNoteDetailModal({ isOpen, onClose, saleNoteId }: Sal
     enabled: !!saleNoteId && isOpen,
   });
 
+  const previewData = useMemo(() => {
+    if (!saleNote) return null;
+    return {
+      customer: {
+        value: saleNote.customer.customerId,
+        label: `${saleNote.customer.customerName} (${saleNote.customer.customerIdentificationNumber})`,
+        ruc: saleNote.customer.customerIdentificationNumber,
+        address: saleNote.customer.customerAddress || '',
+        phone: saleNote.customer.customerPhone || '',
+        email: saleNote.customer.customerEmail,
+      },
+      items: saleNote.items.map(item => ({
+        ...item,
+        price: Number(item.saleNoteItemUnitPrice),
+        subtotal: Number(item.saleNoteItemUnitPrice) * item.saleNoteItemQuantity,
+      })),
+    };
+  }, [saleNote]);
+
   if (!isOpen) return null;
 
   return (
@@ -38,61 +59,18 @@ export default function SaleNoteDetailModal({ isOpen, onClose, saleNoteId }: Sal
         </button>
 
         <div className="p-6 border-b border-gray-200">
-          <h2 className="text-2xl font-bold text-gray-900">Detalle de Nota de Venta</h2>
-          {saleNote && <p className="text-gray-600 font-mono">{saleNote.saleNoteNumber}</p>}
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3"><FaFileAlt /> Detalle de Nota de Venta</h2>
         </div>
 
-        <div className="p-6 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+        <div className="p-8 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 bg-gray-100">
           {isLoading && <div className="flex justify-center items-center h-full"><FaSpinner className="animate-spin text-blue-600 text-4xl" /></div>}
           {isError && <div className="text-center text-red-500">Error al cargar los detalles.</div>}
-          {saleNote && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-                <div className="space-y-2">
-                  <p className="flex items-center gap-2"><FaUser className="text-gray-400" /> <strong>Cliente:</strong> {saleNote.customer.customerName}</p>
-                  <p className="flex items-center gap-2"><FaUser className="text-gray-400" /> <strong>Vendedor:</strong> {saleNote.seller.userName}</p>
-                </div>
-                <div className="space-y-2">
-                  <p className="flex items-center gap-2"><FaCalendarAlt className="text-gray-400" /> <strong>Fecha:</strong> {new Date(saleNote.saleNoteCreatedAt).toLocaleString()}</p>
-                  <p className="flex items-center gap-2"><FaHashtag className="text-gray-400" /> <strong>Estado:</strong> {saleNote.saleNoteStatus}</p>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="text-lg font-semibold mb-2 text-gray-800">Productos</h3>
-                <div className="border rounded-lg overflow-hidden">
-                  <table className="min-w-full">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th className="px-4 py-2 text-left font-semibold text-gray-600">Producto</th>
-                        <th className="px-4 py-2 text-center font-semibold text-gray-600">Cant.</th>
-                        <th className="px-4 py-2 text-right font-semibold text-gray-600">P. Unit.</th>
-                        <th className="px-4 py-2 text-right font-semibold text-gray-600">Subtotal</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {saleNote.items?.map(item => (
-                        <tr key={item.saleNoteItemId}>
-                          <td className="px-4 py-2">{item.product.productName}</td>
-                          <td className="px-4 py-2 text-center">{item.saleNoteItemQuantity}</td>
-                          <td className="px-4 py-2 text-right font-mono">${Number(item.saleNoteItemUnitPrice).toFixed(2)}</td>
-                          <td className="px-4 py-2 text-right font-mono">${(Number(item.saleNoteItemUnitPrice) * item.saleNoteItemQuantity).toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div className="mt-6 text-right border-t pt-4">
-                <p className="text-gray-600">Total</p>
-                <p className="text-3xl font-bold text-gray-900">${Number(saleNote.saleNoteTotal).toFixed(2)}</p>
-              </div>
-            </div>
+          {previewData && (
+            <SaleNotePreview data={previewData} saleNoteNumber={saleNote.saleNoteNumber} saleNoteDate={saleNote.saleNoteCreatedAt} />
           )}
         </div>
 
-        <div className="flex justify-end gap-3 p-4 bg-gray-100 rounded-b-2xl">
+        <div className="flex justify-end gap-3 p-4 bg-gray-50 border-t rounded-b-2xl">
           <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition font-semibold">
             Cerrar
           </button>
