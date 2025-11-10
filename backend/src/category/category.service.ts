@@ -79,6 +79,17 @@ export class CategoryService {
 
   async remove(id: string) {
     await this.findOne(id);
+
+    const productsCount = await this.prisma.product.count({
+      where: { categoryId: id },
+    });
+
+    if (productsCount > 0) {
+      throw new ConflictException(
+        `Esta categoría no se puede eliminar porque está siendo utilizada por ${productsCount} producto(s).`,
+      );
+    }
+
     return this.prisma.category.delete({
       where: { categoryId: id },
     });

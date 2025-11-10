@@ -117,6 +117,7 @@ model Category {
   categoryId           String  @id
   categoryName         String  @unique
   categoryAbbreviation String? @unique
+  categoryIcon         String?
 
   products Product[]
 }

@@ -7,6 +7,8 @@ export interface ProductImage {
 export interface Category {
   categoryId: string;
   categoryName: string;
+  categoryAbbreviation: string;
+  categoryIcon: string;
 }
 
 export interface Product {

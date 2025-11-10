@@ -1,120 +1,70 @@
 'use client';
 
-import { useState, useEffect, FormEvent } from 'react';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaPlus, FaBoxOpen } from 'react-icons/fa';
 import CategoryTable from './components/CategoryTable';
 import NewCategoryModal from './components/NewCategoryModal';
 import EditCategoryModal from './components/EditCategoryModal';
-
-interface Category {
-  categoryId: string;
-  categoryName: string;
-  categoryAbbreviation: string;
-}
-
-type ModalState = 
-  | { type: 'none' }
-  | { type: 'new' }
-  | { type: 'edit', category: Category };
+import ConfirmationModal from '@/components/ConfirmationModal';
+import { Category } from '@/interfaces';
+import { useCategories } from './hooks/useCategories';
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [modalState, setModalState] = useState<ModalState>({ type: 'none' });
+  const {
+    categories,
+    isLoading,
+    error,
+    isNewModalOpen,
+    handleOpenNewModal,
+    handleCloseNewModal,
+    isEditModalOpen,
+    categoryToEdit,
+    handleEditClick,
+    handleCloseEditModal,
+    updateCategoryMutation,
+    handleDeleteClick,
+    confirmDeleteModalProps,
+  } = useCategories();
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
-
-  const fetchCategories = async () => {
-    try {
-      setIsLoading(true);
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
-      if (!response.ok) {
-        throw new Error('Error al obtener las categorías');
-      }
-      const data = await response.json();
-      setCategories(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const handleUpdate = async (updatedCategory: Partial<Omit<Category, 'categoryId'>>) => {
-    if (modalState.type !== 'edit') return;
-
-    try {
-      const response = await fetch(`${API_URL}/categories/${modalState.category.categoryId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedCategory),
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error al actualizar la categoría.');
-      }
-      await fetchCategories();
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
-    }
-  };
-
-  const handleDelete = async (categoryId: string) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar esta categoría?')) return;
-
-    try {
-      const response = await fetch(`${API_URL}/categories/${categoryId}`, {
-        method: 'DELETE',
-      });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.message || 'Error al eliminar la categoría.');
-      }
-      await fetchCategories();
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
-    }
-  };
+  if (isLoading) return <div className="p-8 text-center text-gray-500">Cargando categorías...</div>;
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>;
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Gestión de Categorías</h1>
+    <div className="p-6 sm:p-8">
+      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <FaBoxOpen />
+            Gestión de Categorías
+          </h1>
+          <p className="text-gray-600 mt-1">Crea, edita y elimina las categorías de tus productos.</p>
+        </div>
         <button
-          onClick={() => setModalState({ type: 'new' })}
-          className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-sm"
+          onClick={handleOpenNewModal}
+          className="mt-4 sm:mt-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
         >
+          <FaPlus />
           Nueva Categoría
         </button>
-      </div>
+      </header>
 
       <NewCategoryModal
-        isOpen={modalState.type === 'new'}
-        onClose={() => setModalState({ type: 'none' })}
-        onCategoryCreated={() => {
-          setModalState({ type: 'none' });
-          fetchCategories();
-        }}
+        isOpen={isNewModalOpen}
+        onClose={handleCloseNewModal}
+        onCategoryCreated={handleCloseNewModal}
       />
 
       <EditCategoryModal
-        isOpen={modalState.type === 'edit'}
-        onClose={() => setModalState({ type: 'none' })}
-        onSave={handleUpdate}
-        category={modalState.type === 'edit' ? modalState.category : undefined}
+        isOpen={isEditModalOpen}
+        onClose={handleCloseEditModal}
+        onSave={(updatedCategory: Partial<Omit<Category, 'categoryId'>>) => updateCategoryMutation.mutate({ categoryId: categoryToEdit!.categoryId, ...updatedCategory } as Category)}
+        category={categoryToEdit}
       />
 
-      {/* Tabla de categorías */}
-      {isLoading && <p className="text-center py-4">Cargando categorías...</p>}
-      {error && <p className="text-center py-4 text-red-500">{error}</p>}
-      {!isLoading && !error && (
-        <CategoryTable categories={categories} onEdit={(category) => setModalState({ type: 'edit', category })} onDelete={handleDelete} />
-      )}
+      <ConfirmationModal {...confirmDeleteModalProps} />
+
+      <main>
+        <CategoryTable categories={categories} onEdit={handleEditClick} onDelete={handleDeleteClick} />
+      </main>
     </div>
   );
 }

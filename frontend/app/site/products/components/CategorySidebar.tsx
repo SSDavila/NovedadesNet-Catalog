@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaList, FaTag, FaExclamationTriangle } from 'react-icons/fa';
+import { FaList, FaExclamationTriangle, FaTag } from 'react-icons/fa';
 import { Category } from '@/interfaces/index';
+import { Icon } from '@iconify/react';
 
 interface CategorySidebarProps {
   selectedCategory: string | null;
@@ -100,7 +101,7 @@ export default function CategorySidebar({
                   : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
               }`}
             >
-              <FaTag className="mr-3 h-4 w-4 flex-shrink-0" />
+              <Icon icon={category.categoryIcon || 'mdi:tag'} className="mr-3 h-4 w-4 flex-shrink-0" />
               <span className="truncate">{category.categoryName}</span>
             </button>
           </motion.li>

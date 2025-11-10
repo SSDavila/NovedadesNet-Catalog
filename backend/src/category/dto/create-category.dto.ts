@@ -9,4 +9,8 @@ export class CreateCategoryDto {
   @IsOptional()
   @MaxLength(10) 
   categoryAbbreviation?: string;
+
+  @IsString()
+  @IsOptional()
+  categoryIcon?: string;
 }

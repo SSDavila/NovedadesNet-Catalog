@@ -1,4 +1,7 @@
-import { useState, FormEvent, useEffect } from 'react';
+import { useState, FormEvent, useEffect, useCallback } from 'react';
+import { FaTimes, FaSearch } from 'react-icons/fa';
+import { Icon } from '@iconify/react';
+import { useDebounce } from '../hooks/useDebounce';
 
 interface NewCategoryModalProps {
   isOpen: boolean;
@@ -6,9 +9,48 @@ interface NewCategoryModalProps {
   onCategoryCreated: () => void;
 }
 
+const IconPicker = ({ selectedIcon, onSelect }: { selectedIcon: string, onSelect: (iconName: string) => void }) => {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<string[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const debouncedQuery = useDebounce(query, 500);
+
+  useEffect(() => {
+    if (debouncedQuery) {
+      setIsSearching(true);
+      fetch(`https://api.iconify.design/search?query=${debouncedQuery}&limit=30`)
+        .then(res => res.json())
+        .then(data => {
+          setResults(data.icons || []);
+        })
+        .finally(() => setIsSearching(false));
+    } else {
+      setResults([]);
+    }
+  }, [debouncedQuery]);
+
+  return (
+    <div>
+      <div className="relative mb-2">
+        <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <input type="text" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Buscar icono (ej: laptop, car, gift...)" className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md shadow-sm" />
+      </div>
+      {isSearching && <p className="text-sm text-gray-500">Buscando...</p>}
+      <div className="h-48 overflow-y-auto grid grid-cols-6 gap-2 p-2 border rounded-lg bg-gray-50">
+        {results.map((iconName) => (
+          <button key={iconName} type="button" onClick={() => onSelect(iconName)} className={`flex items-center justify-center p-3 rounded-lg transition-all ${selectedIcon === iconName ? 'bg-purple-600 text-white scale-110 shadow-lg' : 'bg-gray-200 text-gray-600 hover:bg-purple-100 hover:text-purple-700'}`}>
+            <Icon icon={iconName} className="w-5 h-5" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 export default function NewCategoryModal({ isOpen, onClose, onCategoryCreated }: NewCategoryModalProps) {
   const [categoryName, setCategoryName] = useState('');
   const [categoryAbbreviation, setCategoryAbbreviation] = useState('');
+  const [selectedIcon, setSelectedIcon] = useState('mdi:tag');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
 
@@ -32,7 +74,7 @@ export default function NewCategoryModal({ isOpen, onClose, onCategoryCreated }:
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ categoryName, categoryAbbreviation }),
+        body: JSON.stringify({ categoryName, categoryAbbreviation, categoryIcon: selectedIcon }),
       });
       if (!response.ok) {
         const data = await response.json();
@@ -40,6 +82,7 @@ export default function NewCategoryModal({ isOpen, onClose, onCategoryCreated }:
       }
       setCategoryName('');
       setCategoryAbbreviation('');
+      setSelectedIcon('mdi:tag');
       onCategoryCreated();
     } catch (err: any) {
       alert(`Error: ${err.message}`);
@@ -82,6 +125,10 @@ export default function NewCategoryModal({ isOpen, onClose, onCategoryCreated }:
               className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
               maxLength={10}
             />
+          </div>
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Icono</label>
+            <IconPicker selectedIcon={selectedIcon} onSelect={setSelectedIcon} />
           </div>
           <div className="flex justify-end space-x-4">
             <button type="button" onClick={handleClose} className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300">Cancelar</button>
