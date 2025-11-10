@@ -6,11 +6,11 @@ import { FaFacebook, FaInstagram, FaWhatsapp, FaEnvelope } from 'react-icons/fa'
 
 export default function Footer() {
   return (
-    <footer className="bg-white border-t border-gray-200 relative z-10">
+    <footer className="bg-white/80 backdrop-blur-md border-t border-gray-200/80 relative z-10">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
 
-          <div className="md:col-span-5 lg:col-span-6">
+          <div className="md:col-span-5 lg:col-span-6 flex flex-col items-center md:items-start text-center md:text-left">
             <Link href="/site" className="flex items-center gap-3">
               <Image
                 src="/Logo-NovedadesNet.png"
@@ -27,9 +27,9 @@ export default function Footer() {
             </p>
           </div>
 
-          <div className="md:col-span-7 lg:col-span-6">
+          <div className="md:col-span-7 lg:col-span-6 mt-8 md:mt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div>
+              <div className="flex flex-col items-center sm:items-start">
                 <h3 className="text-sm font-semibold text-gray-500 tracking-wider uppercase">Ponte en Contacto</h3>
                 <ul className="mt-4 space-y-3">
                   <li>
@@ -54,9 +54,9 @@ export default function Footer() {
                   </li>
                 </ul>
               </div>
-              <div>
+              <div className="flex flex-col items-center sm:items-start">
                 <h3 className="text-sm font-semibold text-gray-500 tracking-wider uppercase">Síguenos</h3>
-                <div className="flex mt-4 space-x-6">
+                <div className="flex mt-4 space-x-6 justify-center sm:justify-start">
                   <a href="#" className="text-gray-400 hover:opacity-80 transition-opacity duration-200">
                     <span className="sr-only">Facebook</span>
                     <FaFacebook size={28} className="text-blue-600" />

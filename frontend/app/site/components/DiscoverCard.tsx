@@ -5,12 +5,10 @@ import Link from 'next/link';
 import { FaArrowRight } from 'react-icons/fa';
 
 interface DiscoverCardProps {
-  product?: {
-    image: string;
-  };
+  isLoading: boolean;
 }
 
-export const DiscoverCard = ({ product }: DiscoverCardProps) => {
+export const DiscoverCard = ({ isLoading }: DiscoverCardProps) => {
   const cardVariants: any = {
     hidden: { y: 30, opacity: 0, scale: 0.95 },
     visible: { y: 0, opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut', delay: 0.2 } },
@@ -26,15 +24,21 @@ export const DiscoverCard = ({ product }: DiscoverCardProps) => {
           Tecnología que Renueva tu Día
         </h3>
         <p className="mt-2 text-purple-200 max-w-xs mx-auto">
-          Desde gadgets para tu auto hasta soluciones para tu hogar.
+          Desde gadgets para tu auto hasta soluciones para tu hogar e incluso Laptops!
         </p>
       </div>
-      <Image 
-        src={product?.image || "/placeholder.jpg"}
-        alt="Tecnología" 
-        width={400} height={400} 
-        className="my-6 rounded-lg object-cover aspect-square shadow-lg" 
-      />
+      <div className="my-6 aspect-square w-full">
+        {isLoading ? (
+          <div className="w-full h-full bg-purple-800/50 rounded-lg animate-pulse"></div>
+        ) : (
+          <Image 
+            src="/Laptops.png"
+            alt="Tecnología" 
+            width={400} height={400} 
+            className="rounded-lg object-cover w-full h-full shadow-lg" 
+          />
+        )}
+      </div>
       <Link href="/site/products" className="w-auto text-center inline-flex items-center justify-center gap-2 px-8 py-3 bg-yellow-400 text-gray-900 rounded-full text-lg font-semibold shadow-lg hover:bg-white hover:-translate-y-1 transition-all duration-300 group">
         Descubrir <FaArrowRight />
       </Link>

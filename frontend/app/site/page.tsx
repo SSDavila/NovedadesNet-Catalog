@@ -88,12 +88,12 @@ export default function Home() {
               {error && (
                 <div className="flex justify-center items-center h-full min-h-[450px]"><p className="text-red-500">{error}</p></div>
               )}
-              {!isLoading && !error && (
+              {!isLoading && !error && featuredProducts.length > 0 && (
                 <ProductCarousel products={featuredProducts} title="Ofertas Imperdibles" subtitle="Los más pedidos por nuestra comunidad. ¡No te los pierdas!" />
               )}
             </div>
             <div className="lg:col-span-1">
-              <DiscoverCard product={featuredProducts[3]} />
+              <DiscoverCard isLoading={isLoading} />
             </div>
           </div>
         </section>
@@ -118,14 +118,14 @@ export default function Home() {
               variants={itemVariants}
               className="aspect-w-16 aspect-h-9 rounded-xl overflow-hidden shadow-2xl border border-gray-200"
             >
-
-              <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.793286119256!2d-78.50171289164177!3d-0.2029683696452414!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d59a3fbb8e0733%3A0xf6488c5a9d564f5a!2sCentro%20Comercial%20Artesanal%20Quitus!5e0!3m2!1ses!2sus!4v1762728665543!5m2!1ses!2sus" 
-              width="1000" 
-              height="450" 
-              style={{ border: 0 }}
-              allowFullScreen={true}
-              loading="lazy" 
-              referrerPolicy="no-referrer-when-downgrade">
+              <iframe
+                className="w-full h-full"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3989.793286119256!2d-78.50171289164177!3d-0.2029683696452414!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x91d59a3fbb8e0733%3A0xf6488c5a9d564f5a!2sCentro%20Comercial%20Artesanal%20Quitus!5e0!3m2!1ses!2sus!4v1762728665543!5m2!1ses!2sus"
+                style={{ border: 0 }}
+                allowFullScreen={true}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              >
               </iframe>
 
             </motion.div>

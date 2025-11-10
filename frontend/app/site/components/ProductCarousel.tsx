@@ -81,11 +81,11 @@ export const ProductCarousel = ({ products, title, subtitle }: ProductCarouselPr
             transition={{ x: { type: 'spring', stiffness: 300, damping: 30 }, opacity: { duration: 0.2 } }}
             className="absolute w-full h-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {[...Array(visibleProducts)].map((_, i) => {
+            {[...Array(visibleProducts)].map((_, i) => { 
               const productIndex = (index + i) % totalProducts;
               const product = productList[productIndex];
-              // Usar una clave más robusta y única
-              const uniqueKey = `${productIndex}-${product?.href || i}`;
+              // Clave única que considera la página actual del carrusel (index) y la posición de la tarjeta (i)
+              const uniqueKey = `${index}-${i}-${product?.href || productIndex}`; 
 
               return <ProductCard key={uniqueKey} product={product} />;
             })}

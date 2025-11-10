@@ -14,7 +14,7 @@ export function useBestSellers() {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch(`${API_BASE_URL}/products/bestsellers?limit=9`);
+        const response = await fetch(`${API_BASE_URL}/dashboard/bestsellers?limit=9`);
 
         if (!response.ok) {
           throw new Error(`Error ${response.status}: No se pudieron cargar los productos.`);
@@ -26,8 +26,8 @@ export function useBestSellers() {
         const formattedProducts = products.map(product => ({
           name: product.productName,
           image: product.images.length > 0 ? product.images[0].productImageUrl : '/placeholder.jpg',
-          price: product.productPrice,
-          offerPrice: product.productOfferPrice,
+          price: parseFloat(product.productPrice as any) || 0,
+          offerPrice: product.productOfferPrice ? parseFloat(product.productOfferPrice as any) : null,
           href: `/site/products/${product.productId}`,
         }));
         setFeaturedProducts(formattedProducts);

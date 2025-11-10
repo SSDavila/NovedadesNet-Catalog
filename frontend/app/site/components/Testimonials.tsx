@@ -23,7 +23,7 @@ export const Testimonials = ({ testimonials }: TestimonialsProps) => {
   return (
     <section className="py-12 md:py-16">
       <motion.div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.3 }} transition={{ staggerChildren: 0.2 }}>
-        <motion.div variants={itemVariants} className="text-center mb-16">
+        <motion.div variants={itemVariants} className="text-center mb-12">
           <GradientTitle icon={<FaShieldAlt />} text="La Confianza de Nuestros Clientes" gradientId="shield-gradient" />
         </motion.div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
