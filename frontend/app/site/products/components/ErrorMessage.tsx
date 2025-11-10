@@ -1,6 +1,6 @@
 import { FaExclamationTriangle } from 'react-icons/fa';
 import { motion } from 'framer-motion';
-import { itemVariants } from '../animations/variants';
+import { itemVariants } from '@/app/animations/notificationVariants';
 
 interface ErrorMessageProps {
   message: string;

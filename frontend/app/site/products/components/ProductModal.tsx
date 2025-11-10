@@ -1,39 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Product, ProductImage } from '@/interfaces/index';
+import { Product } from '@/interfaces/index';
 import { FaTimes, FaWhatsapp } from 'react-icons/fa';
-
-interface ProductModalProps {
-  product: Product | null;
-  onClose: () => void;
-}
-
-const backdropVariants = {
-  visible: { opacity: 1 },
-  hidden: { opacity: 0 },
-};
-
-const modalVariants = {
-  hidden: {
-    y: -50,
-    opacity: 0,
-    scale: 0.95,
-  },
-  visible: {
-    y: 0,
-    opacity: 1,
-    scale: 1,
-    transition: { delay: 0.1, duration: 0.3 },
-  },
-  exit: {
-    y: 50,
-    opacity: 0,
-    scale: 0.95,
-    transition: { duration: 0.2 },
-  },
-};
+import { backdropVariants, modalVariants } from '@/app/animations/modalVariants';
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('es-EC', {
@@ -42,10 +13,15 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
+interface ProductModalProps {
+  product: Product | null;
+  onClose: () => void;
+}
+
 export default function ProductModal({ product, onClose }: ProductModalProps) {
   const [userSelectedImage, setUserSelectedImage] = useState<string | null>(null);
 
-  const getStockColors = (stock: number) => {
+  const getStockColors = useCallback((stock: number) => {
     if (stock > 5) {
       return { dot: 'bg-green-500', container: 'bg-green-100', text: 'text-green-800' };
     }
@@ -56,23 +32,23 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
       return { dot: 'bg-orange-500', container: 'bg-orange-100', text: 'text-orange-800' };
     }
     return { dot: 'bg-red-500', container: 'bg-red-100', text: 'text-red-800' };
-  };
+  }, []);
 
-  const primaryImageUrl = product?.images?.[0]?.productImageUrl || 'https://via.placeholder.com/600';
-  const selectedImage = userSelectedImage || primaryImageUrl;
-  
-  const handleWhatsAppClick = () => {
+  const primaryImageUrl = useMemo(() => product?.images?.[0]?.productImageUrl || '/placeholder.svg', [product]);
+  const selectedImage = useMemo(() => userSelectedImage || primaryImageUrl, [userSelectedImage, primaryImageUrl]);
+
+  useEffect(() => {
+    setUserSelectedImage(null);
+  }, [product]);
+
+  const handleWhatsAppClick = useCallback(() => {
     const phoneNumber = '593963988846'; 
     const message = `¡Hola! Estoy interesado/a en el producto: ${product?.productName}`;
     const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(message)}`;
     window.open(whatsappUrl, '_blank');
-  };
+  }, [product?.productName]);
 
-  if (!product) {
-    return null;
-  }
-
-  const stockColors = getStockColors(product.productStock);
+  const stockColors = getStockColors(product?.productStock || 0);
 
   return (
     <AnimatePresence>
@@ -83,6 +59,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           animate="visible"
           exit="hidden"
           variants={backdropVariants}
+          onClick={onClose}
         >
           <motion.div
             className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto flex flex-col md:flex-row"
@@ -118,17 +95,17 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mt-2">{product.productName}</h2>
               <div className="flex items-baseline gap-3 mt-4 mb-4">
-                {product.productOfferPrice && product.productOfferPrice > 0 && product.productOfferPrice < product.productPrice ? (
+                {product.productOfferPrice && parseFloat(product.productOfferPrice as any) > 0 && parseFloat(product.productOfferPrice as any) < parseFloat(product.productPrice as any) ? (
                   <>
                     <p className="text-3xl font-extrabold text-gray-900">
-                      {formatPrice(product.productOfferPrice)}
+                      {formatPrice(parseFloat(product.productOfferPrice as any))}
                     </p>
                     <p className="text-xl text-gray-500 line-through">
-                      {formatPrice(product.productPrice)}
+                      {formatPrice(parseFloat(product.productPrice as any))}
                     </p>
                   </>
                 ) : (
-                  <p className="text-3xl font-extrabold text-gray-800">{formatPrice(product.productPrice)}</p>
+                  <p className="text-3xl font-extrabold text-gray-800">{formatPrice(parseFloat(product.productPrice as any))}</p>
                 )}
               </div>
               <div className="mb-4">

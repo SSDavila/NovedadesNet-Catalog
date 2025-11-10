@@ -9,6 +9,7 @@ interface ProductCarouselProps {
   products: {
     name: string;
     image: string;
+    category: string;
     price: number;
     offerPrice?: number | null;
     href: string;

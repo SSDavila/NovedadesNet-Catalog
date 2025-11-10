@@ -7,7 +7,7 @@ import ProductGrid from './components/ProductGrid';
 import LoadingSpinner from './components/LoadingSpinner';
 import ErrorMessage from './components/ErrorMessage';
 import ProductModal from './components/ProductModal';
-import { containerVariants, itemVariants } from './animations/variants';
+import { containerVariants, itemVariants } from '@/app/animations/notificationVariants';
 import { Product } from '@/interfaces/index';
 
 export default function ProductsPage() {

@@ -6,6 +6,7 @@ interface ProductCardProps {
   product: {
     name: string;
     image: string;
+    category?: string;
     price: number;
     offerPrice?: number | null;
     href: string;
@@ -19,7 +20,7 @@ export const ProductCard = ({ product }: ProductCardProps) => {
   };
 
   if (!product) {
-    return null; // No renderizar nada si el producto es indefinido
+    return null;
   }
 
   return (
@@ -34,9 +35,14 @@ export const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </Link>
       <div className="p-4 flex flex-col flex-grow">
-        <h4 className="font-semibold text-gray-800 flex-grow">{product.name}</h4>
+        {product.category && (
+          <p className="text-xs font-medium text-purple-600 uppercase tracking-wider">
+            {product.category}
+          </p>
+        )}
+        <h4 className="mt-2 font-semibold text-gray-800 flex-grow h-12">{product.name}</h4>
         <div className="mt-2 flex items-baseline gap-2">
-          {product.offerPrice ? (<><p className="text-xl font-bold text-purple-600">${product.offerPrice.toFixed(2)}</p><p className="text-sm text-gray-500 line-through">${product.price.toFixed(2)}</p></>) : (<p className="text-xl font-bold text-purple-600">${product.price.toFixed(2)}</p>)}
+          {product.offerPrice ? (<><p className="text-xl font-bold text-gray-900">${product.offerPrice.toFixed(2)}</p><p className="text-sm text-gray-500 line-through">${product.price.toFixed(2)}</p></>) : (<p className="text-xl font-bold text-gray-900">${product.price.toFixed(2)}</p>)}
         </div>
         <Link href={product.href} className="mt-4 w-full text-center bg-purple-100 text-purple-700 font-semibold py-2 rounded-lg hover:bg-purple-600 hover:text-white transition-all duration-300">Ver Producto</Link>
       </div>

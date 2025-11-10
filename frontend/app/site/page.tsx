@@ -116,7 +116,7 @@ export default function Home() {
 
             <motion.div 
               variants={itemVariants}
-              className="aspect-w-16 aspect-h-9 rounded-xl overflow-hidden shadow-2xl border border-gray-200"
+              className="h-80 md:h-96 lg:h-[550px] rounded-xl overflow-hidden shadow-2xl border border-gray-200"
             >
               <iframe
                 className="w-full h-full"

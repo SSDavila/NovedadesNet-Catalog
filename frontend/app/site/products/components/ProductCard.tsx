@@ -42,6 +42,9 @@ export default function ProductCard({ product, onCardClick }: ProductCardProps) 
           alt={product.productName}
           className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
         />
+        {product.productOfferPrice && parseFloat(product.productOfferPrice as any) > 0 && parseFloat(product.productOfferPrice as any) < parseFloat(product.productPrice as any) && (
+          <div className="absolute top-3 right-3 bg-yellow-400 text-gray-900 text-xs font-bold px-2 py-1 rounded-full">OFERTA</div>
+        )}
       </div>
       <div className="p-4 flex flex-col flex-grow">
         <p className="text-xs font-medium text-purple-600 uppercase tracking-wider">
@@ -52,17 +55,19 @@ export default function ProductCard({ product, onCardClick }: ProductCardProps) 
         </h3>
         <div className="mt-3 flex justify-between items-end">
           <div className="flex items-baseline gap-2">
-            {product.productOfferPrice && product.productOfferPrice > 0 && product.productOfferPrice < product.productPrice ? (
+            {product.productOfferPrice && parseFloat(product.productOfferPrice as any) > 0 && parseFloat(product.productOfferPrice as any) < parseFloat(product.productPrice as any) ? (
               <>
                 <p className="text-lg font-bold text-gray-900">
-                  {formatPrice(product.productOfferPrice)}
+                  {formatPrice(parseFloat(product.productOfferPrice as any))}
                 </p>
                 <p className="text-sm text-gray-500 line-through">
-                  {formatPrice(product.productPrice)}
+                  {formatPrice(parseFloat(product.productPrice as any))}
                 </p>
               </>
             ) : (
-              <p className="text-lg font-bold text-gray-900">{formatPrice(product.productPrice)}</p>
+              <p className="text-lg font-bold text-gray-900">
+                {formatPrice(parseFloat(product.productPrice as any))}
+              </p>
             )}
           </div>
           <div className={`flex items-center px-2 py-1 rounded-full text-xs font-semibold ${stockColors.container} ${stockColors.text}`}>

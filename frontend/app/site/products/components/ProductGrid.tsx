@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Product } from '@/interfaces/index';
 import ProductCard from './ProductCard';
-import { containerVariants, itemVariants } from '../animations/variants';
+import { containerVariants, itemVariants } from '@/app/animations/notificationVariants';
 
 interface ProductGridProps {
   products: Product[];

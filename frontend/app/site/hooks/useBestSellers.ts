@@ -26,6 +26,7 @@ export function useBestSellers() {
         const formattedProducts = products.map(product => ({
           name: product.productName,
           image: product.images.length > 0 ? product.images[0].productImageUrl : '/placeholder.jpg',
+          category: product.category?.categoryName || 'Sin Categoría',
           price: parseFloat(product.productPrice as any) || 0,
           offerPrice: product.productOfferPrice ? parseFloat(product.productOfferPrice as any) : null,
           href: `/site/products/${product.productId}`,
