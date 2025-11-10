@@ -24,6 +24,7 @@ interface ProductFormProps {
   isGenerating: boolean;
   onGenerateDescription: () => void;
   categories: Category[];
+  onAddNewCategory: () => void;
 }
 
 interface SortableImageProps {
@@ -69,6 +70,7 @@ export default function ProductForm({
   isGenerating,
   onGenerateDescription,
   categories,
+  onAddNewCategory,
 }: ProductFormProps) {
   const [showOfferPrice, setShowOfferPrice] = useState(false);
   const [categoryQuery, setCategoryQuery] = useState('');
@@ -178,7 +180,15 @@ export default function ProductForm({
             <input type="text" name="productName" id="productName" value={productData.productName} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" required />
           </div>
           <div>
-            <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-800 mb-1.5">Categoría</label>
+            <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-800 mb-1.5 flex items-center">
+              Categoría
+              <button
+                type="button"
+                onClick={onAddNewCategory}
+                className="ml-2 p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                aria-label="Crear nueva categoría"
+              ><FaPlus className="w-3 h-3" /></button>
+            </label>
             <Combobox as="div" value={selectedCategory} onChange={(category: Category) => onProductDataChange({ ...productData, categoryId: category.categoryId })} nullable>
               <div className="relative">
                 <Combobox.Button as="div">
