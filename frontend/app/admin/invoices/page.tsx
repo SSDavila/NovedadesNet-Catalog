@@ -1,216 +1,61 @@
 'use client';
 
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient, useIsMutating } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { Invoice } from '@/interfaces/invoice';
 import { FaFileInvoiceDollar, FaPlus } from 'react-icons/fa';
 import InvoiceList from './components/InvoiceList';
-import InvoiceModal from './components/InvoiceModal';
+import InvoiceDetailModal from './components/InvoiceDetailModal';
 import NewInvoiceModal from './components/NewInvoiceModal';
 import { InvoiceFormData } from './components/NewInvoiceModal';
-import { useNotification } from '@/components/Notifications/NotificationContext';
+import InvoiceDashboard from './components/InvoiceDashboard';
+import { useInvoices } from './hooks/useInvoices';
 
 export default function InvoicesPage() {
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isNewInvoiceModalOpen, setIsNewInvoiceModalOpen] = useState(false);
-  const queryClient = useQueryClient();
-  const { addNotification } = useNotification();
-  const isAuthorizing = useIsMutating({ mutationKey: ['authorizeInvoice'] }) > 0;
-  const isPrinting = useIsMutating({ mutationKey: ['printInvoice'] }) > 0;
-  const isDownloadingXml = useIsMutating({ mutationKey: ['downloadXml'] }) > 0;
-  const isSendingEmail = useIsMutating({ mutationKey: ['sendEmail'] }) > 0;
-
-
-  const { data: invoices = [], isLoading, isError, error } = useQuery<Invoice[]>({
-    queryKey: ['invoices'],
-    queryFn: async () => {
-
-      const token = localStorage.getItem('access_token');
-      if (!token) {
-        throw new Error('No estás autenticado. Por favor, inicia sesión.');
-      }
-
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.status === 401) {
-        throw new Error('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.');
-      }
-      if (!response.ok) {
-        throw new Error('No se pudieron cargar las facturas.');
-      }
-      return response.json();
-    },
-  });
-
-  const createInvoiceMutation = useMutation({
-    mutationFn: async (data: InvoiceFormData) => {
-      if (!data.customer) throw new Error('Cliente no seleccionado');
-
-      const payload = {
-        customerId: data.customer.value,
-        items: data.items.map(item => ({
-          productId: item.productId,
-          quantity: Number(item.quantity),
-          discount: Number(item.discount),
-        })),
-      };
-
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al crear la factura');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      addNotification('Factura creada con éxito', 'success');
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      setIsNewInvoiceModalOpen(false);
-    },
-    onError: (error: Error) => {
-      addNotification(error.message, 'error');
-    },
-  });
-
-  const authorizeInvoiceMutation = useMutation({
-    mutationKey: ['authorizeInvoice'],
-    mutationFn: async (invoiceId: string) => {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${invoiceId}/authorize`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al autorizar la factura');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      addNotification('Factura autorizada correctamente.', 'success');
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-    },
-    onError: (error: Error) => {
-      addNotification(error.message, 'error');
-    },
-  });
-
-  const printInvoiceMutation = useMutation({
-    mutationKey: ['printInvoice'],
-    mutationFn: async (invoiceId: string) => {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${invoiceId}/print`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al generar el PDF de la factura');
-      }
-
-      const blob = await response.blob();
-      const pdfUrl = URL.createObjectURL(blob);
-      window.open(pdfUrl, '_blank');
-    },
-    onSuccess: () => {
-      addNotification('PDF de la factura generado.', 'info');
-    },
-    onError: (error: Error) => {
-      addNotification(error.message, 'error');
-    },
-  });
-
-  const downloadXmlMutation = useMutation({
-    mutationKey: ['downloadXml'],
-    mutationFn: async (invoiceId: string) => {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${invoiceId}/download-xml`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al descargar el XML');
-      }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `factura-${invoiceId}.xml`; // Nombre de archivo genérico, puedes mejorarlo con el número de factura
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      window.URL.revokeObjectURL(url);
-    },
-    onSuccess: () => addNotification('XML descargado correctamente.', 'success'),
-    onError: (error: Error) => addNotification(error.message, 'error'),
-  });
-
-  const sendEmailMutation = useMutation({
-    mutationKey: ['sendEmail'],
-    mutationFn: async (invoiceId: string) => {
-      const token = localStorage.getItem('access_token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/invoices/${invoiceId}/send-email`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al enviar el correo');
-      }
-      return response.json();
-    },
-    onSuccess: () => {
-      addNotification('Correo enviado correctamente.', 'success');
-    },
-    onError: (error: Error) => {
-      addNotification(error.message, 'error');
-    },
-  });
-
-  const handleAuthorizeInvoice = (invoiceId: string) => {
-    authorizeInvoiceMutation.mutate(invoiceId);
-  };
-
-  const handlePrintInvoice = (invoiceId: string) => {
-    printInvoiceMutation.mutate(invoiceId);
-  };
-
-  const handleDownloadXml = (invoiceId: string) => {
-    downloadXmlMutation.mutate(invoiceId);
-  };
-
-  const handleSendEmail = (invoiceId: string) => {
-    sendEmailMutation.mutate(invoiceId);
-  };
+  const {
+    invoices,
+    isLoading,
+    isError,
+    error,
+    createInvoice,
+    isCreatingInvoice,
+    authorizeInvoice,
+    isAuthorizingInvoice,
+    printInvoice,
+    isPrintingInvoice,
+    downloadXml,
+    isDownloadingXml,
+    sendEmail,
+    isSendingEmail,
+  } = useInvoices();
 
   const handleViewInvoice = (invoiceId: string) => {
-    const invoice = invoices.find(inv => inv.invoiceId.toString() === invoiceId);
+    const invoice = invoices.find((inv: { invoiceId: { toString: () => string; }; }) => inv.invoiceId.toString() === invoiceId);
     setSelectedInvoice(invoice || null);
+  };
+
+  const handleAction = (action: string, invoiceId: string) => {
+    const invoice = invoices.find((inv: { invoiceId: { toString: () => string; }; }) => inv.invoiceId.toString() === invoiceId);
+    if (!invoice) return;
+
+    switch (action) {
+      case 'view':
+        handleViewInvoice(invoiceId);
+        break;
+      case 'authorize':
+        authorizeInvoice(invoiceId);
+        break;
+      case 'print':
+        printInvoice(invoiceId);
+        break;
+      case 'downloadXml':
+        downloadXml(invoiceId);
+        break;
+      case 'sendEmail':
+        sendEmail(invoiceId);
+        break;
+    }
   };
 
   if (isError) return <div className="p-8 text-center text-red-600">Error: {(error as Error).message}</div>;
@@ -235,41 +80,33 @@ export default function InvoicesPage() {
       </header>
 
       <main>
-        {isLoading ? (
-          <p className="text-center text-gray-500">Cargando facturas...</p>
-        ) : (
-          <InvoiceList
-            invoices={invoices.map(inv => ({
-              id: inv.invoiceId.toString(),
-              invoiceNumber: inv.invoiceNumber,
-              customerName: inv.customer.customerName,
-              total: inv.invoiceTotal,
-              status: inv.invoiceStatus,
-              date: new Date(inv.invoiceCreatedAt).toLocaleDateString(),
-            }))}
-            onView={(invoice) => handleViewInvoice(invoice.id.toString())}
-            onAuthorize={(invoice) => handleAuthorizeInvoice(invoice.id.toString())}
-            onPrint={(invoice) => handlePrintInvoice(invoice.id.toString())}
-            onDownloadXml={(invoice) => handleDownloadXml(invoice.id.toString())}
-            onSendEmail={(invoice) => handleSendEmail(invoice.id.toString())}
-            isAuthorizing={isAuthorizing}
-            isPrinting={isPrinting}
-            isDownloadingXml={isDownloadingXml}
-            isSendingEmail={isSendingEmail}
-          />
-        )}
+        <InvoiceDashboard invoices={invoices} isLoading={isLoading} />
+        <InvoiceList
+          invoices={invoices.map(inv => ({
+            id: inv.invoiceId.toString(),
+            invoiceNumber: inv.invoiceNumber,
+            customerName: inv.customer.customerName,
+            total: inv.invoiceTotal,
+            status: inv.invoiceStatus,
+            date: new Date(inv.invoiceCreatedAt).toLocaleDateString('es-EC', { day: '2-digit', month: 'short', year: 'numeric' }),
+          }))}
+          onAction={handleAction}
+          isLoading={isLoading}
+          isAuthorizing={isAuthorizingInvoice}
+          isPrinting={isPrintingInvoice}
+          isDownloadingXml={isDownloadingXml}
+          isSendingEmail={isSendingEmail}
+        />
       </main>
-
-      <InvoiceModal
-        invoice={selectedInvoice}
-        onClose={() => setSelectedInvoice(null)}
-      />
-
       <NewInvoiceModal
         isOpen={isNewInvoiceModalOpen}
         onClose={() => setIsNewInvoiceModalOpen(false)}
-        onSubmit={(data) => createInvoiceMutation.mutate(data)}
-        isSubmitting={createInvoiceMutation.isPending}
+        onSubmit={(data) => createInvoice(data)}
+        isSubmitting={isCreatingInvoice}
+      />
+      <InvoiceDetailModal
+        invoice={selectedInvoice}
+        onClose={() => setSelectedInvoice(null)}
       />
     </div>
   );

@@ -20,7 +20,7 @@ export class InvoicesService {
   ) {}
 
   async create(createInvoiceDto: CreateInvoiceDto, sellerId: number) {
-    const { customerId, saleNoteId, items } = createInvoiceDto;
+    const { customerId, saleNoteId, items, paymentMethod } = createInvoiceDto;
 
     if (items.length === 0) {
       throw new BadRequestException('La factura debe tener al menos un ítem.');
@@ -32,8 +32,8 @@ export class InvoicesService {
       if (!company) {
         throw new InternalServerErrorException('Datos de la empresa no configurados.');
       }
-      const establishmentCode = company.companyEstablishmentCode || '002'; // <-- Cambio aquí
-      const emissionPointCode = company.companyEmissionPointCode || '001'; // Ajusta si también es diferente
+      const establishmentCode = company.companyEstablishmentCode || '002';
+      const emissionPointCode = company.companyEmissionPointCode || '001';
 
       const customer = await prisma.customer.findUnique({
         where: { customerId },
@@ -114,6 +114,7 @@ export class InvoicesService {
           customerId,
           sellerId,
           saleNoteId,
+          invoicePaymentMethod: paymentMethod,
           items: {
             create: invoiceItemsData,
           },
@@ -155,7 +156,7 @@ export class InvoicesService {
   findAll() {
     return this.prisma.invoice.findMany({
       include: {
-        customer: { select: { customerName: true } },
+        customer: true,
         seller: { select: { userName: true } },
       },
       orderBy: {

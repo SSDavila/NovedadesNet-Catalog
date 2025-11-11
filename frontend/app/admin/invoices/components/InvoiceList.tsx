@@ -1,4 +1,9 @@
-import { FaEye, FaFilePdf, FaPaperPlane, FaSpinner, FaEnvelope, FaFileCode } from 'react-icons/fa';
+'use client';
+
+import { useState } from 'react';
+import { FaFileInvoiceDollar } from 'react-icons/fa';
+import InvoiceCard from './InvoiceCard';
+import InvoiceCardSkeleton from './InvoiceCardSkeleton';
 
 interface Invoice {
   id: string;
@@ -11,101 +16,76 @@ interface Invoice {
 
 interface InvoiceListProps {
   invoices: Invoice[];
-  onView: (invoice: Invoice) => void;
-  onAuthorize: (invoice: Invoice) => void;
-  onPrint: (invoice: Invoice) => void;
-  onDownloadXml: (invoice: Invoice) => void;
-  onSendEmail: (invoice: Invoice) => void;
+  onAction: (action: string, invoiceId: string) => void;
+  isLoading: boolean;
   isAuthorizing: boolean;
   isPrinting: boolean;
   isDownloadingXml: boolean;
   isSendingEmail: boolean;
 }
 
-const statusClasses = {
-  AUTORIZADA: 'bg-green-100 text-green-800',
-  PENDIENTE: 'bg-yellow-100 text-yellow-800',
-  ANULADA: 'bg-gray-100 text-gray-800',
-  RECHAZADA: 'bg-red-100 text-red-800',
-};
-
 export default function InvoiceList({
   invoices,
-  onView,
-  onAuthorize,
-  onPrint,
-  onDownloadXml,
-  onSendEmail,
+  onAction,
+  isLoading,
   isAuthorizing,
   isPrinting,
   isDownloadingXml,
   isSendingEmail,
 }: InvoiceListProps) {
-  return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-gray-200">
-          <thead className="bg-gray-50">
-            <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">N° Factura</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-              <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-              <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {invoices.map((invoice) => (
-              <tr key={invoice.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700">{invoice.invoiceNumber}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{invoice.customerName}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{invoice.date}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-bold text-gray-800">${Number(invoice.total).toFixed(2)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-center">
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[invoice.status as keyof typeof statusClasses] || 'bg-gray-100 text-gray-800'}`}>
-                    {invoice.status}
-                  </span>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-3">
-                    <button onClick={() => onView(invoice)} className="text-blue-600 hover:text-blue-900" title="Ver Detalle">
-                      <FaEye />
-                    </button>
-                    <button onClick={() => onAuthorize(invoice)} className="text-purple-600 hover:text-purple-900 disabled:text-gray-400 disabled:cursor-not-allowed" disabled={isAuthorizing || invoice.status !== 'PENDIENTE'} title="Autorizar en SRI">
-                      {isAuthorizing ? <FaSpinner className="animate-spin" /> : <FaPaperPlane />}
-                    </button>
-                    <button
-                      onClick={() => onPrint(invoice)}
-                      className="text-red-600 hover:text-red-900 disabled:text-gray-400 disabled:cursor-not-allowed"
-                      disabled={isPrinting || invoice.status === 'PENDIENTE'}
-                      title="Imprimir PDF (RIDE)"
-                    >
-                      {isPrinting ? <FaSpinner className="animate-spin" /> : <FaFilePdf />}
-                    </button>
-                    <button
-                      onClick={() => onDownloadXml(invoice)}
-                      className="text-gray-600 hover:text-gray-900 disabled:text-gray-400 disabled:cursor-not-allowed"
-                      disabled={isDownloadingXml || invoice.status !== 'AUTORIZADA'}
-                      title="Descargar XML"
-                    >
-                      {isDownloadingXml ? <FaSpinner className="animate-spin" /> : <FaFileCode />}
-                    </button>
-                    <button
-                      onClick={() => onSendEmail(invoice)}
-                      className="text-green-600 hover:text-green-900 disabled:text-gray-400 disabled:cursor-not-allowed"
-                      disabled={isSendingEmail || invoice.status !== 'AUTORIZADA'}
-                      title="Enviar por Correo"
-                    >
-                      {isSendingEmail ? <FaSpinner className="animate-spin" /> : <FaEnvelope />}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+
+  const filteredInvoices = invoices.filter(invoice => {
+    const matchesSearch = invoice.invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          invoice.customerName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'ALL' || invoice.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+        {[...Array(6)].map((_, i) => <InvoiceCardSkeleton key={i} />)}
       </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <input
+          type="text"
+          placeholder="Buscar por N° o cliente..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full sm:w-1/2 md:w-1/3 px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        />
+        <select
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+          className="w-full sm:w-auto px-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="ALL">Todos los estados</option>
+          <option value="AUTORIZADA">Autorizada</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="RECHAZADA">Rechazada</option>
+          <option value="ANULADA">Anulada</option>
+        </select>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {filteredInvoices.map((invoice) => (
+          <InvoiceCard key={invoice.id} invoice={invoice} onAction={onAction} />
+        ))}
+      </div>
+      {filteredInvoices.length === 0 && (
+        <div className="text-center py-16 text-gray-500 bg-gray-50 rounded-lg">
+          <FaFileInvoiceDollar className="mx-auto text-4xl text-gray-400" />
+          <p className="mt-4 text-lg font-semibold">No se encontraron facturas</p>
+          <p className="mt-1 text-sm">Intenta ajustar tu búsqueda, filtros o crea una nueva factura.</p>
+        </div>
+      )}
     </div>
   );
 }

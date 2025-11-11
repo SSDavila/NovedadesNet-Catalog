@@ -37,4 +37,8 @@ export class CreateInvoiceDto {
   @ValidateNested({ each: true })
   @Type(() => InvoiceItemDto)
   items: InvoiceItemDto[];
+
+  @IsString()
+  @IsNotEmpty()
+  paymentMethod: string;
 }
