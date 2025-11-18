@@ -1,349 +1,526 @@
-import { Injectable, InternalServerErrorException, BadRequestException } from '@nestjs/common';
-import * as fs from 'fs';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../../prisma/prisma.service'; // Asegúrate que la ruta a tu PrismaService sea correcta
+import { Company, Customer, Invoice, InvoiceItem, Product } from '@prisma/client';
+import * as X2JS from 'x2js';
 import * as forge from 'node-forge';
-import { create } from 'xmlbuilder2';
+import { HttpService } from '@nestjs/axios';
 import axios from 'axios';
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import { Decimal } from '@prisma/client/runtime/library';
+
+// --- Helper Functions ---
+
+/** Formatea una fecha al formato dd/MM/yyyy requerido por el SRI */
+const formatDate = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
+/** Obtiene el código de tipo de identificación del SRI */
+const getIdentificationTypeCode = (type: string): string => {
+  const map = { RUC: '04', CEDULA: '05', PASAPORTE: '06', CONSUMIDOR_FINAL: '07', EXTERIOR: '08' };
+  return map[type] || '07';
+};
+
+/** Obtiene el código de porcentaje de IVA del SRI */
+const getIvaCode = (ivaRate: string): string => {
+  const map = { '0': '0', '12': '2', '14': '3', '15': '5' }; // '15' es el código para 15%
+  return map[ivaRate] || '0';
+};
+
+const SRI_ENDPOINTS = {
+  pruebas: {
+    recepcion: 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
+    autorizacion: 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
+  },
+  produccion: {
+    recepcion: 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
+    autorizacion: 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
+  },
+};
+
 
 @Injectable()
 export class SriService {
-  private getSriEndpoints(environment: string) {
-    if (environment === '2') { 
-      return {
-        reception: 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
-        authorization: 'https://cel.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
-      };
-    }
-    return {
-      reception: 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/RecepcionComprobantesOffline?wsdl',
-      authorization: 'https://celcer.sri.gob.ec/comprobantes-electronicos-ws/AutorizacionComprobantesOffline?wsdl',
-    };
+  private x2js: X2JS;
+
+  constructor(private prisma: PrismaService, private readonly httpService: HttpService) {
+    this.x2js = new X2JS();
   }
 
-  async authorizeInvoice(invoiceData: any, companyData: any): Promise<{ status: string; authorizationNumber?: string; responseXml?: string; signedXml?: string }> {
-
-    const xmlObject = this.buildInvoiceXml(invoiceData, companyData);
-
-    const xmlString = create({ encoding: 'UTF-8' }, xmlObject).end({ prettyPrint: true });
-
-    console.log('--- XML Generado para el SRI ---');
-    console.log(xmlString);
-    console.log('---------------------------------');
-
-    const signedXml = await this.signXml(xmlString, companyData.sriCertificatePath, companyData.sriCertificatePassword);
-
-    fs.writeFileSync('factura_firmada.xml', signedXml, { encoding: 'utf8' });
-
-    console.log('--- XML Firmado Enviado al SRI ---');
-    console.log(signedXml);
-    console.log('-----------------------------------');
-
-    const endpoints = this.getSriEndpoints(companyData.sriEnvironment);
-
-    await this.sendToReception(signedXml, endpoints.reception);
-
-    const authResult = await this.checkAuthorization(invoiceData.invoiceAccessKey, endpoints.authorization);
-
-    return { ...authResult, signedXml };
-  }
-
-  generateAccessKey(emissionDate: Date, voucherType: string, ruc: string, environment: string, series: string, sequence: string): string {
-    const date = new Date(emissionDate);
-    const day = date.getDate().toString().padStart(2, '0');
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const year = date.getFullYear();
-
-    const datePart = `${day}${month}${year}`;
-    const numericCode = Math.random().toString().slice(2, 10);
-    const emissionType = '1';
-
-    const keyWithoutCheckDigit = `${datePart}${voucherType}${ruc}${environment}${series}${sequence}${numericCode}${emissionType}`;
-    const checkDigit = this.calculateCheckDigit(keyWithoutCheckDigit);
-
-    return `${keyWithoutCheckDigit}${checkDigit}`;
-  }
-
-  private calculateCheckDigit(key: string): number {
-    const coefficients = [7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2, 7, 6, 5, 4, 3, 2];
-    let sum = 0;
-    for (let i = 0; i < 48; i++) {
-      sum += parseInt(key[i], 10) * coefficients[i];
-    }
-    const remainder = sum % 11;
-    const checkDigit = 11 - remainder;
-    return checkDigit === 11 ? 0 : checkDigit === 10 ? 1 : checkDigit;
-  }
-
-  private buildInvoiceXml(invoice: any, company: any) {
-
-    const invoiceDate = new Date(invoice.invoiceCreatedAt);
-    const formattedDate = `${invoiceDate.getDate().toString().padStart(2, '0')}/${(invoiceDate.getMonth() + 1).toString().padStart(2, '0')}/${invoiceDate.getFullYear()}`;
-
-    const taxTotals: { [key: string]: { code: string; codePercentage: string; base: number; value: number; tariff: number } } = {};
-
-    const ivaTariffs: { [key: string]: number } = {
-      '0': 0,
-      '2': 12,
-      '3': 14,
-      '4': 15,
-      '5': 5,
-    };
-
-    const identificationTypeMapping: { [key: string]: string } = {
-      'RUC': '04',
-      'CEDULA': '05',
-      'PASAPORTE': '06',
-      'CONSUMIDOR_FINAL': '07',
-      'PLACA': '09',
-    };
-
-    invoice.items.forEach(item => {
-      const ivaRateCode = item.product.productIvaRate;
-      const tariff = ivaTariffs[ivaRateCode] ?? 0;
-      const base = item.invoiceItemSubtotal.toNumber();
-      const value = base * (tariff / 100);
-
-      if (!taxTotals[ivaRateCode]) {
-        taxTotals[ivaRateCode] = {
-          code: '2',
-          codePercentage: ivaRateCode,
-          base: 0,
-          value: 0,
-          tariff,
-        };
-      }
-      taxTotals[ivaRateCode].base += base;
-      taxTotals[ivaRateCode].value += value;
+  /**
+   * Genera el objeto base para el XML de la factura a partir de un ID de factura existente.
+   * @param invoiceId - El ID de la factura en la base de datos.
+   */
+  async generateInvoiceXmlObject(invoiceId: number): Promise<object> {
+    // 1. --- Obtener todos los datos necesarios de la base de datos ---
+    const invoice = await this.prisma.invoice.findUnique({
+      where: { invoiceId },
+      include: {
+        customer: true,
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
     });
 
-    return {
+    if (!invoice) {
+      throw new NotFoundException(`Factura con ID ${invoiceId} no encontrada.`);
+    }
+
+    const company = await this.prisma.company.findFirst();
+    if (!company) {
+      throw new Error('No se ha configurado la información de la empresa.');
+    }
+
+    // 2. --- Construir el objeto con la estructura exacta del XML ---
+    const secuencial = invoice.invoiceNumber.split('-')[2];
+
+    // totalSinImpuestos es la suma de los subtotales de cada item (que ya tienen el descuento aplicado).
+    const totalSinImpuestos = invoice.invoiceSubtotal;
+
+    // Agrupamos los items por su tarifa de IVA para generar los totales
+    const impuestosPorTarifa = invoice.items.reduce((acc, item) => {
+      const ivaRate = item.product.productIvaRate;
+      if (!acc[ivaRate]) {
+        acc[ivaRate] = { baseImponible: new Decimal(0), valor: new Decimal(0) };
+      }
+      const baseImponibleItem = item.invoiceItemSubtotal;
+      acc[ivaRate].baseImponible = acc[ivaRate].baseImponible.plus(baseImponibleItem);
+      acc[ivaRate].valor = acc[ivaRate].valor.plus(baseImponibleItem.mul(new Decimal(ivaRate).div(100)));
+      return acc;
+    }, {} as Record<string, { baseImponible: Decimal; valor: Decimal }>);
+
+    const facturaJson = {
       factura: {
-        '@id': 'comprobante',
-        '@version': '1.1.0',
+        _id: 'comprobante',
+        _version: '2.1.0',
         infoTributaria: {
-          ambiente: parseInt(company.sriEnvironment, 10),
-          tipoEmision: 1,
+          ambiente: company.sriEnvironment, // '1' Pruebas, '2' Producción
+          tipoEmision: company.sriEmissionType, // '1' Emisión Normal
           razonSocial: company.companyName,
           nombreComercial: company.companyTradeName || company.companyName,
           ruc: company.companyRuc,
           claveAcceso: invoice.invoiceAccessKey,
-          codDoc: '01',
-          estab: invoice.invoiceNumber.substring(0, 3),
-          ptoEmi: invoice.invoiceNumber.substring(4, 7),
-          secuencial: invoice.invoiceNumber.substring(8, 17),
+          codDoc: '01', // '01' para Factura
+          estab: company.companyEstablishmentCode,
+          ptoEmi: company.companyEmissionPointCode,
+          secuencial: secuencial,
           dirMatriz: company.companyAddress,
         },
         infoFactura: {
-          fechaEmision: formattedDate,
+          fechaEmision: formatDate(invoice.invoiceCreatedAt),
           dirEstablecimiento: company.companyAddress,
-          obligadoContabilidad: company.companyObligedToAccount ?? 'NO',
-          tipoIdentificacionComprador: identificationTypeMapping[invoice.customer.customerIdentificationType] || '07',
+          obligadoContabilidad: company.companyObligedToAccount,
+          tipoIdentificacionComprador: getIdentificationTypeCode(invoice.customer.customerIdentificationType),
           razonSocialComprador: invoice.customer.customerName,
           identificacionComprador: invoice.customer.customerIdentificationNumber,
-          totalSinImpuestos: invoice.invoiceSubtotal.toFixed(2),
+          totalSinImpuestos: totalSinImpuestos.toFixed(2),
           totalDescuento: invoice.invoiceDiscountTotal.toFixed(2),
           totalConImpuestos: {
-            totalImpuesto: Object.values(taxTotals).map(tax => ({
-              codigo: tax.code,
-              codigoPorcentaje: tax.codePercentage,
-              baseImponible: tax.base.toFixed(2),
-              tarifa: tax.tariff.toFixed(2),
-              valor: tax.value.toFixed(2),
+            totalImpuesto: Object.entries(impuestosPorTarifa).map(([ivaRate, totals]) => ({ // Este se convierte en un array
+              codigo: '2', // '2' para IVA
+              codigoPorcentaje: getIvaCode(ivaRate),
+              baseImponible: totals.baseImponible.toFixed(2),
+              valor: totals.valor.toFixed(2),
             })),
           },
           propina: '0.00',
           importeTotal: invoice.invoiceTotal.toFixed(2),
           moneda: 'DOLAR',
+          pagos: {
+            pago: [ // Forzamos a que sea un array
+              {
+                formaPago: invoice.invoicePaymentMethod,
+                total: invoice.invoiceTotal.toFixed(2),
+              }
+            ]
+          },
         },
         detalles: {
-          detalle: invoice.items.map(item => {
-            const ivaCode = item.product.productIvaRate;
-            const tariff = ivaTariffs[ivaCode] ?? 0;
-
-            const impuesto = {
-              codigo: '2',
-              codigoPorcentaje: ivaCode,
-              tarifa: tariff.toFixed(2),
-              baseImponible: item.invoiceItemSubtotal.toFixed(2),
-              valor: (item.invoiceItemSubtotal.toNumber() * tariff / 100).toFixed(2),
-            };
+          detalle: invoice.items.map((item) => {
+            const subtotalSinDescuento = item.invoiceItemSubtotal.plus(item.invoiceItemDiscount);
+            const ivaRate = item.product.productIvaRate;
+            const valorIva = item.invoiceItemSubtotal.mul(new Decimal(ivaRate).div(100));
 
             return {
-              codigoPrincipal: item.product.productSku || item.productId,
+              codigoPrincipal: item.product.productId,
+              codigoAuxiliar: item.product.productSku || item.product.productId,
               descripcion: item.product.productName,
-              cantidad: item.invoiceItemQuantity,
-              precioUnitario: item.invoiceItemUnitPrice.toFixed(2),
+              cantidad: item.invoiceItemQuantity.toFixed(6), // El SRI recomienda 6 decimales para cantidad
+              precioUnitario: subtotalSinDescuento.div(item.invoiceItemQuantity).toFixed(6), // El SRI recomienda 6 decimales
               descuento: item.invoiceItemDiscount.toFixed(2),
               precioTotalSinImpuesto: item.invoiceItemSubtotal.toFixed(2),
-              impuestos: { impuesto: [impuesto] },
+              impuestos: {
+                impuesto: [ // Forzamos a que sea un array
+                  {
+                    codigo: '2', 
+                    codigoPorcentaje: getIvaCode(ivaRate), 
+                    tarifa: ivaRate, 
+                    baseImponible: item.invoiceItemSubtotal.toFixed(2), 
+                    valor: valorIva.toFixed(2) 
+                  }
+                ]
+              },
             };
           }),
         },
-
-        infoAdicional: {
-          campoAdicional: {
-            '@nombre': 'Email',
-            '#': invoice.customer.customerEmail || 'cliente@correo.com',
-          },
-        },
       },
     };
+
+    return facturaJson;
   }
 
-  private async signXml(xmlToSign: string, signaturePath: string, signaturePass: string): Promise<string> {
+  /**
+   * Genera el string XML de la factura, listo para ser firmado.
+   * @param invoiceId - El ID de la factura.
+   * @returns El string XML de la factura.
+   */
+  async generateXmlString(invoiceId: number): Promise<string> {
+    const jsonObject = await this.generateInvoiceXmlObject(invoiceId);
+    const xmlString = this.x2js.js2xml(jsonObject);
+
+    // El SRI requiere la declaración XML específica como encabezado.
+    return `<?xml version="1.0" encoding="UTF-8"?>\n${xmlString}`;
+  }
+
+  /**
+   * Firma un documento XML utilizando un certificado P12.
+   * @param xmlToSign - El string XML sin firmar.
+   * @param certificatePath - La ruta al archivo .p12.
+   * @param password - La contraseña del certificado.
+   * @returns El string XML firmado.
+   */
+  private async signXml(xmlToSign: string, certificatePath: string, password: string): Promise<string> {
+    const p12Der = await fs.readFile(certificatePath, { encoding: 'binary' });
+    const p12Asn1 = forge.asn1.fromDer(p12Der, false);
+    const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, password);
+
+    const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
+    const keyBags = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
+
+    const cert = certBags[forge.pki.oids.certBag][0].cert;
+    const key = keyBags[forge.pki.oids.pkcs8ShroudedKeyBag][0].key;
+
+    const certDer = forge.pki.pemToDer(forge.pki.certificateToPem(cert));
+    const certB64 = forge.util.encode64(certDer.getBytes());
+
+    const certificateX509 = forge.pki.certificateFromPem(forge.pki.certificateToPem(cert));
+
+    const serialNumber = certificateX509.serialNumber;
+    const issuerName = this.formatIssuer(certificateX509.issuer.attributes);
+
+    const signedPropertiesId = `Signature${Date.now()}-SignedProperties${Date.now()}`;
+    const signatureId = `Signature${Date.now()}`;
+    const referenceId = `Reference-ID-${Date.now()}`;
+
+    const signedProperties = `
+      <xades:SignedProperties Id="${signedPropertiesId}">
+        <xades:SignedSignatureProperties>
+          <xades:SigningTime>${new Date().toISOString()}</xades:SigningTime>
+          <xades:SigningCertificate>
+            <xades:Cert>
+              <xades:CertDigest>
+                <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod>
+                <ds:DigestValue>${(() => {
+                  const md = forge.md.sha1.create();
+                  md.update(forge.asn1.toDer(forge.pki.certificateToAsn1(cert)).getBytes());
+                  return forge.util.encode64(md.digest().bytes());
+                })()}</ds:DigestValue>
+              </xades:CertDigest>
+              <xades:IssuerSerial>
+                <ds:X509IssuerName>${issuerName}</ds:X509IssuerName>
+                <ds:X509SerialNumber>${serialNumber}</ds:X509SerialNumber>
+              </xades:IssuerSerial>
+            </xades:Cert>
+          </xades:SigningCertificate>
+        </xades:SignedSignatureProperties>
+      </xades:SignedProperties>
+    `;
+
+    const md = forge.md.sha1.create();
+    md.update(signedProperties, 'utf8');
+    const signedPropertiesDigest = forge.util.encode64(md.digest().bytes());
+
+    const mdComprobante = forge.md.sha1.create();
+    mdComprobante.update(xmlToSign.replace('<?xml version="1.0" encoding="UTF-8"?>\n', ''), 'utf8');
+    const comprobanteDigest = forge.util.encode64(mdComprobante.digest().bytes());
+
+    const signedInfo = `
+      <ds:SignedInfo>
+        <ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315"></ds:CanonicalizationMethod>
+        <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"></ds:SignatureMethod>
+        <ds:Reference Id="${referenceId}" URI="#comprobante">
+          <ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform></ds:Transforms>
+          <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod>
+          <ds:DigestValue>${comprobanteDigest}</ds:DigestValue>
+        </ds:Reference>
+        <ds:Reference Type="http://uri.etsi.org/01903#SignedProperties" URI="#${signedPropertiesId}">
+          <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"></ds:DigestMethod>
+          <ds:DigestValue>${signedPropertiesDigest}</ds:DigestValue>
+        </ds:Reference>
+      </ds:SignedInfo>
+    `;
+
+    const mdSignedInfo = forge.md.sha1.create();
+    mdSignedInfo.update(signedInfo.replace(/<ds:SignedInfo>/g, '<ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#">'), 'utf8');
+    const signatureValue = forge.util.encode64(key.sign(mdSignedInfo));
+
+    const xades = `
+      <ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" xmlns:xades="http://uri.etsi.org/01903/v1.3.2#" Id="${signatureId}">
+        ${signedInfo}
+        <ds:SignatureValue>${signatureValue}</ds:SignatureValue>
+        <ds:KeyInfo>
+          <ds:X509Data>
+            <ds:X509Certificate>${certB64}</ds:X509Certificate>
+          </ds:X509Data>
+        </ds:KeyInfo>
+        <ds:Object>
+          <xades:QualifyingProperties Target="#${signatureId}">
+            ${signedProperties}
+          </xades:QualifyingProperties>
+        </ds:Object>
+      </ds:Signature>
+    `;
+
+    return xmlToSign.replace('</factura>', xades + '</factura>');
+  }
+
+  private formatIssuer(attributes: any[]): string {
+    return attributes.map(attr => `${attr.shortName}=${attr.value}`).reverse().join(', ');
+  }
+
+  /**
+   * Envía un XML firmado al Web Service de Recepción del SRI.
+   * @param signedXml - El XML firmado.
     try {
-      const p12Der = fs.readFileSync(signaturePath).toString('binary');
-      const p12Asn1 = forge.asn1.fromDer(p12Der);
-      const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, signaturePass);
+      const p12File = await fs.readFile(certificatePath, 'binary');
+      const p12Asn1 = forge.asn1.fromDer(p12File, false);
+      const p12 = forge.pkcs12.pkcs12FromAsn1(p12Asn1, false, password);
 
       const certBags = p12.getBags({ bagType: forge.pki.oids.certBag });
-      const privateKeyBags = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
+      const keyBags = p12.getBags({ bagType: forge.pki.oids.pkcs8ShroudedKeyBag });
 
-      const certificate = certBags[forge.pki.oids.certBag][0].cert;
-      const privateKey = privateKeyBags[forge.pki.oids.pkcs8ShroudedKeyBag][0].key;
+      const cert = certBags[forge.pki.oids.certBag][0].cert;
+      const key = keyBags[forge.pki.oids.pkcs8ShroudedKeyBag][0].key;
 
-      const certDer = forge.pki.certificateToAsn1(certificate);
-      const certB64 = forge.util.encode64(forge.asn1.toDer(certDer).getBytes());
+      const certPem = forge.pki.certificateToPem(cert);
+      const certData = forge.util.encode64(forge.pki.pemToDer(certPem).getBytes());
 
       const md = forge.md.sha1.create();
       md.update(xmlToSign, 'utf8');
 
-      const signature = privateKey.sign(md);
-      const signatureB64 = forge.util.encode64(signature);
+      // Al pasar solo el digest 'md' (que es sha1), node-forge usa el esquema por defecto RSASSA-PKCS1-v1_5, que es RSA-SHA1.
+      const signature = key.sign(md);
+      const signature64 = forge.util.encode64(signature);
 
-      const signatureXml = this.buildSignatureXml(signatureB64, certB64, forge.util.encode64(md.digest().bytes()));
-      return xmlToSign.replace('</factura>', `${signatureXml}</factura>`);
+      const signedXml = xmlToSign.replace(
+        '</factura>',
+        `<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#" Id="Signature620391">
+          <ds:SignedInfo>
+            <ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n-20010315" />
+            <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1" />
+            <ds:Reference Id="Reference43526" URI="#comprobante">
+              <ds:Transforms>
+                <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature" />
+              </ds:Transforms>
+              <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1" />
+              <ds:DigestValue>${forge.util.encode64(md.digest().bytes())}</ds:DigestValue>
+            </ds:Reference>
+          </ds:SignedInfo>
+          <ds:SignatureValue>${signature64}</ds:SignatureValue>
+          <ds:KeyInfo Id="KeyInfo43897">
+            <ds:X509Data>
+              <ds:X509Certificate>${certData}</ds:X509Certificate>
+            </ds:X509Data>
+          </ds:KeyInfo>
+        </ds:Signature>`,
+      );
+
+      return signedXml;
     } catch (error) {
       console.error('Error al firmar el XML:', error);
-      throw new InternalServerErrorException('Error al firmar el documento. Verifique la contraseña y la ruta de la firma electrónica.');
+      throw new Error(`Error al firmar el documento: ${error.message}`);
     }
   }
 
-  private buildSignatureXml(signatureB64: string, certB64: string, digestB64: string): string {
-  const signatureId = 'Signature666';
+  /**
+   * Envía un XML firmado al Web Service de Recepción del SRI.
+   * @param signedXml - El XML firmado.
+   * @returns El resultado de la recepción.
+   */
+  async sendSignedXml(signedXml: string) {
+    const company = await this.prisma.company.findFirst();
+    if (!company) {
+      throw new Error('No se ha configurado la información de la empresa.');
+    }
 
-  const xmlObj = {
-    'ds:Signature': {
-      '@xmlns:ds': 'http://www.w3.org/2000/09/xmldsig#',
-      '@Id': signatureId,
-      'ds:SignedInfo': {
-        'ds:CanonicalizationMethod': {
-          '@Algorithm': 'http://www.w3.org/TR/2001/REC-xml-c14n-20010315',
-        },
-        'ds:SignatureMethod': {
-          '@Algorithm': 'http://www.w3.org/2000/09/xmldsig#rsa-sha1',
-        },
-        'ds:Reference': {
-          '@URI': '#comprobante',
-          'ds:Transforms': {
-            'ds:Transform': {
-              '@Algorithm': 'http://www.w3.org/2000/09/xmldsig#enveloped-signature',
-            },
-          },
-          'ds:DigestMethod': {
-            '@Algorithm': 'http://www.w3.org/2000/09/xmldsig#sha1',
-          },
-          'ds:DigestValue': digestB64,
-        },
-      },
-      'ds:SignatureValue': signatureB64,
-      'ds:KeyInfo': {
-        'ds:X509Data': {
-          'ds:X509Certificate': certB64,
-        },
-      },
-    },
-  };
+    const environment = company.sriEnvironment === '1' ? 'pruebas' : 'produccion';
+    const url = SRI_ENDPOINTS[environment].recepcion;
 
-  return create(xmlObj).end({ headless: true, prettyPrint: false });
-}
+    const xmlBase64 = Buffer.from(signedXml).toString('base64');
 
-  private async sendToReception(signedXml: string, endpoint: string): Promise<void> {
-    const soapEnvelope = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ec="http://ec.gob.sri.ws.recepcion">
-       <soapenv:Header/>
-       <soapenv:Body>
+    const soapBody = `
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ec="http://ec.gob.sri.ws.recepcion">
+        <soapenv:Header/>
+        <soapenv:Body>
           <ec:validarComprobante>
-             <xml>${Buffer.from(signedXml, 'utf8').toString('base64')}</xml>
+            <xml>${xmlBase64}</xml>
           </ec:validarComprobante>
-       </soapenv:Body>
-    </soapenv:Envelope>`;
+        </soapenv:Body>
+      </soapenv:Envelope>
+    `;
 
     try {
-      const response = await axios.post(endpoint, soapEnvelope, {
-        headers: { 'Content-Type': 'application/xml; charset=UTF-8' },
+      const { data } = await axios.post(url, soapBody, {
+        headers: { 'Content-Type': 'text/xml;charset=UTF-8' },
       });
 
-      const resultXml = response.data;
-      if (!resultXml.includes('<estado>RECIBIDA</estado>')) {
-        const errorMessage = resultXml.match(/<mensaje>(.*?)<\/mensaje>/)?.[1] || 'Error desconocido en la recepción del SRI.';
-        console.error('Error en la recepción del SRI:', resultXml);
-        throw new BadRequestException(`SRI: ${errorMessage}`);
+      // Parsear la respuesta SOAP
+      const responseJson = this.x2js.xml2js(data) as any;
+      const body = responseJson.Envelope.Body;
+
+      if (body.validarComprobanteResponse) {
+        return body.validarComprobanteResponse.RespuestaRecepcionComprobante;
+      } else if (body.Fault) {
+        throw new Error(`Error del SRI: ${JSON.stringify(body.Fault.faultstring)}`);
       }
+      throw new Error('Respuesta inesperada del SRI.');
     } catch (error) {
-      console.error('Error en la recepción del SRI:', error.response?.data || error.message);
-      throw new InternalServerErrorException('Fallo la comunicación con el servicio de recepción del SRI.');
+      console.error('Error en la petición al SRI:', error.response?.data || error.message);
+      throw new Error('No se pudo comunicar con el servicio de recepción del SRI.');
     }
   }
 
-  private async checkAuthorization(accessKey: string, endpoint: string): Promise<{ status: string; authorizationNumber?: string; responseXml?: string }> {
-    const soapEnvelope = `<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ec="http://ec.gob.sri.ws.autorizacion">
-       <soapenv:Header/>
-       <soapenv:Body>
+  /**
+   * Consulta el Web Service de Autorización del SRI.
+   * @param accessKey - La clave de acceso del comprobante.
+   */
+  async checkAuthorization(accessKey: string) {
+    const company = await this.prisma.company.findFirst();
+    if (!company) {
+      throw new Error('No se ha configurado la información de la empresa.');
+    }
+
+    const environment = company.sriEnvironment === '1' ? 'pruebas' : 'produccion';
+    const url = SRI_ENDPOINTS[environment].autorizacion;
+
+    const soapBody = `
+      <soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ec="http://ec.gob.sri.ws.autorizacion">
+        <soapenv:Header/>
+        <soapenv:Body>
           <ec:autorizacionComprobante>
-             <claveAccesoComprobante>${accessKey}</claveAccesoComprobante>
+            <claveAccesoComprobante>${accessKey}</claveAccesoComprobante>
           </ec:autorizacionComprobante>
-       </soapenv:Body>
-    </soapenv:Envelope>`;
+        </soapenv:Body>
+      </soapenv:Envelope>
+    `;
 
     try {
-      const response = await axios.post(endpoint, soapEnvelope, { headers: { 'Content-Type': 'text/xml;charset=UTF-8' } });
-      const resultXml = response.data;
-      const status = resultXml.match(/<estado>(.*?)<\/estado>/)?.[1];
+      const { data } = await axios.post(url, soapBody, {
+        headers: { 'Content-Type': 'text/xml;charset=UTF-8' },
+      });
 
-      if (status === 'AUTORIZADO') {
-        const authorizationNumber = resultXml.match(/<numeroAutorizacion>(.*?)<\/numeroAutorizacion>/)?.[1];
-        return { status, authorizationNumber, responseXml: resultXml };
-      } else {
-        const message = resultXml.match(/<mensaje>(.*?)<\/mensaje>/)?.[1] || 'Factura no autorizada.';
-        throw new BadRequestException(`SRI: ${status} - ${message}`);
+      const responseJson = this.x2js.xml2js(data) as any;
+      const body = responseJson.Envelope.Body;
+
+      if (body.autorizacionComprobanteResponse) {
+        const respuesta = body.autorizacionComprobanteResponse.RespuestaAutorizacionComprobante;
+        // El SRI devuelve una lista de autorizaciones, usualmente con un solo elemento.
+        return respuesta.autorizaciones.autorizacion;
+      } else if (body.Fault) {
+        throw new Error(`Error del SRI: ${JSON.stringify(body.Fault.faultstring)}`);
       }
+      throw new Error('Respuesta inesperada del SRI en autorización.');
     } catch (error) {
-      if (error instanceof BadRequestException) throw error;
-      console.error('Error en la autorización del SRI:', error.response?.data || error.message);
-      throw new InternalServerErrorException('Fallo la comunicación con el servicio de autorización del SRI.');
+      console.error('Error en la petición de autorización al SRI:', error.response?.data || error.message);
+      throw new Error('No se pudo comunicar con el servicio de autorización del SRI.');
     }
   }
 
-  async cancelInvoice(invoice: any, company: any) {
-    if (invoice.invoiceStatus !== 'AUTORIZADA') {
-      throw new BadRequestException('Solo se pueden anular facturas autorizadas.');
+  /**
+   * Orquesta todo el proceso de una factura electrónica:
+   * 1. Genera y firma el XML.
+   * 2. Envía para recepción.
+   * 3. Consulta la autorización.
+   * 4. Actualiza la base de datos.
+   * @param invoiceId - El ID de la factura a procesar.
+   */
+  async processElectronicInvoice(invoiceId: number) {
+    // --- 1. Generar y firmar XML ---
+    const unsignedXml = await this.generateXmlString(invoiceId);
+    const invoiceData = await this.prisma.invoice.findUnique({ where: { invoiceId } });
+    const company = await this.prisma.company.findFirst();
+
+    if (!company || !company.sriCertificatePath || !company.sriCertificatePassword) {
+      throw new Error('La configuración del certificado digital de la empresa no está completa.');
+    }
+    if (!invoiceData) {
+      throw new NotFoundException('Factura no encontrada para procesar.');
     }
 
-    const cancellationXmlObject = {
-      anulacion: {
-        infoTributaria: {
-          ambiente: parseInt(company.sriEnvironment, 10),
-          tipoEmision: 1,
-          razonSocial: company.companyName,
-          ruc: company.companyRuc,
-          claveAcceso: invoice.invoiceAccessKey,
-          codDoc: '04',
-          estab: invoice.invoiceNumber.substring(0, 3),
-          ptoEmi: invoice.invoiceNumber.substring(4, 7),
-          secuencial: invoice.invoiceNumber.substring(8, 17),
-          dirMatriz: company.companyAddress,
+    // --- Guardar XML sin firmar para depuración ---
+    const xmlDir = path.join(process.cwd(), 'xml_generated');
+    await fs.mkdir(xmlDir, { recursive: true });
+    await fs.writeFile(path.join(xmlDir, `${invoiceData.invoiceNumber}-unsigned.xml`), unsignedXml);
+    // ------------------------------------------------
+
+    const signedXml = await this.signXml(unsignedXml, company.sriCertificatePath, company.sriCertificatePassword);
+
+    await this.prisma.invoice.update({
+      where: { invoiceId },
+      data: { invoiceSignedXml: signedXml, invoiceStatus: 'FIRMADO' },
+    });
+
+    // --- Guardar XML firmado para depuración ---
+    await fs.writeFile(path.join(xmlDir, `${invoiceData.invoiceNumber}-signed.xml`), signedXml);
+    // -------------------------------------------
+
+    // --- 2. Enviar para Recepción ---
+    const receptionResponse = await this.sendSignedXml(signedXml);
+    if (receptionResponse.estado !== 'RECIBIDA') {
+      const errorMessage = receptionResponse.comprobantes.comprobante.mensajes.mensaje.informacionAdicional;
+      await this.prisma.invoice.update({
+        where: { invoiceId },
+        data: { invoiceStatus: 'RECHAZADO', invoiceSriResponse: JSON.stringify(receptionResponse) },
+      });
+      throw new Error(`El SRI no recibió la factura. Error: ${errorMessage}`);
+    }
+
+    await this.prisma.invoice.update({
+      where: { invoiceId },
+      data: { invoiceStatus: 'RECIBIDA' },
+    });
+
+    // --- 3. Consultar Autorización (con una pausa) ---
+    await new Promise(resolve => setTimeout(resolve, 3000)); // Pausa de 3 segundos
+
+    const authResponse = await this.checkAuthorization(invoiceData.invoiceAccessKey);
+
+    // --- 4. Actualizar la Base de Datos ---
+    if (authResponse.estado === 'AUTORIZADO') {
+      await this.prisma.invoice.update({
+        where: { invoiceId },
+        data: {
+          invoiceStatus: 'AUTORIZADO',
+          invoiceSriAuthorizationDateTime: new Date(authResponse.fechaAutorizacion),
+          invoiceSriAuthorizationNumber: authResponse.numeroAutorizacion,
+          invoiceSriResponse: JSON.stringify(authResponse),
         },
-        infoAnulacion: {
-          fechaAnulacion: new Date().toLocaleDateString('es-EC', { day: '2-digit', month: '2-digit', year: 'numeric' }),
-          comprobanteAnular: '01',
-          secuencialAnular: invoice.invoiceNumber,
-          autorizacionAnular: invoice.invoiceSriAuthorization,
-          motivoAnulacion: 'ANULACION SOLICITADA POR EL USUARIO',
-        },
-      },
-    };
-    const cancellationXmlString = create(cancellationXmlObject).end({ prettyPrint: true });
-    const signedCancellationXml = await this.signXml(cancellationXmlString, company.sriCertificatePath, company.sriCertificatePassword);
-    const endpoints = this.getSriEndpoints(company.sriEnvironment);
-    await this.sendToReception(signedCancellationXml, endpoints.reception);
+      });
+      return { success: true, message: 'Factura autorizada por el SRI.', data: authResponse };
+    } else {
+      const errorMessage = authResponse.mensajes.mensaje.informacionAdicional;
+      await this.prisma.invoice.update({
+        where: { invoiceId },
+        data: { invoiceStatus: 'NO AUTORIZADO', invoiceSriResponse: JSON.stringify(authResponse) },
+      });
+      throw new Error(`Factura no autorizada. Error: ${errorMessage}`);
+    }
   }
 }

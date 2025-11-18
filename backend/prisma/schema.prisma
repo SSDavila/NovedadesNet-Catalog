@@ -154,8 +154,8 @@ model SaleNote {
 
   customerId         String
   customer           Customer            @relation(fields: [customerId], references: [customerId])
-  sellerId           Int
-  seller             User                @relation(fields: [sellerId], references: [userId])
+  userId             Int                 @map("sellerId")
+  seller             User                @relation(fields: [userId], references: [userId])
   items              SaleNoteItem[]
   invoice            Invoice?
 
@@ -188,16 +188,17 @@ model Invoice {
   invoiceDiscountTotal    Decimal  @default(0) @db.Decimal(10, 2)
   invoiceTotal            Decimal  @db.Decimal(10, 2)
   invoicePaymentMethod    String   @default("01")
-  invoiceSriAuthorization String?
-  invoiceSriResponse      String?
+  invoiceSriAuthorizationDateTime DateTime?
+  invoiceSriAuthorizationNumber String?
+  invoiceSriResponse      String?  @db.Text
   invoiceSignedXml        String?  @db.Text
   invoiceCreatedAt        DateTime @default(now())
   invoiceUpdatedAt        DateTime @updatedAt
 
   customerId         String
   customer           Customer            @relation(fields: [customerId], references: [customerId])
-  sellerId           Int
-  seller             User                @relation(fields: [sellerId], references: [userId])
+  userId             Int                 @map("sellerId")
+  seller             User                @relation(fields: [userId], references: [userId])
   saleNoteId         Int?                @unique
   saleNote           SaleNote?           @relation(fields: [saleNoteId], references: [saleNoteId])
 

@@ -14,10 +14,10 @@ import { CustomersModule } from './customer/customers.module';
 import { SaleNotesModule } from './salesnotes/salesnotes.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { InvoicesModule } from './invoice/invoice.module';
-import { SriModule } from './sri/sri.module';
 import { PdfModule } from './pdf/pdf.module';
 import { EmailModule } from './email/email.module';
 import { BIDashboardModule } from './bi-dashboard/bi-dashboard.module';
+import { SriModule } from './sri/sri.module';
 
 @Module({
   imports: [
@@ -37,10 +37,10 @@ import { BIDashboardModule } from './bi-dashboard/bi-dashboard.module';
     SaleNotesModule,
     InventoryModule,
     InvoicesModule,
-    SriModule,
     PdfModule,
     EmailModule,
     BIDashboardModule,
+    SriModule,
   ],
   controllers: [AiController]
 })

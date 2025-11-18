@@ -91,8 +91,12 @@ export class SaleNotesService {
         data: {
           saleNoteNumber,
           saleNoteTotal: total,
-          customerId,
-          sellerId,
+          customer: {
+            connect: { customerId: customerId },
+          },
+          seller: {
+            connect: { userId: sellerId },
+          },
           items: {
             create: saleNoteItemsData,
           },
