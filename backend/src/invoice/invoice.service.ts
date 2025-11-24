@@ -115,7 +115,7 @@ export class InvoicesService {
       const invoiceAccessKey = this.generateAccessKey(
         new Date(), 
         '01', 
-        company.sriEmissionType, // Tipo de Emisión (campo faltante)
+        company.sriEmissionType, 
         company.companyRuc,
         company.sriEnvironment,
         establishmentCode,

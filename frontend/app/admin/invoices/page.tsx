@@ -12,13 +12,10 @@ import NewInvoiceModal from './components/NewInvoiceModal';
 import InvoiceDashboard from './components/InvoiceDashboard';
 
 export default function InvoicesPage() {
-  // Estado para manejar la visibilidad de los modales
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [isNewInvoiceModalOpen, setIsNewInvoiceModalOpen] = useState(false);
-  // Estado para asegurar que el código solo se ejecute en el cliente
   const [isClient, setIsClient] = useState(false);
 
-  // Hook central que maneja toda la lógica de datos
   const {
     invoices,
     isLoadingInvoices,
@@ -33,14 +30,12 @@ export default function InvoicesPage() {
     sendEmail,
   } = useInvoices();
 
-  // Efecto para establecer que estamos en el lado del cliente
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Manejador central para todas las acciones de la lista de facturas
   const handleAction = (action: string, invoiceId: number) => {
-    const invoice = invoices.find((inv) => inv.invoiceId === invoiceId);
+    const invoice = invoices.find((inv: { invoiceId: number; }) => inv.invoiceId === invoiceId);
     if (!invoice) return;
 
     switch (action) {
@@ -51,21 +46,19 @@ export default function InvoicesPage() {
         authorizeInvoice(invoiceId);
         break;
       case 'print':
-        printInvoice(invoiceId); // Lógica a implementar
+        printInvoice(invoiceId); 
         break;
       case 'downloadXml':
-        downloadXml(invoiceId); // Lógica a implementar
+        downloadXml(invoiceId);
         break;
       case 'sendEmail':
-        sendEmail(invoiceId); // Lógica a implementar
+        sendEmail(invoiceId); 
         break;
     }
   };
 
-  // Manejador para la creación de la factura
   const handleCreateAndClose = (data: InvoiceFormData) => {
-    // Transformamos los datos para que coincidan con el DTO del backend.
-    // El backend solo necesita el ID del producto, la cantidad y el descuento por cada ítem.
+
     const payloadForBackend = {
       customerId: data.customerId,
       paymentMethod: data.paymentMethod,
@@ -78,18 +71,14 @@ export default function InvoicesPage() {
     createInvoice(payloadForBackend, {
 
       onSuccess: () => {
-        // La lógica de sondeo ya se inicia en el hook.
-        // Aquí solo cerramos el modal.
         setIsNewInvoiceModalOpen(false);
       },
       onError: (error) => {
-        // Opcional: Mostrar un toast o alerta de error
         alert(`Error al crear la factura: ${error.message}`);
       },
     });
   };
 
-  // Renderizado del contenido principal
   const renderMainContent = () => {
     if (!isClient || isLoadingInvoices) {
       return <div className="text-center p-8">Cargando facturas...</div>;

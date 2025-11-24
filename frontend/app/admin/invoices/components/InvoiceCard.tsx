@@ -50,16 +50,48 @@ export default function InvoiceCard({ invoice, onAction, isProcessing = false }:
       </div>
 
       <div className="p-3 bg-gray-50/70 rounded-b-xl border-t flex justify-end items-center gap-2">
-        {['NO AUTORIZADO', 'RECHAZADO'].includes(invoice.invoiceStatus) && (
-          <button onClick={() => onAction('authorize', invoice.invoiceId)} title="Reintentar Autorización" className="p-2 text-blue-600 hover:bg-gray-200 rounded-full disabled:text-gray-300" disabled={isProcessing}>
-            <FaSync />
+        {['PENDIENTE', 'NO AUTORIZADO', 'RECHAZADO', 'RECIBIDA'].includes(invoice.invoiceStatus) && (
+          <button 
+            onClick={() => onAction('authorize', invoice.invoiceId)} 
+            title="Procesar con SRI" 
+            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full disabled:text-gray-300 transition-colors" 
+            disabled={isProcessing}
+          >
+            <FaSync className={isProcessing ? 'animate-spin' : ''} />
           </button>
         )}
-        <button onClick={() => onAction('view', invoice.invoiceId)} title="Ver Detalle" className="p-2 text-gray-600 hover:bg-gray-200 rounded-full" disabled={isProcessing}>
+        
+        {invoice.invoiceStatus === 'AUTORIZADO' && (
+            <>
+                <button 
+                    onClick={() => onAction('print', invoice.invoiceId)} 
+                    title="Descargar RIDE (PDF)" 
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-full disabled:text-gray-300 transition-colors" 
+                    disabled={isProcessing}
+                >
+                    <FaFilePdf />
+                </button>
+                <button 
+                    onClick={() => onAction('sendEmail', invoice.invoiceId)} 
+                    title="Enviar por Email" 
+                    className="p-2 text-gray-600 hover:bg-gray-200 rounded-full disabled:text-gray-300 transition-colors" 
+                    disabled={isProcessing}
+                >
+                    <FaEnvelope />
+                </button>
+            </>
+        )}
+
+        <button 
+            onClick={() => onAction('view', invoice.invoiceId)} 
+            title="Ver Detalle" 
+            className="p-2 text-gray-600 hover:bg-gray-200 rounded-full disabled:text-gray-300 transition-colors" 
+            disabled={isProcessing}
+        >
           <FaEye />
         </button>
-        {/* Otros botones de acción se pueden agregar aquí, deshabilitados si isProcessing es true */}
       </div>
+
     </div>
   );
 }
