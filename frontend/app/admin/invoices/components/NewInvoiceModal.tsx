@@ -7,6 +7,8 @@ import NewInvoiceForm from './NewInvoiceForm';
 import { InvoicePreview } from './InvoicePreview';
 import { Customer, Product } from '@/interfaces';
 import axios from 'axios';
+import { motion } from 'framer-motion';
+import { backdropVariants, modalVariants } from '@/app/animations/modalVariants';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
 
@@ -15,7 +17,7 @@ export interface InvoiceItem {
   productName: string;
   quantity: number;
   price: number;
-  discount: number; // Este es el valor del descuento, no el porcentaje
+  discount: number; 
   subtotal: number;
 }
 
@@ -61,11 +63,20 @@ export default function NewInvoiceModal({ isOpen, onClose, onSubmit, isSubmittin
   }, [isOpen]);
 
   const handleFormSubmit: SubmitHandler<InvoiceFormData> = (data) => onSubmit(data);
-  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
-      <div className="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col">
+    <motion.div
+      className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+      variants={backdropVariants}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+    >
+      <motion.div
+        className="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col"
+        variants={modalVariants}
+        onClick={(e) => e.stopPropagation()} 
+      >
         <header className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-900">Nueva Factura</h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-800 p-2 rounded-full hover:bg-gray-100"><FaTimes /></button>
@@ -84,7 +95,7 @@ export default function NewInvoiceModal({ isOpen, onClose, onSubmit, isSubmittin
             </footer>
           </form>
         </FormProvider>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

@@ -62,6 +62,7 @@ export const AdminProductCard = ({ product, onEdit, onDelete }: AdminProductCard
           src={imageUrl}
           alt={product.productName}
           fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

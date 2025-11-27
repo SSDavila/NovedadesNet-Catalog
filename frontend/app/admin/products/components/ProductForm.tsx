@@ -189,7 +189,7 @@ export default function ProductForm({
                 aria-label="Crear nueva categoría"
               ><FaPlus className="w-3 h-3" /></button>
             </label>
-            <Combobox as="div" value={selectedCategory} onChange={(category: Category) => onProductDataChange({ ...productData, categoryId: category.categoryId })} nullable>
+            <Combobox as="div" value={selectedCategory} onChange={(category: Category | null) => onProductDataChange({ ...productData, categoryId: category?.categoryId || '' })} nullable>
               <div className="relative">
                 <Combobox.Button as="div">
                   <Combobox.Input
@@ -267,12 +267,15 @@ export default function ProductForm({
             <label htmlFor="productStock" className="block text-sm font-semibold text-gray-800 mb-1.5">Stock</label>
             <input type="number" name="productStock" id="productStock" value={productData.productStock} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" required min="0" />
           </div>
+          <div>
+            <label htmlFor="productCost" className="block text-sm font-semibold text-gray-800 mb-1.5">Costo del Producto</label>
+            <input type="number" name="productCost" id="productCost" value={productData.productCost || ''} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" min="0" step="0.01" placeholder="0.00" />
+          </div>
         </div>
       </fieldset>
 
       <fieldset>
         <div className="flex justify-between items-center mb-4">
-          <label htmlFor="productDescription" className="text-lg font-semibold text-gray-800">Descripción</label>
           <button type="button" onClick={onGenerateDescription} disabled={isGenerating || !productData.productName} className="flex items-center gap-2 text-xs bg-purple-100 text-purple-700 font-semibold px-2 py-1.5 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
             {isGenerating ? <FaSpinner className="animate-spin" /> : <FaWandMagicSparkles />}
             Generar con IA

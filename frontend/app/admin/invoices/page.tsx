@@ -5,6 +5,7 @@ import { FaFileInvoiceDollar, FaPlus } from 'react-icons/fa';
 import { useInvoices } from './hooks/useInvoices';
 import { InvoiceFormData } from './components/NewInvoiceModal';
 import { Invoice } from '@/interfaces/invoice';
+import { AnimatePresence } from 'framer-motion';
 
 import InvoiceList from './components/InvoiceList';
 import InvoiceDetailModal from './components/InvoiceDetailModal';
@@ -111,12 +112,16 @@ export default function InvoicesPage() {
         {renderMainContent()}
       </main>
 
-      <NewInvoiceModal
-        isOpen={isNewInvoiceModalOpen}
-        onClose={() => setIsNewInvoiceModalOpen(false)}
-        onSubmit={handleCreateAndClose}
-        isSubmitting={isCreatingInvoice}
-      />
+      <AnimatePresence>
+        {isNewInvoiceModalOpen && (
+          <NewInvoiceModal
+            isOpen={isNewInvoiceModalOpen}
+            onClose={() => setIsNewInvoiceModalOpen(false)}
+            onSubmit={handleCreateAndClose}
+            isSubmitting={isCreatingInvoice}
+          />
+        )}
+      </AnimatePresence>
 
       <InvoiceDetailModal
         invoice={selectedInvoice}

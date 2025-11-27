@@ -26,6 +26,12 @@ export class CreateProductDto {
   @IsOptional()
   productOfferPrice?: number;
 
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Type(() => Number)
+  @Min(0)
+  @IsOptional()
+  productCost?: number;
+
   @IsString()
   @IsOptional()
   productDescription?: string;

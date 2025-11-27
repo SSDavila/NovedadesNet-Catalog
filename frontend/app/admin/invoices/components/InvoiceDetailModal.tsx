@@ -4,6 +4,8 @@ import { useMemo } from 'react';
 import { FaTimes, FaFileInvoiceDollar } from 'react-icons/fa';
 import { Invoice } from '@/interfaces/invoice';
 import { InvoicePreview } from './InvoicePreview';
+import { motion } from 'framer-motion';
+import { backdropVariants, modalVariants } from '@/app/animations/modalVariants';
 
 interface InvoiceDetailModalProps {
   invoice: Invoice | null;
@@ -34,11 +36,30 @@ export default function InvoiceDetailModal({ invoice, onClose }: InvoiceDetailMo
     };
   }, [invoice]);
 
-  if (!invoice) return null;
+  // REMOVED: if (!invoice) return null;
+
+  if (!invoice) return null; // Keep this for safety if rendered without invoice, but parent should control it.
+  // Actually, if we render it conditionally in parent {selectedInvoice && <Modal ... />}, this check is redundant but harmless.
+  // However, for exit animation, the 'invoice' prop might become null before the animation finishes if we just set it to null.
+  // We need to handle that. Usually we keep the invoice data until the modal is fully closed.
+  // But AnimatePresence handles "exit" by keeping the component in the DOM.
+  // So 'invoice' will still be the old value during exit? No, if we do setSelectedInvoice(null), the prop becomes null.
+  // We need to ensure the parent doesn't clear the selectedInvoice until the animation is done? 
+  // OR, AnimatePresence preserves the *children* as they were when they were removed. So it should be fine.
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col">
+    <motion.div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+      variants={backdropVariants}
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+    >
+      <motion.div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col"
+        variants={modalVariants}
+        onClick={(e) => e.stopPropagation()}
+      >
         <header className="p-6 border-b border-gray-200 flex justify-between items-center">
           <div>
             <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3"><FaFileInvoiceDollar /> Detalle de Factura</h2>
@@ -58,7 +79,7 @@ export default function InvoiceDetailModal({ invoice, onClose }: InvoiceDetailMo
             Cerrar
           </button>
         </footer>
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 }

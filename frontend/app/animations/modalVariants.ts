@@ -1,9 +1,11 @@
-export const backdropVariants = {
+import { Variants } from 'framer-motion';
+
+export const backdropVariants: Variants = {
   visible: { opacity: 1 },
   hidden: { opacity: 0, transition: { duration: 0.2 } },
 };
 
-export const modalVariants = {
+export const modalVariants: Variants = {
   hidden: {
     opacity: 0,
     scale: 0.95,

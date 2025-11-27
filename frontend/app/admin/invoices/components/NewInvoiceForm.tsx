@@ -36,19 +36,19 @@ export default function NewInvoiceForm({ customers = [], products = [] }: NewInv
   })), [products]);
 
   const handleAddItem = () => {
-    if (!selectedProduct) return; // selectedProduct ahora es el objeto Product completo
+    if (!selectedProduct) return; 
     const existingItem = items.find(item => item.productId === selectedProduct.productId);
 
     if (existingItem) {
-      // Si el item ya existe, solo incrementa la cantidad
-      handleItemChange(selectedProduct.productId, 'quantity', existingItem.quantity + 1);
+
+      handleItemChange(selectedProduct.productId, 'quantity', (existingItem.quantity + 1).toString());
     } else {
       const newItem: InvoiceItem = {
         productId: selectedProduct.productId,
         productName: selectedProduct.productName,
         quantity: 1,
         price: Number(selectedProduct.productPrice),
-        discount: 0, // El valor del descuento, no el porcentaje
+        discount: 0, 
         subtotal: Number(selectedProduct.productPrice),
       };
       setValue('items', [...items, newItem], { shouldValidate: true });
@@ -61,12 +61,11 @@ export default function NewInvoiceForm({ customers = [], products = [] }: NewInv
     const newItems = items.map(item => {
       if (item.productId === productId) {
         const updatedItem = { ...item, [field]: numericValue };
-        // El subtotal es precio * cantidad - descuento
         const subtotal = (updatedItem.quantity * updatedItem.price) - updatedItem.discount;
         return { ...updatedItem, subtotal };
       }
       return item;
-    }).filter(item => field === 'quantity' ? item.quantity > 0 : true); // Solo filtra si la cantidad es 0
+    }).filter(item => field === 'quantity' ? item.quantity > 0 : true);
 
     setValue('items', newItems, { shouldValidate: true });
   };

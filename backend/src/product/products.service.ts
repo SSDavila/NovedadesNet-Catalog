@@ -79,6 +79,9 @@ export class ProductsService {
           productOfferPrice: productDetails.productOfferPrice
             ? +productDetails.productOfferPrice
             : undefined,
+          productCost: productDetails.productCost
+            ? +productDetails.productCost
+            : undefined,
         },
       });
 
@@ -97,6 +100,7 @@ export class ProductsService {
     if (searchTerm) {
       return this.prisma.product.findMany({
         where: {
+          productIsActive: true,
           OR: [
             {
               productName: {
@@ -117,6 +121,7 @@ export class ProductsService {
     }
 
     return this.prisma.product.findMany({
+      where: { productIsActive: true },
       include: includeRelations,
     });
   }
@@ -140,6 +145,7 @@ export class ProductsService {
       // 1. Convertir campos numéricos de string a number
       if (dataToUpdate.productPrice) dataToUpdate.productPrice = +dataToUpdate.productPrice;
       if (dataToUpdate.productOfferPrice) dataToUpdate.productOfferPrice = +dataToUpdate.productOfferPrice;
+      if (dataToUpdate.productCost) dataToUpdate.productCost = +dataToUpdate.productCost;
       if (dataToUpdate.productStock) dataToUpdate.productStock = +dataToUpdate.productStock;
 
       // 2. Eliminar imágenes marcadas para borrado
@@ -228,18 +234,11 @@ export class ProductsService {
       throw new NotFoundException(`Producto con ID '${id}' no encontrado.`);
     }
 
-    const deletedProduct = await this.prisma.product.delete({
+    const deletedProduct = await this.prisma.product.update({
       where: { productId: id },
-      include: { images: true }, 
+      data: { productIsActive: false },
     });
 
-    if (deletedProduct.images && deletedProduct.images.length > 0) {
-      const deletePromises = deletedProduct.images.map((image) =>
-        this.cloudinary.deleteImage(image.productImagePublicId),
-      );
-      await Promise.all(deletePromises);
-    }
-
-    return { message: `Producto '${deletedProduct.productName}' y sus imágenes han sido eliminados.` };
+    return { message: `Producto '${deletedProduct.productName}' ha sido eliminado (soft delete).` };
   }
 }

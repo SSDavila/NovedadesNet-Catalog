@@ -27,6 +27,7 @@ const INITIAL_STATE = {
   productDescription: '',
   productPrice: '',
   productOfferPrice: '0',
+  productCost: '',
   productStock: '',
   categoryId: '',
 };
@@ -46,8 +47,9 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
         productDescription: product.productDescription,
         productPrice: product.productPrice.toString(),
         productOfferPrice: (product.productOfferPrice || 0).toString(),
+        productCost: (product.productCost || '').toString(),
         productStock: product.productStock.toString(),
-        categoryId: product.category.categoryId || '',
+        categoryId: product.category?.categoryId || product.categoryId || '',
       });
       const initialImages = product.images?.map(img => ({ existingImage: img })) || [];
       setCurrentImages(initialImages);
@@ -160,6 +162,7 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
                     isGenerating={isGenerating}
                     onGenerateDescription={handleGenerateDescription}
                     categories={categories}
+                    onAddNewCategory={() => addNotification('Funcionalidad no disponible en edición', 'info')}
                   />
                 </div>
                 <div className="hidden lg:col-span-4 lg:flex flex-col bg-gray-100 p-5 border-l overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full">

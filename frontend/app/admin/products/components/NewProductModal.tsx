@@ -25,6 +25,7 @@ const INITIAL_STATE = {
   productDescription: '',
   productPrice: '',
   productOfferPrice: '0',
+  productCost: '',
   productStock: '',
   categoryId: '',
 };

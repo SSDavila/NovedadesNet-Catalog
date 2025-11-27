@@ -95,6 +95,7 @@ model Product {
   productLowStockThreshold Int?     @default(5)
   productCreatedAt         DateTime @default(now())
   productUpdatedAt         DateTime @updatedAt
+  productIsActive          Boolean  @default(true)
 
   categoryId         String?
   category           Category?           @relation(fields: [categoryId], references: [categoryId])
