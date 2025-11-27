@@ -9,8 +9,12 @@ export class BIDashboardController {
   @Get('bestsellers')
   async getBestSellers(
     @Query('limit', new DefaultValuePipe(9), ParseIntPipe) limit: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
   ) {
-    return this.dashboardService.getBestSellingProducts(limit);
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.dashboardService.getBestSellingProducts(limit, start, end);
   }
 
   @Get('sales-summary')
@@ -22,5 +26,36 @@ export class BIDashboardController {
     const endDate = endOfMonth(targetDate);
 
     return this.dashboardService.getSalesAndProfitSummary(startDate, endDate);
+  }
+
+  @Get('stats')
+  async getDashboardStats(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.dashboardService.getDashboardStats(start, end);
+  }
+
+  @Get('monthly-customers')
+  async getMonthlyCustomers(
+    @Query('months', new DefaultValuePipe(6), ParseIntPipe) months: number,
+  ) {
+    return this.dashboardService.getMonthlyCustomers(months);
+  }
+
+  @Get('monthly-profit')
+  async getMonthlyProfit(
+    @Query('months', new DefaultValuePipe(6), ParseIntPipe) months: number,
+  ) {
+    return this.dashboardService.getMonthlyProfit(months);
+  }
+
+  @Get('recent-sales')
+  async getRecentSales(
+    @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
+  ) {
+    return this.dashboardService.getRecentSales(limit);
   }
 }
