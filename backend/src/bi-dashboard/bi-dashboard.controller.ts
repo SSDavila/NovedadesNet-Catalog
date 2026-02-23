@@ -1,10 +1,10 @@
-import { Controller, Get, Query, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
+import { Controller, Get, Query, ParseIntPipe, DefaultValuePipe, Param } from '@nestjs/common';
 import { BIDashboardService } from './bi-dashboard.service';
 import { startOfMonth, endOfMonth, subMonths } from 'date-fns';
 
 @Controller('dashboard')
 export class BIDashboardController {
-  constructor(private readonly dashboardService: BIDashboardService) {}
+  constructor(private readonly dashboardService: BIDashboardService) { }
 
   @Get('bestsellers')
   async getBestSellers(
@@ -57,5 +57,26 @@ export class BIDashboardController {
     @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number,
   ) {
     return this.dashboardService.getRecentSales(limit);
+  }
+
+  @Get('seller-commissions')
+  async getSellerCommissions(
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.dashboardService.getSellerCommissions(start, end);
+  }
+
+  @Get('seller-sales-details/:id')
+  async getSellerDetailedSales(
+    @Param('id', ParseIntPipe) sellerId: number,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    const start = startDate ? new Date(startDate) : undefined;
+    const end = endDate ? new Date(endDate) : undefined;
+    return this.dashboardService.getSellerDetailedSales(sellerId, start, end);
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, InternalServerErrorException } from "@nestjs/common";
 import { PrismaService } from '../../prisma/prisma.service';
-import { Invoice, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { CreateInvoiceDto } from './dto/create-invoice.dto';
 import { UpdateInvoiceDto } from './dto/update-invoice.dto';
 import { PdfService } from 'src/pdf/pdf.service';
@@ -123,7 +123,7 @@ export class InvoicesService {
         invoiceNumber.split('-')[2], 
       );
 
-      const invoiceData: Prisma.InvoiceCreateInput = {
+      const invoiceData = {
         invoiceNumber,
         invoiceAccessKey, 
         invoiceStatus: 'PENDIENTE', 
@@ -339,7 +339,7 @@ export class InvoicesService {
     return;
   }
 
-  async cancel(id: number): Promise<Invoice> {
+  async cancel(id: number) {
     const invoice = await this.findOne(id);
     if (invoice.invoiceStatus === 'ANULADA') {
       throw new BadRequestException('La factura ya está anulada.');

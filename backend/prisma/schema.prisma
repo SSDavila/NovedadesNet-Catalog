@@ -7,10 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-generator erd {
-  provider = "prisma-erd-generator"
-  output   = "ERD.svg"
-}
+// generator erd {
+//   provider = "prisma-erd-generator"
+//   output   = "ERD.svg"
+// }
 
 // ==============================================================================
 // == Authentication & Users
@@ -30,6 +30,7 @@ model User {
   saleNotes          SaleNote[]
   invoices           Invoice[]
   inventoryMovements InventoryMovement[]
+  productCommissions SellerProductCommission[]
 }
 
 // ==============================================================================
@@ -96,6 +97,7 @@ model Product {
   productCreatedAt         DateTime @default(now())
   productUpdatedAt         DateTime @updatedAt
   productIsActive          Boolean  @default(true)
+  productCommission       Decimal  @default(0) @db.Decimal(5, 2)
 
   categoryId         String?
   category           Category?           @relation(fields: [categoryId], references: [categoryId])
@@ -103,6 +105,9 @@ model Product {
   inventoryMovements InventoryMovement[]
   saleNoteItems      SaleNoteItem[]
   invoiceItems       InvoiceItem[]
+  sellerCommissions  SellerProductCommission[]
+
+  @@index([productCreatedAt])
 }
 
 model ProductImage {
@@ -121,6 +126,17 @@ model Category {
   categoryIcon         String?
 
   products Product[]
+}
+
+model SellerProductCommission {
+  userId     Int
+  productId  String
+  commission Decimal @db.Decimal(5, 2)
+
+  user    User    @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [productId], onDelete: Cascade)
+
+  @@id([userId, productId])
 }
 
 model InventoryMovement {
@@ -161,6 +177,9 @@ model SaleNote {
   invoice            Invoice?
 
   inventoryMovements InventoryMovement[]
+
+  @@index([saleNoteCreatedAt])
+  @@index([userId])
 }
 
 model SaleNoteItem {

@@ -2,11 +2,11 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  InternalServerErrorException,
 } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
-import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CustomersService {
@@ -14,9 +14,29 @@ export class CustomersService {
 
   async create(createCustomerDto: CreateCustomerDto) {
     return this.prisma.$transaction(async (tx) => {
-      const customerCount = await tx.customer.count();
-      const nextIdNumber = customerCount + 1;
-      const newCustomerId = `CLI-${nextIdNumber}`;
+      // Buscamos todos los IDs para encontrar el primer hueco disponible
+      const allCustomers = await tx.customer.findMany({
+        select: { customerId: true },
+      });
+
+      const existingIds = new Set<number>();
+      for (const customer of allCustomers) {
+        const parts = customer.customerId.split('-');
+        if (parts.length === 2) {
+          const num = parseInt(parts[1], 10);
+          if (!isNaN(num)) {
+            existingIds.add(num);
+          }
+        }
+      }
+
+      // Buscamos el primer número (empezando desde 1) que NO esté en uso
+      let nextId = 1;
+      while (existingIds.has(nextId)) {
+        nextId++;
+      }
+
+      const newCustomerId = `CLI-${nextId}`;
 
       try {
         const newCustomer = await tx.customer.create({
@@ -27,12 +47,21 @@ export class CustomersService {
         });
         return newCustomer;
       } catch (error) {
-        if (
-          error instanceof Prisma.PrismaClientKnownRequestError &&
-          error.code === 'P2002'
-        ) {
+        // Usamos un tipo genérico para evitar errores de importación con los tipos de Prisma
+        const prismaError = error as { code?: string; meta?: { target?: string[] } };
+        
+        if (prismaError.code === 'P2002') {
+          // Verificamos si el error viene del ID generado o de un dato del usuario (RUC/Email)
+          const target = prismaError.meta?.target;
+          
+          if (target && target.includes('customerId')) {
+            throw new InternalServerErrorException(
+              'Error al generar ID. Por favor intente nuevamente.',
+            );
+          }
+
           throw new ConflictException(
-            'Ya existe un cliente con ese número de identificación.',
+            'Ya existe un cliente con ese número de identificación o correo electrónico.',
           );
         }
         throw error;

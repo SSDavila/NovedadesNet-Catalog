@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { API_BASE_URL } from '@/lib/constants';
 
 interface DashboardStats {
@@ -41,63 +41,96 @@ interface BestSeller {
   images: Array<{ productImageUrl: string }>;
 }
 
-export function useDashboardData(dateRange?: { startDate?: string; endDate?: string }) {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [monthlyCustomers, setMonthlyCustomers] = useState<MonthlyCustomer[]>([]);
-  const [monthlyProfit, setMonthlyProfit] = useState<MonthlyProfit[]>([]);
-  const [recentSales, setRecentSales] = useState<RecentSale[]>([]);
-  const [bestSellers, setBestSellers] = useState<BestSeller[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+interface DetailedSellerSale {
+  productId: string;
+  productName: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  commissionRate: number;
+  commissionAmount: number;
+  documentNumber: string;
+  date: string;
+  type: string;
+}
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+interface SellerCommission {
+  userId: number;
+  userName: string;
+  userEmail: string;
+  totalSales: number;
+  totalCommission: number;
+  salesCount: number;
+}
 
-        const [statsRes, customersRes, profitRes, salesRes, sellersRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/dashboard/stats`),
-          fetch(`${API_BASE_URL}/dashboard/monthly-customers?months=6`),
-          fetch(`${API_BASE_URL}/dashboard/monthly-profit?months=6`),
-          fetch(`${API_BASE_URL}/dashboard/recent-sales?limit=5`),
-          fetch(`${API_BASE_URL}/dashboard/bestsellers?limit=5`),
-        ]);
+export function useDashboardData(startDate?: string, endDate?: string) {
+  const queryClient = useQueryClient();
 
-        if (!statsRes.ok || !customersRes.ok || !profitRes.ok || !salesRes.ok || !sellersRes.ok) {
-          throw new Error('Error al cargar los datos del dashboard');
-        }
+  // Fetch all dashboard data
+  const fetchData = async () => {
+    const params = new URLSearchParams();
+    if (startDate) params.append('startDate', startDate);
+    if (endDate) params.append('endDate', endDate);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
 
-        const [statsData, customersData, profitData, salesData, sellersData] = await Promise.all([
-          statsRes.json(),
-          customersRes.json(),
-          profitRes.json(),
-          salesRes.json(),
-          sellersRes.json(),
-        ]);
+    // Some endpoints may not support dates yet, but we pass them anyway to be ready
+    const [statsRes, customersRes, profitRes, salesRes, sellersRes, commissionsRes] = await Promise.all([
+      fetch(`${API_BASE_URL}/dashboard/stats${queryString}`),
+      fetch(`${API_BASE_URL}/dashboard/monthly-customers?months=6`), // Monthly charts usually fixed range
+      fetch(`${API_BASE_URL}/dashboard/monthly-profit?months=6`),    // Monthly charts usually fixed range
+      fetch(`${API_BASE_URL}/dashboard/recent-sales?limit=5`),        // Recent sales are usually absolute latest
+      fetch(`${API_BASE_URL}/dashboard/bestsellers${queryString}${queryString ? '&' : '?'}limit=5`),
+      fetch(`${API_BASE_URL}/dashboard/seller-commissions${queryString}`),
+    ]);
 
-        setStats(statsData);
-        setMonthlyCustomers(customersData);
-        setMonthlyProfit(profitData);
-        setRecentSales(salesData);
-        setBestSellers(sellersData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Error desconocido');
-      } finally {
-        setLoading(false);
-      }
+    if (!statsRes.ok || !customersRes.ok || !profitRes.ok || !salesRes.ok || !sellersRes.ok || !commissionsRes.ok) {
+      throw new Error('Error al cargar los datos del dashboard');
+    }
+
+    return {
+      stats: await statsRes.json() as DashboardStats,
+      monthlyCustomers: await customersRes.json() as MonthlyCustomer[],
+      monthlyProfit: await profitRes.json() as MonthlyProfit[],
+      recentSales: await salesRes.json() as RecentSale[],
+      bestSellers: await sellersRes.json() as BestSeller[],
+      sellerCommissions: await commissionsRes.json() as SellerCommission[],
     };
+  };
 
-    fetchDashboardData();
-  }, []);
+  const { data, isLoading, isError, error, refetch } = useQuery({
+    queryKey: ['dashboardData', startDate, endDate],
+    queryFn: fetchData,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+
+  const fetchSellerDetails = async (sellerId: number) => {
+    try {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+
+      const res = await fetch(`${API_BASE_URL}/dashboard/seller-sales-details/${sellerId}${queryString}`);
+      if (!res.ok) throw new Error('Error al cargar detalles del vendedor');
+      return await res.json() as DetailedSellerSale[];
+    } catch (err) {
+      console.error(err);
+      return [];
+    }
+  };
 
   return {
-    stats,
-    monthlyCustomers,
-    monthlyProfit,
-    recentSales,
-    bestSellers,
-    loading,
-    error,
+    ...data,
+    stats: data?.stats || null,
+    monthlyCustomers: data?.monthlyCustomers || [],
+    monthlyProfit: data?.monthlyProfit || [],
+    recentSales: data?.recentSales || [],
+    bestSellers: data?.bestSellers || [],
+    sellerCommissions: data?.sellerCommissions || [],
+    fetchSellerDetails,
+    refresh: refetch,
+    loading: isLoading,
+    error: isError ? (error as Error).message : null,
   };
 }
