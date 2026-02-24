@@ -92,7 +92,7 @@ export default function ProductForm({
     accept: { 'image/*': ['.jpeg', '.png', '.jpg', '.gif', '.webp'] },
   });
 
-  const imagePreviews = currentImages.map(img => 
+  const imagePreviews = currentImages.map(img =>
     img.file ? URL.createObjectURL(img.file) : img.existingImage!.productImageUrl
   );
 
@@ -115,7 +115,7 @@ export default function ProductForm({
     setShowOfferPrice(newShowState);
     if (!newShowState) {
 
-        onProductDataChange({ ...productData, productOfferPrice: '0' });
+      onProductDataChange({ ...productData, productOfferPrice: '0' });
     }
   };
 
@@ -147,8 +147,8 @@ export default function ProductForm({
     categoryQuery === ''
       ? categories
       : categories.filter((category) => {
-          return category.categoryName.toLowerCase().includes(categoryQuery.toLowerCase());
-        });
+        return category.categoryName.toLowerCase().includes(categoryQuery.toLowerCase());
+      });
 
 
   return (
@@ -239,7 +239,7 @@ export default function ProductForm({
             <label htmlFor="productPrice" className="block text-sm font-semibold text-gray-800 mb-1.5">Precio ($)</label>
             <input type="number" name="productPrice" id="productPrice" value={productData.productPrice} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" required min="0" step="0.01" />
           </div>
-          
+
           {showOfferPrice ? (
             <div className="self-end">
               <label htmlFor="productOfferPrice" className="block text-sm font-semibold text-gray-800 mb-1.5">Precio de Oferta</label>

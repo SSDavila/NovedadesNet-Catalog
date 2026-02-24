@@ -27,7 +27,7 @@ export default function Home() {
       y: 0,
       opacity: 1,
       transition: {
-        duration: 0.6, 
+        duration: 0.6,
         ease: 'easeOut',
       },
     },
@@ -99,7 +99,7 @@ export default function Home() {
         </section>
 
         <section className="py-12 md:py-16 bg-white/50 backdrop-blur-sm">
-        <Testimonials testimonials={testimonials} />
+          <Testimonials testimonials={testimonials} />
           <motion.div
             className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8"
             initial="hidden"
@@ -110,11 +110,11 @@ export default function Home() {
             <motion.div variants={itemVariants} className="text-center mb-12">
               <GradientTitle icon={<FaMapMarkerAlt />} text="Encuéntranos" gradientId="map-gradient" />
               <p className="mt-4 text-lg text-gray-600">
-                Visita nuestro local en el C.C Quitus, Segundo Piso, Local 111.
+                Visita nuestro local en el C.C Quitus, Segundo Piso, Local 390.
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               variants={itemVariants}
               className="h-80 md:h-96 lg:h-[550px] rounded-xl overflow-hidden shadow-2xl border border-gray-200"
             >

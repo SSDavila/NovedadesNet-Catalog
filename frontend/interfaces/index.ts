@@ -25,6 +25,10 @@ export interface Product {
     categoryName: string;
   };
   images: ProductImage[];
+  sellerCommissions?: {
+    userId: number;
+    commission: number;
+  }[];
 }
 
 export interface User {

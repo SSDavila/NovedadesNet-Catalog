@@ -8,4 +8,8 @@ export class UpdateProductDto extends PartialType(CreateProductDto) {
   @IsOptional()
   @IsDefined()
   imagesToDelete?: string[];
+
+  @IsString()
+  @IsOptional()
+  sellerCommissions?: string;
 }

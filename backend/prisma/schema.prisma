@@ -97,7 +97,6 @@ model Product {
   productCreatedAt         DateTime @default(now())
   productUpdatedAt         DateTime @updatedAt
   productIsActive          Boolean  @default(true)
-  productCommission       Decimal  @default(0) @db.Decimal(5, 2)
 
   categoryId         String?
   category           Category?           @relation(fields: [categoryId], references: [categoryId])

@@ -43,7 +43,7 @@ export const AdminProductCard = ({ product, onEdit, onDelete }: AdminProductCard
         label: `${stock} en Stock`,
       };
     }
-    return { 
+    return {
       dot: 'bg-green-600',
       bg: 'bg-green-100',
       text: 'text-green-800',
@@ -56,48 +56,43 @@ export const AdminProductCard = ({ product, onEdit, onDelete }: AdminProductCard
   const stockClasses = getStockClasses(product.productStock);
 
   return (
-    <div className="group relative bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col overflow-hidden transition-shadow hover:shadow-lg">
-      <div className="relative w-full h-48 overflow-hidden">
+    <div className="group relative bg-white/70 backdrop-blur-md border border-white/20 rounded-[2rem] shadow-sm flex flex-col overflow-hidden transition-all duration-500 hover:shadow-[0_20px_50px_rgba(124,58,237,0.12)] hover:-translate-y-1">
+      <div className="relative w-full h-56 overflow-hidden">
         <Image
           src={imageUrl}
           alt={product.productName}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-          className="object-cover group-hover:scale-105 transition-transform duration-300"
+          className="object-cover group-hover:scale-110 transition-transform duration-700"
         />
-        <div className="absolute inset-0 bg-black/40 flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <button onClick={() => onEdit(product)} className="bg-white/80 text-gray-900 p-3 rounded-full hover:bg-white transition" aria-label="Editar producto">
-            <FaEdit size={20} />
+        <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-[2px] flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-all duration-500">
+          <button onClick={() => onEdit(product)} className="bg-white text-purple-600 p-4 rounded-2xl hover:bg-purple-600 hover:text-white transition-all transform hover:scale-110 shadow-xl" aria-label="Editar producto">
+            <FaEdit size={18} />
           </button>
-          <button onClick={() => onDelete(product)} className="bg-white/80 text-red-600 p-3 rounded-full hover:bg-white transition" aria-label="Eliminar producto">
-            <FaTrashAlt size={20} />
+          <button onClick={() => onDelete(product)} className="bg-white text-rose-600 p-4 rounded-2xl hover:bg-rose-600 hover:text-white transition-all transform hover:scale-110 shadow-xl" aria-label="Eliminar producto">
+            <FaTrashAlt size={18} />
           </button>
         </div>
       </div>
-      <div className="p-4 flex-grow flex flex-col">
-        <div className="min-h-[60px]">
+      <div className="p-6 flex-grow flex flex-col">
+        <div className="min-h-[70px]">
           {product.category && (
-            <p className="text-xs font-medium text-purple-600 uppercase tracking-wider mb-1">
+            <p className="text-[10px] font-black text-purple-500 uppercase tracking-[0.2em] mb-2">
               {product.category.categoryName}
             </p>
           )}
-          <h3 className="text-lg font-semibold text-gray-800 truncate flex-grow leading-tight">
+          <h3 className="text-xl font-black text-gray-900 leading-tight tracking-tighter">
             {product.productName}
           </h3>
         </div>
-        <div className="flex justify-between items-center pt-2">
+        <div className="flex justify-between items-center pt-6 border-t border-gray-50 mt-auto">
           <div className="flex items-baseline gap-2">
-            <p className={`font-semibold ${hasOffer ? 'text-green-600 text-lg' : 'text-gray-900 text-lg'}`}>
-              {formatCurrency(hasOffer ? product.productOfferPrice : product.productPrice)}
+            <p className={`font-black tracking-tighter ${hasOffer ? 'text-emerald-600 text-2xl' : 'text-gray-900 text-2xl'}`}>
+              ${Number(hasOffer ? product.productOfferPrice : product.productPrice).toFixed(0)}
             </p>
-            {hasOffer && (
-              <p className="text-sm text-gray-500 line-through">
-                {formatCurrency(product.productPrice)}
-              </p>
-            )}
           </div>
           <span
-            className={`inline-flex items-center gap-1.5 px-2 py-1 text-xs font-bold rounded-full ${stockClasses.bg} ${stockClasses.text} ${product.productStock === 0 ? 'animate-pulse' : ''}`}
+            className={`inline-flex items-center gap-2 px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-full ${stockClasses.bg} ${stockClasses.text} ${product.productStock === 0 ? 'animate-pulse' : ''}`}
           >
             <span className={`h-1.5 w-1.5 rounded-full ${stockClasses.dot}`}></span>
             {stockClasses.label}

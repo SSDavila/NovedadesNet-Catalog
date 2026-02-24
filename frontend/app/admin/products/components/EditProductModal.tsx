@@ -3,7 +3,8 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSpinner, FaTimes } from 'react-icons/fa';
-import { Category, Product, ProductImage } from '@/interfaces';
+import { FaUsersGear } from 'react-icons/fa6';
+import { Category, Product, ProductImage, User } from '@/interfaces';
 import ProductForm from './ProductForm';
 import { useNotification } from '@/components/Notifications/NotificationContext';
 import { API_BASE_URL } from '@/lib/constants';
@@ -11,8 +12,8 @@ import { ProductDetailPreview } from './ProductDetailPreview';
 import { backdropVariants, modalVariants } from '@/app/animations/modalVariants';
 
 export type ImageState = {
-  file?: File; 
-  existingImage?: ProductImage; 
+  file?: File;
+  existingImage?: ProductImage;
 };
 
 interface EditProductModalProps {
@@ -37,10 +38,11 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
   const [currentImages, setCurrentImages] = useState<ImageState[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [activeSellers, setActiveSellers] = useState<User[]>([]);
+  const [sellerOverrides, setSellerOverrides] = useState<Record<number, string>>({});
   const { addNotification } = useNotification();
 
   useEffect(() => {
-
     if (product) {
       setProductData({
         productName: product.productName,
@@ -53,11 +55,19 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
       });
       const initialImages = product.images?.map(img => ({ existingImage: img })) || [];
       setCurrentImages(initialImages);
+
+      // Initialize seller overrides from product data
+      const overrides: Record<number, string> = {};
+      product.sellerCommissions?.forEach(sc => {
+        overrides[sc.userId] = sc.commission.toString();
+      });
+      setSellerOverrides(overrides);
     }
 
     return () => {
       setProductData(INITIAL_STATE);
       setCurrentImages([]);
+      setSellerOverrides({});
     };
   }, [product]);
 
@@ -71,7 +81,21 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
         console.error(error);
       }
     };
+
+    const fetchSellers = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/users`);
+        if (!response.ok) throw new Error('No se pudieron cargar los vendedores.');
+        const allUsers: User[] = await response.json();
+        const sellers = allUsers.filter(u => u.userIsActive && (u.userRole === 'VENDEDOR' || u.userRole === 'ADMIN'));
+        setActiveSellers(sellers);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
     fetchCategories();
+    fetchSellers();
   }, []);
 
   const handleGenerateDescription = async () => {
@@ -84,7 +108,7 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
       const token = localStorage.getItem('access_token');
       const response = await fetch(`${API_BASE_URL}/ai/generate-description`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -105,13 +129,12 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     const newImages = currentImages.map(img => img.file).filter((file): file is File => !!file);
     const originalPublicIds = product?.images?.map(img => img.productImagePublicId) || [];
     const currentPublicIds = currentImages.map(img => img.existingImage?.productImagePublicId).filter((id): id is string => !!id);
     const imagesToDelete = originalPublicIds.filter(id => !currentPublicIds.includes(id));
 
-    console.log("Imágenes a eliminar (public_ids):", imagesToDelete);
     const formData = new FormData();
 
     Object.keys(productData).forEach(key => {
@@ -123,6 +146,13 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
     });
 
     imagesToDelete.forEach(publicId => formData.append('imagesToDelete', publicId));
+
+    // Add seller overrides as a JSON string
+    const overridesArray = Object.entries(sellerOverrides)
+      .filter(([_, value]) => value !== '')
+      .map(([userId, commission]) => ({ userId: parseInt(userId), commission: parseFloat(commission) }));
+
+    formData.append('sellerCommissions', JSON.stringify(overridesArray));
 
     updateProductMutation.mutate({ productId: product!.productId, formData });
   };
@@ -154,16 +184,54 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
             <form onSubmit={handleSubmit} className="flex-grow flex flex-col overflow-hidden">
               <div className="grid lg:grid-cols-7 flex-grow overflow-y-auto">
                 <div className="lg:col-span-3 overflow-y-auto p-8 bg-white scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full">
-                  <ProductForm
-                    productData={productData}
-                    onProductDataChange={setProductData}
-                    currentImages={currentImages}
-                    onCurrentImagesChange={setCurrentImages}
-                    isGenerating={isGenerating}
-                    onGenerateDescription={handleGenerateDescription}
-                    categories={categories}
-                    onAddNewCategory={() => addNotification('Funcionalidad no disponible en edición', 'info')}
-                  />
+                  <div className="space-y-8">
+                    <ProductForm
+                      productData={productData}
+                      onProductDataChange={setProductData}
+                      currentImages={currentImages}
+                      onCurrentImagesChange={setCurrentImages}
+                      isGenerating={isGenerating}
+                      onGenerateDescription={handleGenerateDescription}
+                      categories={categories}
+                      onAddNewCategory={() => addNotification('Funcionalidad no disponible en edición', 'info')}
+                    />
+
+                    <div className="border-t pt-8">
+                      <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                        <span className="p-2 bg-indigo-100 text-indigo-600 rounded-lg"><FaUsersGear className="w-4 h-4" /></span>
+                        Comisiones por Vendedor
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-6 font-medium">Define comisiones personalizadas para vendedores específicos. Si no se define una, usarán la Comisión General.</p>
+
+                      <div className="space-y-3">
+                        {activeSellers.length > 0 ? (
+                          activeSellers.map(seller => (
+                            <div key={seller.userId} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl border border-gray-100 transition-all hover:bg-white hover:border-indigo-100 group">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-bold text-gray-700">{seller.userName}</span>
+                                <span className="text-xs text-gray-400 font-medium">{seller.userEmail}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  placeholder="0"
+                                  value={sellerOverrides[seller.userId] || ''}
+                                  onChange={(e) => setSellerOverrides(prev => ({ ...prev, [seller.userId]: e.target.value }))}
+                                  className="w-20 px-2 py-1.5 text-right font-bold text-indigo-600 bg-white border border-gray-200 rounded-lg focus:ring-1 focus:ring-indigo-500 outline-none transition-all group-hover:border-indigo-200"
+                                  min="0"
+                                  max="100"
+                                  step="0.1"
+                                />
+                                <span className="text-gray-400 font-bold">%</span>
+                              </div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-sm text-gray-400 italic py-4 text-center border-2 border-dashed border-gray-100 rounded-xl">No hay vendedores activos registrados.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 <div className="hidden lg:col-span-4 lg:flex flex-col bg-gray-100 p-5 border-l overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 scrollbar-thumb-rounded-full">
                   <div className="w-full">

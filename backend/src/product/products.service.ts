@@ -13,13 +13,13 @@ export class ProductsService {
   constructor(
     private prisma: PrismaService,
     private cloudinary: CloudinaryService,
-  ) {}
+  ) { }
 
   async create(
     createProductDto: CreateProductDto,
     files: Express.Multer.File[],
   ) {
-    const { imagesToDelete, ...productDetails } = createProductDto;
+    const { imagesToDelete, sellerCommissions, ...productDetails } = createProductDto;
 
     if (!productDetails.categoryId) {
       throw new BadRequestException(
@@ -85,6 +85,20 @@ export class ProductsService {
         },
       });
 
+      // 1.5 Sync seller specific commissions
+      if (sellerCommissions) {
+        const parsedCommissions = JSON.parse(sellerCommissions);
+        if (parsedCommissions.length > 0) {
+          await tx.sellerProductCommission.createMany({
+            data: parsedCommissions.map((c: any) => ({
+              userId: c.userId,
+              productId: newProductId,
+              commission: c.commission,
+            })),
+          });
+        }
+      }
+
       return createdProduct;
     });
 
@@ -95,6 +109,7 @@ export class ProductsService {
     const includeRelations = {
       images: true,
       category: true,
+      sellerCommissions: true,
     };
 
     if (searchTerm) {
@@ -129,7 +144,11 @@ export class ProductsService {
   findOne(id: string) {
     return this.prisma.product.findUnique({
       where: { productId: id },
-      include: { images: true },
+      include: {
+        images: true,
+        category: true,
+        sellerCommissions: true,
+      },
     });
   }
 
@@ -139,7 +158,7 @@ export class ProductsService {
     files: Express.Multer.File[],
   ) {
     return this.prisma.$transaction(async (tx) => {
-      const { imagesToDelete, ...productDetails } = updateProductDto;
+      const { imagesToDelete, sellerCommissions, ...productDetails } = updateProductDto;
       const dataToUpdate: any = { ...productDetails };
 
       // 1. Convertir campos numéricos de string a number
@@ -147,6 +166,23 @@ export class ProductsService {
       if (dataToUpdate.productOfferPrice) dataToUpdate.productOfferPrice = +dataToUpdate.productOfferPrice;
       if (dataToUpdate.productCost) dataToUpdate.productCost = +dataToUpdate.productCost;
       if (dataToUpdate.productStock) dataToUpdate.productStock = +dataToUpdate.productStock;
+
+      // 1.5 Sync seller specific commissions
+      if (sellerCommissions) {
+        const parsedCommissions = JSON.parse(sellerCommissions);
+        await tx.sellerProductCommission.deleteMany({
+          where: { productId: id },
+        });
+        if (parsedCommissions.length > 0) {
+          await tx.sellerProductCommission.createMany({
+            data: parsedCommissions.map((c: any) => ({
+              userId: c.userId,
+              productId: id,
+              commission: c.commission,
+            })),
+          });
+        }
+      }
 
       // 2. Eliminar imágenes marcadas para borrado
       if (imagesToDelete && imagesToDelete.length > 0) {

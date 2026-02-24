@@ -49,4 +49,8 @@ export class CreateProductDto {
   @IsString({ each: true })
   @IsOptional()
   imagesToDelete?: string[];
+
+  @IsString()
+  @IsOptional()
+  sellerCommissions?: string;
 }

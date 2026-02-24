@@ -29,20 +29,22 @@ export default function AdminProductsPage() {
   if (isError) return <div className="p-8 text-center text-red-600">Error: {error?.message || 'Ocurrió un error desconocido'}</div>;
 
   return (
-    <div className="p-6 sm:p-8">
-      <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+    <div className="p-4 sm:p-10 bg-[#f8f9ff] min-h-screen">
+      <header className="mb-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <FaBoxOpen />
-            Administrar Productos
+          <h1 className="text-3xl font-black text-gray-900 tracking-tighter flex items-center gap-4">
+            <div className="p-3 bg-purple-100 rounded-2xl text-purple-600">
+              <FaBoxOpen />
+            </div>
+            Productos
           </h1>
-          <p className="text-gray-600 mt-1">
-            Gestiona el catálogo de tu tienda.
+          <p className="text-xs font-bold text-gray-500 mt-2 uppercase tracking-widest">
+            Catálogo completo & Stock
           </p>
         </div>
         <button
           onClick={handleOpenNewModal}
-          className="mt-4 sm:mt-0 flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+          className="flex items-center gap-3 bg-gradient-to-br from-purple-600 to-indigo-700 text-white px-8 py-4 rounded-2xl font-black uppercase text-xs tracking-widest shadow-lg shadow-purple-600/20 hover:scale-105 active:scale-95 transition-all"
         >
           <FaPlus />
           Nuevo Producto
@@ -57,7 +59,7 @@ export default function AdminProductsPage() {
             {products.map((product) => (
               <AdminProductCard
                 key={product.productId}
-                product={product} 
+                product={product}
                 onEdit={handleEditClick}
                 onDelete={handleDeleteClick}
               />

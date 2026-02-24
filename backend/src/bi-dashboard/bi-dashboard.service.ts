@@ -413,7 +413,7 @@ export class BIDashboardService {
       const subtotal = item.invoiceItemSubtotal?.toNumber() || item.saleNoteItemSubtotal?.toNumber() || 0;
       const commissionRate = specificCommissions.find(
         (sc: any) => sc.userId === sellerId && sc.productId === item.productId
-      )?.commission?.toNumber() ?? (item.product as any).productCommission?.toNumber() ?? 0;
+      )?.commission?.toNumber() ?? 0;
 
       metrics.totalSales += subtotal;
       metrics.totalCommission += subtotal * (commissionRate / 100);
@@ -505,7 +505,7 @@ export class BIDashboardService {
         const subtotal = item.invoiceItemSubtotal?.toNumber() || item.saleNoteItemSubtotal?.toNumber() || 0;
         const commissionRate = specificCommissions.find(
           (sc: any) => sc.productId === item.productId
-        )?.commission?.toNumber() ?? (item.product as any).productCommission?.toNumber() ?? 0;
+        )?.commission?.toNumber() ?? 0;
 
         detailedSales.push({
           productId: item.productId,

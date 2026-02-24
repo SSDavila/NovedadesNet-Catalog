@@ -10,9 +10,9 @@ export default function AdminLayout({
 }) {
   return (
     <Providers>
-      <div className="flex h-screen bg-gray-50 overflow-hidden">
+      <div className="flex h-screen bg-[#f8f9ff] overflow-hidden font-sans antialiased selection:bg-purple-100 selection:text-purple-900">
         <Sidebar />
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto relative scroll-smooth">
           {children}
         </main>
       </div>
