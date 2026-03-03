@@ -24,7 +24,7 @@ export default function ProductsPage() {
   return (
     <div className="bg-white min-h-screen relative">
       {/* Background Decor */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none bg-slate-50/20">
+      <div className="absolute -top-20 inset-x-0 bottom-0 overflow-hidden pointer-events-none bg-slate-50/20">
         {/* Main Page Style Grid - Extended Coverage */}
         <div
           className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f0_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f0_1px,transparent_1px)] bg-[size:40px_40px] opacity-[0.45]"
