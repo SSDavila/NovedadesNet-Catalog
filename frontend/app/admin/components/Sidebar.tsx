@@ -79,40 +79,37 @@ export default function Sidebar() {
   return (
     <aside
       className={clsx(
-        'h-screen bg-[#0f0c29] text-gray-100 flex flex-col shadow-2xl transition-all duration-500 ease-in-out relative z-40 border-r border-white/5',
-        collapsed ? 'w-20' : 'w-72'
+        'h-screen bg-[#0a0a0f] text-gray-400 flex flex-col shadow-xl transition-all duration-500 ease-in-out relative z-40 border-r border-white/5',
+        collapsed ? 'w-20' : 'w-64'
       )}
     >
-      {/* Background Glow */}
-      <div className="absolute top-0 left-0 w-full h-1/2 bg-purple-600/5 blur-[120px] pointer-events-none" />
-
-      <div className="flex items-center justify-between px-6 py-8 border-b border-white/5 relative z-10">
+      <div className="flex items-center justify-between px-6 py-6 border-b border-white/5 relative z-10">
         <div className={clsx("flex items-center gap-3 transition-opacity duration-300", collapsed ? "opacity-0 invisible w-0" : "opacity-100")}>
-          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
-            <span className="font-black text-white text-xl">N</span>
+          <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/20">
+            <span className="font-bold text-white text-lg">N</span>
           </div>
-          <span className="font-black text-2xl tracking-tighter bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
+          <span className="font-bold text-lg tracking-tight text-white">
             Novedades
           </span>
         </div>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all flex-shrink-0"
+          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-500 hover:text-white transition-all flex-shrink-0"
           aria-label="Toggle sidebar"
         >
-          {collapsed ? <FaChevronRight className="w-4 h-4" /> : <FaChevronLeft className="w-4 h-4" />}
+          {collapsed ? <FaChevronRight className="w-3 h-3" /> : <FaChevronLeft className="w-3 h-3" />}
         </button>
       </div>
 
-      <nav className="flex-1 px-3 py-6 space-y-8 overflow-y-auto scrollbar-none relative z-10">
+      <nav className="flex-1 px-4 py-8 space-y-6 overflow-y-auto scrollbar-none relative z-10">
         {sections.map((section, index) => (
-          <div key={section.title} className="space-y-3">
+          <div key={section.title} className="space-y-2">
             {!collapsed && (
-              <p className="px-4 text-[10px] uppercase font-black text-gray-500 tracking-[0.2em]">
+              <p className="px-3 text-[10px] uppercase font-bold text-gray-600 tracking-widest mb-4">
                 {section.title}
               </p>
             )}
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {section.links.map(({ href, label, icon: Icon }) => {
                 const isActive = pathname === href;
                 return (
@@ -120,31 +117,30 @@ export default function Sidebar() {
                     key={href}
                     href={href}
                     className={clsx(
-                      "group relative flex items-center gap-4 px-4 py-3 rounded-2xl transition-all duration-300",
-                      isActive ? "bg-white/10 shadow-lg" : "hover:bg-white/5"
+                      "group relative flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200",
+                      isActive ? "bg-white/5 text-white" : "hover:text-gray-200"
                     )}
                   >
                     {isActive && (
                       <motion.div
-                        layoutId="active-pill-modern"
-                        className="absolute left-0 w-1 h-6 bg-purple-500 rounded-full"
-                        style={{ boxShadow: '0 0 15px #a855f7' }}
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                        layoutId="active-pill-minimal"
+                        className="absolute left-0 w-0.5 h-4 bg-purple-500 rounded-full"
+                        transition={{ type: 'spring', stiffness: 400, damping: 40 }}
                       />
                     )}
                     <div className={clsx(
-                      "flex items-center gap-4 w-full transition-all duration-300",
+                      "flex items-center gap-3 w-full transition-all duration-200",
                       collapsed && "justify-center"
                     )}>
                       <Icon
                         className={clsx(
-                          "w-5 h-5 transition-all duration-300",
-                          isActive ? "text-purple-400 scale-110" : "text-gray-500 group-hover:text-gray-300"
+                          "w-4 h-4 transition-colors",
+                          isActive ? "text-purple-400" : "text-gray-500 group-hover:text-gray-300"
                         )}
                       />
                       {!collapsed && (
                         <span className={clsx(
-                          "text-sm font-bold tracking-tight transition-colors duration-300",
+                          "text-sm font-medium transition-colors duration-200",
                           isActive ? "text-white" : "text-gray-400 group-hover:text-gray-200"
                         )}>
                           {label}
@@ -163,17 +159,17 @@ export default function Sidebar() {
         <button
           onClick={handleLogout}
           className={clsx(
-            "group flex items-center gap-4 px-4 py-4 rounded-2xl w-full text-left transition-all duration-300 border border-transparent",
-            "hover:bg-red-500/10 hover:border-red-500/20"
+            "group flex items-center gap-3 px-3 py-3 rounded-lg w-full text-left transition-all duration-200",
+            "hover:bg-rose-500/5"
           )}
         >
           <div className={clsx(
-            "flex items-center gap-4 w-full transition-all duration-300",
+            "flex items-center gap-3 w-full transition-all duration-200",
             collapsed && "justify-center"
           )}>
-            <FaSignOutAlt className="w-5 h-5 text-gray-500 group-hover:text-red-400 transition-colors" />
+            <FaSignOutAlt className="w-4 h-4 text-gray-500 group-hover:text-rose-400 transition-colors" />
             {!collapsed && (
-              <span className="text-sm font-bold text-gray-400 group-hover:text-red-400">
+              <span className="text-sm font-medium text-gray-500 group-hover:text-rose-400">
                 Cerrar Sesión
               </span>
             )}

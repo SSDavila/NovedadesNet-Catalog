@@ -12,11 +12,20 @@ body {
 }
 
 @layer utilities {
+
   /* Animation for products */
   @keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
   }
+
   .animate-fadeIn {
     animation: fadeIn 0.2s ease-out forwards;
   }
@@ -61,38 +70,37 @@ body {
 }
 
 :root {
-  --radius: 1.25rem; /* Smoother, rounder corners */
-  --background: oklch(0.985 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
-  --card: oklch(1 0 0 / 0.8);
-  --card-foreground: oklch(0.129 0.042 264.695);
-  --popover: oklch(1 0 0 / 0.95);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.534 0.222 284.6); /* Purple Electric #7C3AED */
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.93 0.034 264.695);
-  --secondary-foreground: oklch(0.488 0.243 264.376);
-  --muted: oklch(0.96 0.015 264.695);
-  --muted-foreground: oklch(0.447 0.034 264.695);
-  --accent: oklch(0.92 0.08 284.6);
-  --accent-foreground: oklch(0.534 0.222 284.6);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.04 264.695 / 0.4);
-  --input: oklch(0.9 0.04 264.695 / 0.4);
-  --ring: oklch(0.534 0.222 284.6);
-  --chart-1: oklch(0.534 0.222 284.6);
-  --chart-2: oklch(0.488 0.243 264.376);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.129 0.042 264.695);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.534 0.222 284.6);
+  --radius: 1rem;
+  /* Slightly tighter corners for a professional feel */
+  --background: oklch(0.99 0 0);
+  /* Pure off-white */
+  --foreground: oklch(0.15 0.02 260);
+  /* Deep grey-navy */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.02 260);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.02 260);
+  --primary: oklch(0.45 0.2 280);
+  /* Professional Deep Purple */
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.96 0.01 280);
+  --secondary-foreground: oklch(0.35 0.15 280);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.45 0.02 260);
+  --accent: oklch(0.94 0.03 280);
+  --accent-foreground: oklch(0.45 0.2 280);
+  --destructive: oklch(0.55 0.2 25);
+  --border: oklch(0.92 0.01 260);
+  --input: oklch(0.92 0.01 260);
+  --ring: oklch(0.45 0.2 280);
+  --chart-1: oklch(0.45 0.2 280);
+  --chart-2: oklch(0.55 0.15 260);
+  --sidebar: oklch(0.12 0.02 270);
+  /* Midnight Purple-Black */
+  --sidebar-foreground: oklch(0.95 0.01 270);
+  --sidebar-primary: oklch(0.55 0.2 285);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(1 0 0 / 0.05);
-  --sidebar-accent-foreground: oklch(1 0 0);
-  --sidebar-border: oklch(1 0 0 / 0.1);
-  --sidebar-ring: oklch(0.534 0.222 284.6);
+  --sidebar-border: oklch(1 0 0 / 0.08);
 }
 
 .dark {
@@ -130,8 +138,43 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground tracking-tight;
   }
 }
 
+.shadow-soft {
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-deep {
+  box-shadow: 0 10px 40px -5px rgba(0, 0, 0, 0.1);
+}
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
+
+.custom-scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+}
+.custom-scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 10px;
+}
+.custom-scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}
