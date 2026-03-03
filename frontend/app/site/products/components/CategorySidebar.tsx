@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { FaList, FaExclamationTriangle, FaTag } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaList, FaExclamationTriangle } from 'react-icons/fa';
 import { Category } from '@/interfaces/index';
 import { Icon } from '@iconify/react';
+import clsx from 'clsx';
 
 interface CategorySidebarProps {
   selectedCategory: string | null;
@@ -12,9 +13,12 @@ interface CategorySidebarProps {
 }
 
 const SkeletonLoader = () => (
-  <div className="space-y-2 animate-pulse">
-    {[...Array(4)].map((_, i) => (
-      <div key={i} className="h-9 bg-gray-200 rounded-lg"></div>
+  <div className="space-y-4 animate-pulse">
+    {[...Array(5)].map((_, i) => (
+      <div key={i} className="flex items-center gap-3">
+        <div className="w-8 h-8 bg-gray-100 rounded-lg"></div>
+        <div className="h-4 bg-gray-100 rounded-md flex-grow"></div>
+      </div>
     ))}
   </div>
 );
@@ -24,14 +28,14 @@ const containerVariants = {
   visible: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.05,
+      staggerChildren: 0.03,
     },
   },
 };
 
 const itemVariants = {
-  hidden: { y: 10, opacity: 0 },
-  visible: { y: 0, opacity: 1 },
+  hidden: { x: -10, opacity: 0 },
+  visible: { x: 0, opacity: 1 },
 };
 
 export default function CategorySidebar({
@@ -49,12 +53,12 @@ export default function CategorySidebar({
         setError(null);
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
         if (!response.ok) {
-          throw new Error('No se pudieron cargar las categorías.');
+          throw new Error('Error al cargar categorías');
         }
         const data: Category[] = await response.json();
         setCategories(data);
       } catch (err: any) {
-        setError(err.message || 'Ocurrió un error inesperado.');
+        setError(err.message || 'Error inesperado');
       } finally {
         setIsLoading(false);
       }
@@ -63,64 +67,87 @@ export default function CategorySidebar({
   }, []);
 
   const renderContent = () => {
-    if (isLoading) {
-      return <SkeletonLoader />;
-    }
+    if (isLoading) return <SkeletonLoader />;
 
     if (error) {
       return (
-        <div className="text-center text-red-600 bg-red-50 p-3 rounded-lg">
-          <FaExclamationTriangle className="mx-auto mb-2" />
-          <p className="text-sm font-medium">{error}</p>
+        <div className="text-center p-6 bg-red-50/50 rounded-2xl border border-red-100/50">
+          <FaExclamationTriangle className="mx-auto mb-3 text-red-400" size={24} />
+          <p className="text-xs font-bold text-red-600 uppercase tracking-widest leading-normal">{error}</p>
         </div>
       );
     }
 
     return (
-      <motion.ul className="space-y-1" variants={containerVariants}>
-        <motion.li variants={itemVariants}>
-          <button
-            onClick={() => onSelectCategory(null)}
-            className={`w-full flex items-center text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-              selectedCategory === null
-                ? 'bg-purple-600 text-white shadow-md'
-                : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
-            }`}
-          >
-            <FaList className="mr-3 h-4 w-4 flex-shrink-0" />
-            Todas
-          </button>
-        </motion.li>
+      <motion.div className="space-y-1.5" variants={containerVariants}>
+        <motion.button
+          variants={itemVariants}
+          onClick={() => onSelectCategory(null)}
+          className={clsx(
+            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 relative group",
+            selectedCategory === null
+              ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
+              : "text-gray-500 hover:bg-white hover:text-purple-600 hover:shadow-sm"
+          )}
+        >
+          <div className={clsx(
+            "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+            selectedCategory === null ? "bg-white/20" : "bg-gray-50 group-hover:bg-purple-50"
+          )}>
+            <FaList size={14} />
+          </div>
+          <span className="tracking-tight">Todas</span>
+          {selectedCategory === null && (
+            <motion.div layoutId="activeCat" className="absolute right-4 w-1.5 h-1.5 rounded-full bg-white" />
+          )}
+        </motion.button>
+
         {categories.map((category) => (
-          <motion.li key={category.categoryId} variants={itemVariants}>
-            <button
-              onClick={() => onSelectCategory(category.categoryName)}
-              className={`w-full flex items-center text-left px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
-                selectedCategory === category.categoryName
-                  ? 'bg-purple-600 text-white shadow-md'
-                  : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
-              }`}
-            >
-              <Icon icon={category.categoryIcon || 'mdi:tag'} className="mr-3 h-4 w-4 flex-shrink-0" />
-              <span className="truncate">{category.categoryName}</span>
-            </button>
-          </motion.li>
+          <motion.button
+            key={category.categoryId}
+            variants={itemVariants}
+            onClick={() => onSelectCategory(category.categoryName)}
+            className={clsx(
+              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 relative group",
+              selectedCategory === category.categoryName
+                ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
+                : "text-gray-500 hover:bg-white hover:text-purple-600 hover:shadow-sm"
+            )}
+          >
+            <div className={clsx(
+              "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
+              selectedCategory === category.categoryName ? "bg-white/20" : "bg-gray-50 group-hover:bg-purple-50"
+            )}>
+              <Icon icon={category.categoryIcon || 'ph:tag-bold'} width="18" />
+            </div>
+            <span className="tracking-tight truncate">{category.categoryName}</span>
+            {selectedCategory === category.categoryName && (
+              <motion.div layoutId="activeCat" className="absolute right-4 w-1.5 h-1.5 rounded-full bg-white" />
+            )}
+          </motion.button>
         ))}
-      </motion.ul>
+      </motion.div>
     );
   };
 
   return (
-    <motion.aside
-      className="w-full lg:w-64 flex-shrink-0 p-6 bg-white border border-gray-200/80 rounded-xl shadow-sm"
+    <motion.div
+      className="w-full"
       initial="hidden"
       animate="visible"
       variants={containerVariants}
     >
-      <h2 className="text-xl font-bold text-gray-900 mb-4 pb-4 border-b border-gray-200">
-        Categorías
-      </h2>
-      {renderContent()}
-    </motion.aside>
+      <div className="mb-4 pl-4">
+        <h2 className="text-[9px] font-black text-purple-600 uppercase tracking-[0.2em]">
+          Explorar
+        </h2>
+        <h3 className="text-xl font-black text-gray-900 tracking-tighter mt-1">
+          Categorías
+        </h3>
+      </div>
+      <div className="bg-gray-50/50 p-2 rounded-[2rem] border border-gray-100">
+        {renderContent()}
+      </div>
+    </motion.div>
   );
 }
