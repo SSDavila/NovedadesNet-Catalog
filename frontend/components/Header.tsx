@@ -35,7 +35,7 @@ export default function Header() {
           style={{ backgroundImage: 'radial-gradient(#6b21a8 0.5px, transparent 0.5px)', backgroundSize: '10px 10px' }} />
 
         {/* Main Content */}
-        <div className="px-6 h-14 flex items-center justify-between relative z-10">
+        <div className="px-6 h-[72px] flex items-center justify-between relative z-10">
           <div className="flex items-center gap-10">
             {/* Integrated Logo & Stacked Typography */}
             <Link href="/site" className="flex items-center gap-3 active:scale-95 transition-transform">
@@ -43,8 +43,8 @@ export default function Header() {
                 <Image
                   src="/Logo-NovedadesNet.png"
                   alt="Logo"
-                  width={34}
-                  height={34}
+                  width={42}
+                  height={42}
                   className="object-contain"
                 />
               </div>

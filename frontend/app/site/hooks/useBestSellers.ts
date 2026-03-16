@@ -14,14 +14,31 @@ export function useBestSellers() {
       try {
         setIsLoading(true);
         setError(null);
-        const response = await fetch(`${API_BASE_URL}/dashboard/bestsellers?limit=9`);
+        const response = await fetch(`${API_BASE_URL}/dashboard/bestsellers?limit=12`);
 
         if (!response.ok) {
           throw new Error(`Error ${response.status}: No se pudieron cargar los productos.`);
         }
 
         const text = await response.text();
-        const products: Product[] = text ? JSON.parse(text) : [];
+        let products: Product[] = text ? JSON.parse(text) : [];
+
+        // RANDOM FALLBACK: If no bestsellers exist, fetch all products and pick up to 12 random ones
+        if (products.length === 0) {
+          try {
+            const fallbackResponse = await fetch(`${API_BASE_URL}/products`);
+            if (fallbackResponse.ok) {
+              const fallbackText = await fallbackResponse.text();
+              let allProducts: Product[] = fallbackText ? JSON.parse(fallbackText) : [];
+              
+              // Shuffle array to get random products
+              allProducts = allProducts.sort(() => 0.5 - Math.random());
+              products = allProducts.slice(0, 12); // Take exactly up to 12
+            }
+          } catch (e) {
+            console.warn('Failed to fetch fallback products', e);
+          }
+        }
 
         const formattedProducts = products.map(product => ({
           name: product.productName,
@@ -29,6 +46,7 @@ export function useBestSellers() {
           category: product.category?.categoryName || 'Sin Categoría',
           price: parseFloat(product.productPrice as any) || 0,
           offerPrice: product.productOfferPrice ? parseFloat(product.productOfferPrice as any) : null,
+          stock: product.productStock || 0,
           href: `/site/products/${product.productId}`,
         }));
         setFeaturedProducts(formattedProducts);
