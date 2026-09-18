@@ -25,6 +25,7 @@ interface NewSaleNoteFormProps {
   customers: Customer[];
   products: Product[];
   onAddNewCustomer: () => void;
+  onCustomersNeedRefresh: () => Promise<void>;
 }
 
 const IVA_RATE = 0.12;

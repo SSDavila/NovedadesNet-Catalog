@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import axios, { AxiosError } from 'axios';
 import { SaleNote } from '@/interfaces';
@@ -48,14 +49,17 @@ export const useSaleNotes = () => {
     queryKey: ['saleNotes'],
     queryFn: fetchSaleNotesAPI,
     enabled: !!getAuthToken(),
-    onError: (err: any) => {
-      if (err instanceof AxiosError && err.response?.status === 401) {
+  });
+
+  useEffect(() => {
+    if (isError && error) {
+      if (error instanceof AxiosError && error.response?.status === 401) {
         addNotification('Tu sesión ha expirado. Por favor, inicia sesión de nuevo.', 'error');
       } else {
-        addNotification(err.message || 'No se pudieron cargar las notas de venta.', 'error');
+        addNotification(error.message || 'No se pudieron cargar las notas de venta.', 'error');
       }
-    },
-  });
+    }
+  }, [isError, error, addNotification]);
 
   const createSaleNoteMutation = useMutation<SaleNote, Error, SaleNoteFormData>({
     mutationFn: createSaleNoteAPI,

@@ -3,7 +3,7 @@
 import { useState, useEffect, FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { FaTimes } from 'react-icons/fa';
-import { User } from '../page';
+import { User } from '@/interfaces';
 
 interface AddUserModalProps {
   onClose: () => void;

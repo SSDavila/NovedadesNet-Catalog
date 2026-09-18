@@ -2,7 +2,7 @@ import React, { ReactElement } from 'react';
 import { GradientIcon } from './GradientIcon';
 
 interface GradientTitleProps {
-  icon: ReactElement;
+  icon: ReactElement<React.SVGProps<SVGSVGElement>>;
   text: string;
   gradientId: string;
 }

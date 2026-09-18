@@ -2,7 +2,7 @@
 
 import { useState, useEffect, FormEvent } from 'react';
 import { createPortal } from 'react-dom';
-import { User } from '../page';
+import { User } from '@/interfaces';
 import { FaSpinner, FaTimes } from 'react-icons/fa';
 
 interface EditUserModalProps {

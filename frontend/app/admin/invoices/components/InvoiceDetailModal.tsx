@@ -16,14 +16,7 @@ export default function InvoiceDetailModal({ invoice, onClose }: InvoiceDetailMo
   const previewData = useMemo(() => {
     if (!invoice) return null;
     return {
-      customer: {
-        value: invoice.customer.customerId,
-        label: `${invoice.customer.customerName} (${invoice.customer.customerIdentificationNumber})`,
-        ruc: invoice.customer.customerIdentificationNumber,
-        address: invoice.customer.customerAddress || 'N/A',
-        phone: invoice.customer.customerPhone || 'N/A',
-        email: invoice.customer.customerEmail || 'N/A',
-      },
+      customerId: invoice.customer.customerId,
       items: invoice.items.map(item => ({
         productId: item.product.productId,
         productName: item.product.productName,
@@ -69,11 +62,11 @@ export default function InvoiceDetailModal({ invoice, onClose }: InvoiceDetailMo
             <FaTimes />
           </button>
         </header>
-        
+
         <main className="p-8 flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 bg-gray-50">
           {previewData && <InvoicePreview data={previewData} />}
         </main>
-        
+
         <footer className="flex justify-end gap-3 p-4 bg-gray-100 border-t rounded-b-2xl">
           <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition font-semibold">
             Cerrar

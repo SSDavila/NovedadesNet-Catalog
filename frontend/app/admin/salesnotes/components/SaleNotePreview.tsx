@@ -5,11 +5,13 @@ import { SaleNoteFormData } from './NewSaleNoteForm';
 
 interface SaleNotePreviewProps {
   data: SaleNoteFormData;
+  saleNoteNumber?: string;
+  saleNoteDate?: string;
 }
 
 const IVA_RATE = 0.12;
 
-export const SaleNotePreview = ({ data }: SaleNotePreviewProps) => {
+export const SaleNotePreview = ({ data, saleNoteNumber, saleNoteDate }: SaleNotePreviewProps) => {
   const { subtotal, iva, total } = useMemo(() => {
     const sub = data.items.reduce((acc, item) => acc + item.subtotal, 0);
     const tax = sub * IVA_RATE;
@@ -24,8 +26,8 @@ export const SaleNotePreview = ({ data }: SaleNotePreviewProps) => {
           <p className="text-sm text-gray-500">PRE-FACTURA / COTIZACIÓN</p>
         </div>
         <div className="text-right">
-          <p className="font-semibold text-gray-700">Nro. #000-000-000000001</p>
-          <p className="text-sm text-gray-500">Fecha: {new Date().toLocaleDateString('es-EC')}</p>
+          <p className="font-semibold text-gray-700">Nro. {saleNoteNumber || '#000-000-000000001'}</p>
+          <p className="text-sm text-gray-500">Fecha: {saleNoteDate ? new Date(saleNoteDate).toLocaleDateString('es-EC') : new Date().toLocaleDateString('es-EC')}</p>
         </div>
       </div>
 

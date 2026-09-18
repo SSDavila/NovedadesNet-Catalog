@@ -38,7 +38,7 @@ export default function SaleNotesPage() {
     setIsDetailModalOpen(true);
   };
 
-  if (isErrorSaleNotes) return <div className="p-8 text-center text-red-600">Error: {errorSaleNotes.message}</div>;
+  if (isErrorSaleNotes) return <div className="p-8 text-center text-red-600">Error: {errorSaleNotes?.message || 'Error desconocido'}</div>;
 
   return (
     <div className="p-6 sm:p-8">

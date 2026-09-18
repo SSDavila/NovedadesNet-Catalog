@@ -69,9 +69,7 @@ export interface SaleNote {
   saleNoteStatus: string;
   saleNoteTotal: number;
   saleNoteCreatedAt: string;
-  customer: {
-    customerName: string;
-  };
+  customer: Customer;
   seller: {
     userName: string;
   };
@@ -80,6 +78,7 @@ export interface SaleNote {
     saleNoteItemQuantity: number;
     saleNoteItemUnitPrice: number;
     product: {
+      productId: string;
       productName: string;
       productSku: string | null;
     };

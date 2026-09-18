@@ -7,6 +7,7 @@ export interface InvoiceItem {
   invoiceItemDiscount: number;
   invoiceItemSubtotal: number;
   product: {
+    productId: string;
     productName: string;
     productSku: string | null;
   };

@@ -41,8 +41,10 @@ export default function SaleNoteDetailModal({ isOpen, onClose, saleNoteId }: Sal
         phone: saleNote.customer.customerPhone || '',
         email: saleNote.customer.customerEmail,
       },
-      items: saleNote.items.map(item => ({
-        ...item,
+      items: (saleNote.items || []).map(item => ({
+        productId: item.product?.productId || '',
+        productName: item.product?.productName || '',
+        quantity: item.saleNoteItemQuantity,
         price: Number(item.saleNoteItemUnitPrice),
         subtotal: Number(item.saleNoteItemUnitPrice) * item.saleNoteItemQuantity,
       })),
@@ -66,7 +68,7 @@ export default function SaleNoteDetailModal({ isOpen, onClose, saleNoteId }: Sal
           {isLoading && <div className="flex justify-center items-center h-full"><FaSpinner className="animate-spin text-blue-600 text-4xl" /></div>}
           {isError && <div className="text-center text-red-500">Error al cargar los detalles.</div>}
           {previewData && (
-            <SaleNotePreview data={previewData} saleNoteNumber={saleNote.saleNoteNumber} saleNoteDate={saleNote.saleNoteCreatedAt} />
+            <SaleNotePreview data={previewData} saleNoteNumber={saleNote?.saleNoteNumber} saleNoteDate={saleNote?.saleNoteCreatedAt} />
           )}
         </div>
 
