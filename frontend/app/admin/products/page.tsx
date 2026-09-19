@@ -26,7 +26,13 @@ export default function AdminProductsPage() {
     confirmModalProps,
   } = useProducts();
 
-  if (isError) return <div className="p-8 text-center text-red-600">Error: {error?.message || 'Ocurrió un error desconocido'}</div>;
+  if (isError) return (
+    <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] gap-4">
+      <FaBoxOpen className="text-gray-300 text-7xl" />
+      <p className="text-gray-400 text-lg font-medium">No existen productos aún</p>
+      <p className="text-gray-300 text-sm">Cuando agregues productos, aparecerán aquí.</p>
+    </div>
+  );
 
   return (
     <div className="p-4 sm:p-12 min-h-screen bg-[#fcfcfd]">
@@ -51,6 +57,12 @@ export default function AdminProductsPage() {
         <main>
           {isLoading ? (
             <div className="text-center p-8 text-gray-500">Cargando productos...</div>
+          ) : products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <FaBoxOpen className="text-gray-300 text-7xl" />
+              <p className="text-gray-400 text-lg font-medium">No existen productos aún</p>
+              <p className="text-gray-300 text-sm">Haz clic en "Nuevo Producto" para comenzar.</p>
+            </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {products.map((product) => (
