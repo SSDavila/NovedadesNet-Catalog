@@ -172,7 +172,6 @@ export default function NewProductModal({ isOpen, onClose, createProductMutation
             animate="visible"
             exit="hidden"
             variants={backdropVariants}
-            onClick={handleClose}
           >
             <motion.div
               className="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col relative"

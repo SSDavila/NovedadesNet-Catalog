@@ -166,7 +166,6 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
           animate="visible"
           exit="hidden"
           variants={backdropVariants}
-          onClick={onClose}
         >
           <motion.div
             className="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-6xl max-h-[95vh] flex flex-col relative"
