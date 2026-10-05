@@ -51,14 +51,7 @@ const sections = [
   { title: 'Sistema', links: adminLinks },
 ];
 
-// Flat list for bottom nav (most-used links)
-const bottomNavLinks = [
-  { href: '/admin', label: 'Dashboard', icon: FaTachometerAlt },
-  { href: '/admin/products', label: 'Productos', icon: FaBox },
-  { href: '/admin/invoices', label: 'Facturas', icon: FaFileInvoiceDollar },
-  { href: '/admin/customers', label: 'Clientes', icon: FaUserTie },
-  { href: '/admin/inventory', label: 'Inventario', icon: FaWarehouse },
-];
+
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -282,29 +275,6 @@ export default function Sidebar() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* ── MOBILE BOTTOM NAV BAR ──────────────────────────────────────── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0f] border-t border-white/5 flex items-center justify-around px-2 py-2 safe-area-pb">
-        {bottomNavLinks.map(({ href, label, icon: Icon }) => {
-          const isActive = pathname === href;
-          return (
-            <Link
-              key={href}
-              href={href}
-              className={clsx(
-                "flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all min-w-[52px]",
-                isActive ? "text-purple-400" : "text-gray-500 hover:text-gray-300"
-              )}
-            >
-              <Icon className="w-5 h-5" />
-              <span className={clsx("text-[9px] font-bold uppercase tracking-wider", isActive ? "text-purple-400" : "text-gray-600")}>
-                {label.split(' ')[0]}
-              </span>
-              {isActive && <div className="w-1 h-1 rounded-full bg-purple-500" />}
-            </Link>
-          );
-        })}
-      </nav>
     </>
   );
 }
