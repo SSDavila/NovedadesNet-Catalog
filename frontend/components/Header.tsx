@@ -112,39 +112,50 @@ export default function Header() {
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {isMenuOpen && (
-          <div className="fixed inset-0 top-24 px-4 pointer-events-none z-[60]">
-            <motion.div
-              initial={{ opacity: 0, y: 15, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 15, scale: 0.98 }}
-              className="bg-white/95 backdrop-blur-2xl p-6 rounded-[2.5rem] shadow-2xl border border-white/50 pointer-events-auto max-w-sm ml-auto relative overflow-hidden"
-            >
-              <div className="relative z-10 flex flex-col gap-3">
-                {navLinks.map((link) => (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className="fixed inset-0 z-50 bg-black/30 backdrop-blur-xs md:hidden"
+            onClick={() => setIsMenuOpen(false)}
+          >
+            <div className="pt-24 px-4 max-w-sm ml-auto">
+              <motion.div
+                initial={{ opacity: 0, y: -12, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -12, scale: 0.95 }}
+                transition={{ type: 'spring', damping: 25, stiffness: 320 }}
+                className="bg-white/95 backdrop-blur-2xl p-6 rounded-[2.5rem] shadow-2xl border border-white/50 relative overflow-hidden"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="relative z-10 flex flex-col gap-3">
+                  {navLinks.map((link) => (
+                    <Link
+                      key={link.name}
+                      href={link.href}
+                      className={`flex items-center justify-between p-5 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] transition-all ${pathname === link.href
+                        ? 'bg-purple-600 text-white shadow-xl shadow-purple-200'
+                        : 'bg-slate-50 text-slate-600 hover:bg-purple-50'
+                        }`}
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      {link.name}
+                      <div className={`w-2 h-2 rounded-full ${pathname === link.href ? 'bg-yellow-400' : 'bg-slate-300'}`} />
+                    </Link>
+                  ))}
                   <Link
-                    key={link.name}
-                    href={link.href}
-                    className={`flex items-center justify-between p-5 rounded-2xl text-[12px] font-black uppercase tracking-[0.2em] transition-all ${pathname === link.href
-                      ? 'bg-purple-600 text-white shadow-xl shadow-purple-200'
-                      : 'bg-slate-50 text-slate-600 hover:bg-purple-50'
-                      }`}
+                    href="/site/login"
+                    className="mt-4 flex items-center justify-center gap-4 p-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-[0.25em] shadow-xl shadow-slate-300/40"
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    {link.name}
-                    <div className={`w-2 h-2 rounded-full ${pathname === link.href ? 'bg-yellow-400' : 'bg-slate-300'}`} />
+                    <FaUserCircle size={18} />
+                    <span>Acceso</span>
                   </Link>
-                ))}
-                <Link
-                  href="/site/login"
-                  className="mt-4 flex items-center justify-center gap-4 p-5 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-[0.25em] shadow-xl shadow-slate-300/40"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <FaUserCircle size={18} />
-                  <span>Acceso</span>
-                </Link>
-              </div>
-            </motion.div>
-          </div>
+                </div>
+              </motion.div>
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </header>

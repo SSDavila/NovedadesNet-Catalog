@@ -13,11 +13,9 @@ interface CategorySidebarProps {
 }
 
 const SkeletonLoader = () => (
-  <div className="space-y-4 animate-pulse">
+  <div className="flex lg:flex-col gap-2 animate-pulse overflow-hidden py-1">
     {[...Array(5)].map((_, i) => (
-      <div key={i} className="flex items-center gap-3">
-        <div className="w-8 h-8 bg-gray-100 rounded-lg"></div>
-        <div className="h-4 bg-gray-100 rounded-md flex-grow"></div>
+      <div key={i} className="flex items-center gap-2 px-3 py-2 rounded-full lg:rounded-xl bg-gray-100/80 shrink-0 w-24 lg:w-full h-8 lg:h-11">
       </div>
     ))}
   </div>
@@ -79,26 +77,29 @@ export default function CategorySidebar({
     }
 
     return (
-      <motion.div className="space-y-1.5" variants={containerVariants}>
+      <motion.div
+        className="flex lg:flex-col overflow-x-auto lg:overflow-visible gap-2 lg:space-y-1.5 scrollbar-none py-1 px-1 lg:px-0"
+        variants={containerVariants}
+      >
         <motion.button
           variants={itemVariants}
           onClick={() => onSelectCategory(null)}
           className={clsx(
-            "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 relative group",
+            "shrink-0 flex items-center gap-2 lg:gap-3 px-3.5 py-2 lg:px-4 lg:py-3 rounded-full lg:rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 relative group whitespace-nowrap",
             selectedCategory === null
-              ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
-              : "text-gray-500 hover:bg-white hover:text-purple-600 hover:shadow-sm"
+              ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
+              : "text-gray-600 bg-white/80 lg:bg-transparent hover:bg-white hover:text-purple-600 border border-gray-200/60 lg:border-none hover:shadow-sm"
           )}
         >
           <div className={clsx(
-            "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-            selectedCategory === null ? "bg-white/20" : "bg-gray-50 group-hover:bg-purple-50"
+            "w-6 h-6 lg:w-8 lg:h-8 rounded-full lg:rounded-lg flex items-center justify-center transition-colors",
+            selectedCategory === null ? "bg-white/20" : "bg-gray-100 group-hover:bg-purple-50"
           )}>
-            <FaList size={14} />
+            <FaList size={12} className="lg:w-3.5 lg:h-3.5" />
           </div>
           <span className="tracking-tight">Todas</span>
           {selectedCategory === null && (
-            <motion.div layoutId="activeCat" className="absolute right-4 w-1.5 h-1.5 rounded-full bg-white" />
+            <motion.div layoutId="activeCat" className="hidden lg:block absolute right-4 w-1.5 h-1.5 rounded-full bg-white" />
           )}
         </motion.button>
 
@@ -108,21 +109,21 @@ export default function CategorySidebar({
             variants={itemVariants}
             onClick={() => onSelectCategory(category.categoryName)}
             className={clsx(
-              "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all duration-300 relative group",
+              "shrink-0 flex items-center gap-2 lg:gap-3 px-3.5 py-2 lg:px-4 lg:py-3 rounded-full lg:rounded-xl text-xs sm:text-sm font-bold transition-all duration-300 relative group whitespace-nowrap",
               selectedCategory === category.categoryName
-                ? "bg-purple-600 text-white shadow-lg shadow-purple-600/20"
-                : "text-gray-500 hover:bg-white hover:text-purple-600 hover:shadow-sm"
+                ? "bg-purple-600 text-white shadow-md shadow-purple-600/25"
+                : "text-gray-600 bg-white/80 lg:bg-transparent hover:bg-white hover:text-purple-600 border border-gray-200/60 lg:border-none hover:shadow-sm"
             )}
           >
             <div className={clsx(
-              "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-              selectedCategory === category.categoryName ? "bg-white/20" : "bg-gray-50 group-hover:bg-purple-50"
+              "w-6 h-6 lg:w-8 lg:h-8 rounded-full lg:rounded-lg flex items-center justify-center transition-colors",
+              selectedCategory === category.categoryName ? "bg-white/20" : "bg-gray-100 group-hover:bg-purple-50"
             )}>
-              <Icon icon={category.categoryIcon || 'ph:tag-bold'} width="18" />
+              <Icon icon={category.categoryIcon || 'ph:tag-bold'} width="16" />
             </div>
             <span className="tracking-tight truncate">{category.categoryName}</span>
             {selectedCategory === category.categoryName && (
-              <motion.div layoutId="activeCat" className="absolute right-4 w-1.5 h-1.5 rounded-full bg-white" />
+              <motion.div layoutId="activeCat" className="hidden lg:block absolute right-4 w-1.5 h-1.5 rounded-full bg-white" />
             )}
           </motion.button>
         ))}
@@ -137,15 +138,15 @@ export default function CategorySidebar({
       animate="visible"
       variants={containerVariants}
     >
-      <div className="mb-4 pl-4">
-        <h2 className="text-[9px] font-black text-purple-600 uppercase tracking-[0.2em]">
+      <div className="mb-2 lg:mb-4 px-2 lg:pl-4 flex items-center justify-between lg:block">
+        <h2 className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em]">
           Explorar
         </h2>
-        <h3 className="text-xl font-black text-gray-900 tracking-tighter mt-1">
+        <h3 className="text-sm lg:text-xl font-black text-gray-900 tracking-tight lg:tracking-tighter lg:mt-1">
           Categorías
         </h3>
       </div>
-      <div className="bg-gray-50/50 p-2 rounded-[2rem] border border-gray-100">
+      <div className="bg-transparent lg:bg-gray-50/50 p-0 lg:p-2 rounded-none lg:rounded-[2rem] border-0 lg:border lg:border-gray-100">
         {renderContent()}
       </div>
     </motion.div>

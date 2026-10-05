@@ -17,7 +17,7 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from 'react-icons/fa';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import clsx from 'clsx';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -202,65 +202,86 @@ export default function Sidebar() {
       </div>
 
       {/* ── MOBILE FULL-SCREEN MENU (drawer) ───────────────────────────── */}
-      {mobileOpen && (
-        <div
-          className="md:hidden fixed inset-0 z-40 bg-black/60"
-          onClick={() => setMobileOpen(false)}
-        >
-          <div
-            className="absolute top-0 left-0 bottom-0 w-72 bg-[#0a0a0f] flex flex-col shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="md:hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
+            onClick={() => setMobileOpen(false)}
           >
-            {/* Header */}
-            <div className="flex items-center gap-3 px-6 py-5 border-b border-white/5 mt-14">
-              <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center">
-                <span className="font-bold text-white text-lg">N</span>
-              </div>
-              <span className="font-bold text-lg tracking-tight text-white">Novedades</span>
-            </div>
-
-            {/* Nav links */}
-            <nav className="flex-1 px-4 py-6 space-y-5 overflow-y-auto scrollbar-none">
-              {sections.map((section) => (
-                <div key={section.title} className="space-y-1">
-                  <p className="px-3 text-[10px] uppercase font-bold text-gray-600 tracking-widest mb-3">
-                    {section.title}
-                  </p>
-                  {section.links.map(({ href, label, icon: Icon }) => {
-                    const isActive = pathname === href;
-                    return (
-                      <Link
-                        key={href}
-                        href={href}
-                        onClick={() => setMobileOpen(false)}
-                        className={clsx(
-                          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
-                          isActive ? "bg-white/5 text-white" : "text-gray-400 hover:text-gray-200"
-                        )}
-                      >
-                        <Icon className={clsx("w-4 h-4", isActive ? "text-purple-400" : "text-gray-500")} />
-                        <span className="text-sm font-medium">{label}</span>
-                        {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-purple-500" />}
-                      </Link>
-                    );
-                  })}
+            <motion.div
+              initial={{ x: '-100%', opacity: 0.8 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: '-100%', opacity: 0.8 }}
+              transition={{ type: 'spring', damping: 27, stiffness: 280 }}
+              className="absolute top-0 left-0 bottom-0 w-72 bg-[#0a0a0f] flex flex-col shadow-2xl border-r border-white/5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-5 border-b border-white/5">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-900/30">
+                    <span className="font-bold text-white text-lg">N</span>
+                  </div>
+                  <span className="font-bold text-lg tracking-tight text-white">Novedades</span>
                 </div>
-              ))}
-            </nav>
+                <button
+                  onClick={() => setMobileOpen(false)}
+                  className="p-1.5 rounded-lg bg-white/5 text-gray-400 hover:text-white transition-all"
+                  aria-label="Cerrar menú"
+                >
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
 
-            {/* Logout */}
-            <div className="p-4 border-t border-white/5">
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-3 rounded-lg w-full text-left hover:bg-rose-500/5 group transition-all"
-              >
-                <FaSignOutAlt className="w-4 h-4 text-gray-500 group-hover:text-rose-400 transition-colors" />
-                <span className="text-sm font-medium text-gray-500 group-hover:text-rose-400">Cerrar Sesión</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              {/* Nav links */}
+              <nav className="flex-1 px-4 py-6 space-y-5 overflow-y-auto scrollbar-none">
+                {sections.map((section) => (
+                  <div key={section.title} className="space-y-1">
+                    <p className="px-3 text-[10px] uppercase font-bold text-gray-600 tracking-widest mb-3">
+                      {section.title}
+                    </p>
+                    {section.links.map(({ href, label, icon: Icon }) => {
+                      const isActive = pathname === href;
+                      return (
+                        <Link
+                          key={href}
+                          href={href}
+                          onClick={() => setMobileOpen(false)}
+                          className={clsx(
+                            "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all",
+                            isActive ? "bg-white/10 text-white font-semibold" : "text-gray-400 hover:text-gray-200 hover:bg-white/5"
+                          )}
+                        >
+                          <Icon className={clsx("w-4 h-4", isActive ? "text-purple-400" : "text-gray-500")} />
+                          <span className="text-sm">{label}</span>
+                          {isActive && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-purple-500" />}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                ))}
+              </nav>
+
+              {/* Logout */}
+              <div className="p-4 border-t border-white/5 mt-auto">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-3 py-3 rounded-lg w-full text-left hover:bg-rose-500/10 group transition-all"
+                >
+                  <FaSignOutAlt className="w-4 h-4 text-gray-500 group-hover:text-rose-400 transition-colors" />
+                  <span className="text-sm font-medium text-gray-500 group-hover:text-rose-400">Cerrar Sesión</span>
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── MOBILE BOTTOM NAV BAR ──────────────────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0a0a0f] border-t border-white/5 flex items-center justify-around px-2 py-2 safe-area-pb">

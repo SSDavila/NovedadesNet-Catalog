@@ -50,26 +50,26 @@ export default function ProductsPage() {
         <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]" />
       </div>
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 md:py-16">
-        <div className="flex flex-col lg:flex-row gap-12 xl:gap-20 items-start">
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-12 md:py-16">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-12 xl:gap-20 items-start">
           {/* Sidebar & Navigation Column */}
           <aside className="w-full lg:w-72 flex-shrink-0">
-            <div className="lg:sticky lg:top-24 space-y-10">
+            <div className="lg:sticky lg:top-24 space-y-4 lg:space-y-10">
               {/* Vertical Header - Aligned with Categories */}
-              <header className="px-4">
+              <header className="px-1 lg:px-4">
                 <motion.h1
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter leading-[1.1]"
+                  className="text-3xl sm:text-4xl md:text-5xl font-black text-gray-900 tracking-tighter leading-[1.1]"
                 >
-                  Nuestras <br />
+                  Nuestras <br className="hidden sm:inline" />
                   <span className="text-purple-600">Novedades</span>
                 </motion.h1>
                 <motion.p
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="mt-4 text-sm text-gray-400 font-medium leading-relaxed"
+                  className="mt-2 sm:mt-4 text-xs sm:text-sm text-gray-400 font-medium leading-relaxed"
                 >
                   Selección curada de productos premium.
                 </motion.p>
