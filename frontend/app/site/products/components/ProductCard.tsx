@@ -46,7 +46,7 @@ export default function ProductCard({ product, onCardClick }: ProductCardProps) 
 
   return (
     <motion.div
-      className="group relative flex flex-col h-full bg-white rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-100"
+      className="group relative flex flex-col h-full bg-white rounded-2xl sm:rounded-[2rem] overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 cursor-pointer border border-gray-100"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -8 }}
@@ -72,17 +72,17 @@ export default function ProductCard({ product, onCardClick }: ProductCardProps) 
       </div>
 
       {/* Content - Tightened spacing */}
-      <div className="p-5 pb-4 flex flex-col flex-grow bg-white">
-        <div className="flex justify-between items-center gap-4 mb-3">
+      <div className="p-3 sm:p-5 pb-3 sm:pb-4 flex flex-col flex-grow bg-white">
+        <div className="flex justify-between items-center gap-1 sm:gap-4 mb-2 sm:mb-3">
           <div className="flex flex-col flex-1">
-            <p className="text-[11px] font-black text-purple-600 uppercase tracking-[0.2em] mb-1">
+            <p className="text-[9px] sm:text-[11px] font-black text-purple-600 uppercase tracking-[0.12em] sm:tracking-[0.2em] mb-1 truncate">
               {product.category?.categoryName || 'General'}
             </p>
           </div>
 
           {/* Enhanced Stock Badge */}
           <div className={clsx(
-            "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm border whitespace-nowrap",
+            "flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wider shadow-sm border whitespace-nowrap",
             stockStatus.bg,
             stockStatus.text,
             stockStatus.border
@@ -94,7 +94,7 @@ export default function ProductCard({ product, onCardClick }: ProductCardProps) 
 
         {/* Title area - optimized spacing to avoid clipping and reduce vertical height */}
         <div className="mb-2">
-          <h3 className="text-base font-bold text-gray-900 leading-snug group-hover:text-purple-700 transition-colors line-clamp-2 min-h-[2.5rem]">
+          <h3 className="text-xs sm:text-base font-bold text-gray-900 leading-snug group-hover:text-purple-700 transition-colors line-clamp-2 min-h-[2rem] sm:min-h-[2.5rem]">
             {product.productName}
           </h3>
         </div>
@@ -103,21 +103,21 @@ export default function ProductCard({ product, onCardClick }: ProductCardProps) 
           <div className="flex flex-col">
             {hasOffer ? (
               <div className="flex flex-col">
-                <p className="text-2xl font-black text-gray-900 tracking-tighter leading-none">
+                <p className="text-base sm:text-2xl font-black text-gray-900 tracking-tighter leading-none">
                   {formatPrice(parseFloat(product.productOfferPrice as any))}
                 </p>
-                <p className="text-sm text-gray-400 line-through font-medium mt-1">
+                <p className="text-[10px] sm:text-sm text-gray-400 line-through font-medium mt-0.5 sm:mt-1">
                   {formatPrice(parseFloat(product.productPrice as any))}
                 </p>
               </div>
             ) : (
-              <p className="text-2xl font-black text-gray-900 tracking-tighter leading-none">
+              <p className="text-base sm:text-2xl font-black text-gray-900 tracking-tighter leading-none">
                 {formatPrice(parseFloat(product.productPrice as any))}
               </p>
             )}
           </div>
 
-          <div className="w-10 h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-sm border border-gray-100/50">
+          <div className="w-7 h-7 sm:w-10 sm:h-10 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-purple-600 group-hover:text-white transition-all duration-300 shadow-sm border border-gray-100/50 flex-shrink-0">
             <Icon icon="ph:arrow-right-bold" width="18" />
           </div>
         </div>

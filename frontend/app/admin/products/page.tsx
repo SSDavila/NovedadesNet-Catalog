@@ -26,28 +26,20 @@ export default function AdminProductsPage() {
     confirmModalProps,
   } = useProducts();
 
-  if (isError) return (
-    <div className="p-8 flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <FaBoxOpen className="text-gray-300 text-7xl" />
-      <p className="text-gray-400 text-lg font-medium">No existen productos aún</p>
-      <p className="text-gray-300 text-sm">Cuando agregues productos, aparecerán aquí.</p>
-    </div>
-  );
-
   return (
-    <div className="p-4 sm:p-12 min-h-screen bg-[#fcfcfd]">
+    <div className="p-4 sm:p-8 md:p-12 min-h-screen bg-[#fcfcfd]">
       <div className="max-w-7xl mx-auto">
-        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8 mb-14">
+        <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-8 mb-8 sm:mb-14">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Gestión de Catálogo</h1>
-            <div className="flex items-center gap-2 mt-2">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">Gestión de Catálogo</h1>
+            <div className="flex items-center gap-2 mt-1 sm:mt-2">
               <div className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse" />
               <p className="text-xs font-medium text-gray-400 uppercase tracking-widest">Inventario & Productos</p>
             </div>
           </div>
           <button
             onClick={handleOpenNewModal}
-            className="flex items-center gap-3 bg-purple-600 text-white px-8 py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-purple-700 transition-all shadow-soft hover:shadow-deep active:scale-95"
+            className="flex items-center justify-center gap-2.5 bg-purple-600 text-white px-6 py-3 sm:py-3.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-purple-700 transition-all shadow-soft hover:shadow-deep active:scale-95 w-full sm:w-auto shrink-0"
           >
             <FaPlus className="text-[10px]" />
             Nuevo Producto
@@ -56,15 +48,33 @@ export default function AdminProductsPage() {
 
         <main>
           {isLoading ? (
-            <div className="text-center p-8 text-gray-500">Cargando productos...</div>
-          ) : products.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
-              <FaBoxOpen className="text-gray-300 text-7xl" />
-              <p className="text-gray-400 text-lg font-medium">No existen productos aún</p>
-              <p className="text-gray-300 text-sm">Haz clic en "Nuevo Producto" para comenzar.</p>
+            <div className="flex flex-col items-center justify-center py-24 gap-3 text-gray-400">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+              <p className="text-sm font-medium">Cargando productos...</p>
+            </div>
+          ) : isError || products.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 px-4 text-center bg-white rounded-2xl border border-gray-100 shadow-soft gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-purple-50 flex items-center justify-center text-purple-600">
+                <FaBoxOpen className="text-3xl" />
+              </div>
+              <div>
+                <p className="text-gray-900 text-lg font-bold">No existen productos aún</p>
+                <p className="text-gray-400 text-sm mt-1 max-w-sm">
+                  {isError
+                    ? 'No se pudieron sincronizar los productos o el catálogo está vacío.'
+                    : 'Comienza agregando el primer producto a tu catálogo virtual.'}
+                </p>
+              </div>
+              <button
+                onClick={handleOpenNewModal}
+                className="mt-2 flex items-center gap-2 bg-purple-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-purple-700 transition-all"
+              >
+                <FaPlus className="text-[10px]" />
+                Agregar Producto
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {products.map((product) => (
                 <AdminProductCard
                   key={product.productId}

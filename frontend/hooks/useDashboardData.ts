@@ -73,27 +73,43 @@ export function useDashboardData(startDate?: string, endDate?: string) {
     if (endDate) params.append('endDate', endDate);
     const queryString = params.toString() ? `?${params.toString()}` : '';
 
-    // Some endpoints may not support dates yet, but we pass them anyway to be ready
-    const [statsRes, customersRes, profitRes, salesRes, sellersRes, commissionsRes] = await Promise.all([
-      fetch(`${API_BASE_URL}/dashboard/stats${queryString}`),
-      fetch(`${API_BASE_URL}/dashboard/monthly-customers?months=6`), // Monthly charts usually fixed range
-      fetch(`${API_BASE_URL}/dashboard/monthly-profit?months=6`),    // Monthly charts usually fixed range
-      fetch(`${API_BASE_URL}/dashboard/recent-sales?limit=5`),        // Recent sales are usually absolute latest
-      fetch(`${API_BASE_URL}/dashboard/bestsellers${queryString}${queryString ? '&' : '?'}limit=5`),
-      fetch(`${API_BASE_URL}/dashboard/seller-commissions${queryString}`),
+    const safeFetchJson = async <T>(resPromise: Promise<Response>, fallback: T): Promise<T> => {
+      try {
+        const res = await resPromise;
+        if (!res.ok) return fallback;
+        const data = await res.json();
+        return (data !== null && data !== undefined) ? data : fallback;
+      } catch {
+        return fallback;
+      }
+    };
+
+    const defaultStats: DashboardStats = {
+      totalRevenue: 0,
+      revenueChange: 0,
+      totalProfit: 0,
+      profitChange: 0,
+      profitMargin: 0,
+      totalCustomers: 0,
+      totalProducts: 0,
+    };
+
+    const [stats, monthlyCustomers, monthlyProfit, recentSales, bestSellers, sellerCommissions] = await Promise.all([
+      safeFetchJson<DashboardStats>(fetch(`${API_BASE_URL}/dashboard/stats${queryString}`), defaultStats),
+      safeFetchJson<MonthlyCustomer[]>(fetch(`${API_BASE_URL}/dashboard/monthly-customers?months=6`), []),
+      safeFetchJson<MonthlyProfit[]>(fetch(`${API_BASE_URL}/dashboard/monthly-profit?months=6`), []),
+      safeFetchJson<RecentSale[]>(fetch(`${API_BASE_URL}/dashboard/recent-sales?limit=5`), []),
+      safeFetchJson<BestSeller[]>(fetch(`${API_BASE_URL}/dashboard/bestsellers${queryString}${queryString ? '&' : '?'}limit=5`), []),
+      safeFetchJson<SellerCommission[]>(fetch(`${API_BASE_URL}/dashboard/seller-commissions${queryString}`), []),
     ]);
 
-    if (!statsRes.ok || !customersRes.ok || !profitRes.ok || !salesRes.ok || !sellersRes.ok || !commissionsRes.ok) {
-      throw new Error('Error al cargar los datos del dashboard');
-    }
-
     return {
-      stats: await statsRes.json() as DashboardStats,
-      monthlyCustomers: await customersRes.json() as MonthlyCustomer[],
-      monthlyProfit: await profitRes.json() as MonthlyProfit[],
-      recentSales: await salesRes.json() as RecentSale[],
-      bestSellers: await sellersRes.json() as BestSeller[],
-      sellerCommissions: await commissionsRes.json() as SellerCommission[],
+      stats: stats || defaultStats,
+      monthlyCustomers: Array.isArray(monthlyCustomers) ? monthlyCustomers : [],
+      monthlyProfit: Array.isArray(monthlyProfit) ? monthlyProfit : [],
+      recentSales: Array.isArray(recentSales) ? recentSales : [],
+      bestSellers: Array.isArray(bestSellers) ? bestSellers : [],
+      sellerCommissions: Array.isArray(sellerCommissions) ? sellerCommissions : [],
     };
   };
 

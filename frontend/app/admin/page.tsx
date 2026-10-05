@@ -50,9 +50,7 @@ const StatCard = ({ icon: Icon, title, value, change, color, subtitle }: StatCar
 };
 
 const MonthlyProfitChart = ({ data }: { data: Array<{ month: string; revenue: number; profit: number }> }) => {
-  if (data.length === 0) return null;
-
-  const maxValue = Math.max(...data.map(d => Math.max(d.revenue, d.profit)));
+  const maxValue = data.length > 0 ? Math.max(...data.map(d => Math.max(d.revenue, d.profit))) : 0;
 
   return (
     <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-soft">
@@ -73,39 +71,44 @@ const MonthlyProfitChart = ({ data }: { data: Array<{ month: string; revenue: nu
         </div>
       </div>
 
-      <div className="h-64 flex items-end gap-3">
-        {data.map((item, index) => (
-          <div key={index} className="flex-1 flex flex-col items-center gap-4 group/bar">
-            <div className="w-full flex gap-1 items-end h-full">
-              <div
-                className="flex-1 bg-indigo-100 rounded-t-lg hover:bg-indigo-500 transition-colors relative cursor-help"
-                style={{ height: `${(item.revenue / maxValue) * 100}%` }}
-              >
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gray-900 text-white text-[9px] font-bold rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
-                  ${item.revenue.toFixed(0)}
+      {data.length === 0 ? (
+        <div className="h-64 flex flex-col items-center justify-center text-center gap-3">
+          <FaChartLine className="text-gray-200 h-12 w-12" />
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sin datos para este periodo</p>
+        </div>
+      ) : (
+        <div className="h-64 flex items-end gap-3">
+          {data.map((item, index) => (
+            <div key={index} className="flex-1 flex flex-col items-center gap-4 group/bar">
+              <div className="w-full flex gap-1 items-end h-full">
+                <div
+                  className="flex-1 bg-indigo-100 rounded-t-lg hover:bg-indigo-500 transition-colors relative cursor-help"
+                  style={{ height: `${(item.revenue / maxValue) * 100}%` }}
+                >
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gray-900 text-white text-[9px] font-bold rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
+                    ${item.revenue.toFixed(0)}
+                  </div>
+                </div>
+                <div
+                  className="flex-1 bg-purple-100 rounded-t-lg hover:bg-purple-500 transition-colors relative cursor-help"
+                  style={{ height: `${(item.profit / maxValue) * 100}%` }}
+                >
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gray-900 text-white text-[9px] font-bold rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
+                    ${item.profit.toFixed(0)}
+                  </div>
                 </div>
               </div>
-              <div
-                className="flex-1 bg-purple-100 rounded-t-lg hover:bg-purple-500 transition-colors relative cursor-help"
-                style={{ height: `${(item.profit / maxValue) * 100}%` }}
-              >
-                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gray-900 text-white text-[9px] font-bold rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
-                  ${item.profit.toFixed(0)}
-                </div>
-              </div>
+              <span className="text-[10px] font-bold text-gray-400 uppercase">{item.month}</span>
             </div>
-            <span className="text-[10px] font-bold text-gray-400 uppercase">{item.month}</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 const MonthlyCustomersChart = ({ data }: { data: Array<{ month: string; count: number }> }) => {
-  if (data.length === 0) return null;
-
-  const maxCount = Math.max(...data.map(d => d.count));
+  const maxCount = data.length > 0 ? Math.max(...data.map(d => d.count)) : 0;
 
   return (
     <div className="bg-white p-8 rounded-2xl border border-gray-100 shadow-soft">
@@ -114,21 +117,28 @@ const MonthlyCustomersChart = ({ data }: { data: Array<{ month: string; count: n
         Adquisición de Clientes
       </h3>
 
-      <div className="h-64 flex items-end gap-5">
-        {data.map((item, index) => (
-          <div key={index} className="flex-1 flex flex-col items-center gap-4 group/bar">
-            <div
-              className="w-full bg-purple-100 rounded-t-lg hover:bg-purple-500 transition-colors relative cursor-help"
-              style={{ height: `${maxCount > 0 ? (item.count / maxCount) * 100 : 0}%` }}
-            >
-              <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gray-900 text-white text-[9px] font-bold rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
-                {item.count} clientes
+      {data.length === 0 ? (
+        <div className="h-64 flex flex-col items-center justify-center text-center gap-3">
+          <FaUsers className="text-gray-200 h-12 w-12" />
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sin datos para este periodo</p>
+        </div>
+      ) : (
+        <div className="h-64 flex items-end gap-5">
+          {data.map((item, index) => (
+            <div key={index} className="flex-1 flex flex-col items-center gap-4 group/bar">
+              <div
+                className="w-full bg-purple-100 rounded-t-lg hover:bg-purple-500 transition-colors relative cursor-help"
+                style={{ height: `${maxCount > 0 ? (item.count / maxCount) * 100 : 0}%` }}
+              >
+                <div className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-0.5 bg-gray-900 text-white text-[9px] font-bold rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap z-20">
+                  {item.count} clientes
+                </div>
               </div>
+              <span className="text-[10px] font-bold text-gray-400 uppercase">{item.month}</span>
             </div>
-            <span className="text-[10px] font-bold text-gray-400 uppercase">{item.month}</span>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -140,34 +150,41 @@ const TopProductsWidget = ({ products }: { products: Array<{ productName: string
         <FaStar className="text-amber-500" />
         Rendimiento de Productos
       </h3>
-      <ul className="space-y-3">
-        {products.map((product, index) => (
-          <li key={index} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
-            <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-              {product.images && product.images.length > 0 ? (
-                <img
-                  src={product.images[0].productImageUrl}
-                  alt={product.productName}
-                  className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-gray-300">
-                  <FaBox className="w-4 h-4" />
-                </div>
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-900 truncate">{product.productName}</p>
-              <div className="flex items-center gap-2 mt-1">
-                <span className="text-[10px] font-bold text-gray-400 uppercase">
-                  {product.totalSold} vendidos
-                </span>
+      {products.length === 0 ? (
+        <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
+          <FaBox className="text-gray-200 h-10 w-10" />
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sin productos vendidos aún</p>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {products.map((product, index) => (
+            <li key={index} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+              <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0].productImageUrl}
+                    alt={product.productName}
+                    className="w-full h-full object-cover grayscale-[0.5] group-hover:grayscale-0 transition-all"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-gray-300">
+                    <FaBox className="w-4 h-4" />
+                  </div>
+                )}
               </div>
-            </div>
-            <p className="text-sm font-bold text-gray-900 tracking-tight">${Number(product.productPrice).toFixed(0)}</p>
-          </li>
-        ))}
-      </ul>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-gray-900 truncate">{product.productName}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase">
+                    {product.totalSold} vendidos
+                  </span>
+                </div>
+              </div>
+              <p className="text-sm font-bold text-gray-900 tracking-tight">${Number(product.productPrice).toFixed(0)}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
@@ -179,25 +196,32 @@ const RecentSalesWidget = ({ sales }: { sales: Array<{ invoiceNumber: string; cu
         <FaReceipt className="text-purple-600" />
         Ventas Recientes
       </h3>
-      <ul className="space-y-3">
-        {sales.map((sale, index) => (
-          <li key={index} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
-            <div className="bg-gray-100 rounded-lg p-2.5 flex-shrink-0 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
-              <FaReceipt className="h-3.5 w-3.5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-900 truncate">#{sale.invoiceNumber}</p>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate mt-0.5">{sale.customerName}</p>
-            </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-sm font-bold text-gray-900 tracking-tight">${sale.total.toFixed(0)}</p>
-              <p className="text-[9px] font-bold text-gray-400 mt-0.5">
-                {formatDistanceToNow(new Date(sale.createdAt), { addSuffix: false, locale: es })}
-              </p>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {sales.length === 0 ? (
+        <div className="py-12 flex flex-col items-center justify-center text-center gap-3">
+          <FaReceipt className="text-gray-200 h-10 w-10" />
+          <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">Sin ventas recientes</p>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {sales.map((sale, index) => (
+            <li key={index} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors group">
+              <div className="bg-gray-100 rounded-lg p-2.5 flex-shrink-0 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
+                <FaReceipt className="h-3.5 w-3.5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-gray-900 truncate">#{sale.invoiceNumber}</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider truncate mt-0.5">{sale.customerName}</p>
+              </div>
+              <div className="text-right flex-shrink-0">
+                <p className="text-sm font-bold text-gray-900 tracking-tight">${sale.total.toFixed(0)}</p>
+                <p className="text-[9px] font-bold text-gray-400 mt-0.5">
+                  {formatDistanceToNow(new Date(sale.createdAt), { addSuffix: false, locale: es })}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 };
@@ -459,23 +483,23 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4 mb-6">
               <StatCard
                 title="Ingresos del Mes"
-                value={`$${stats?.totalRevenue.toFixed(2) || '0.00'}`}
-                change={stats?.revenueChange || 0}
+                value={`$${(stats?.totalRevenue ?? 0).toFixed(2)}`}
+                change={stats?.revenueChange ?? 0}
                 icon={FaDollarSign}
                 color="from-emerald-500 to-teal-600"
                 subtitle="vs mes anterior"
               />
               <StatCard
                 title="Ganancias del Mes"
-                value={`$${stats?.totalProfit.toFixed(2) || '0.00'}`}
-                change={stats?.profitChange || 0}
+                value={`$${(stats?.totalProfit ?? 0).toFixed(2)}`}
+                change={stats?.profitChange ?? 0}
                 icon={FaChartLine}
                 color="from-purple-500 to-indigo-600"
-                subtitle={`Margen: ${stats?.profitMargin || 0}%`}
+                subtitle={`Margen: ${stats?.profitMargin ?? 0}%`}
               />
               <StatCard
                 title="Total Clientes"
-                value={stats?.totalCustomers.toString() || '0'}
+                value={(stats?.totalCustomers ?? 0).toString()}
                 change={0}
                 icon={FaUsers}
                 color="from-sky-500 to-blue-600"
@@ -483,7 +507,7 @@ export default function DashboardPage() {
               />
               <StatCard
                 title="Productos Activos"
-                value={stats?.totalProducts.toString() || '0'}
+                value={(stats?.totalProducts ?? 0).toString()}
                 change={0}
                 icon={FaBox}
                 color="from-orange-500 to-amber-600"

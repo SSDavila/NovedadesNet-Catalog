@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Product } from '@/interfaces/index';
-import { FaTimes, FaWhatsapp, FaBox, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
+import { FaTimes, FaWhatsapp, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { backdropVariants, modalVariants } from '@/app/animations/modalVariants';
 import clsx from 'clsx';
 
@@ -74,9 +74,8 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
 
   const scrollThumbnails = (direction: 'left' | 'right') => {
     if (thumbnailsRef.current) {
-      const scrollAmount = 200;
       thumbnailsRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        left: direction === 'left' ? -200 : 200,
         behavior: 'smooth'
       });
     }
@@ -89,10 +88,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
       if (activeThumb) {
         const container = thumbnailsRef.current;
         const scrollLeft = activeThumb.offsetLeft - (container.offsetWidth / 2) + (activeThumb.offsetWidth / 2);
-        container.scrollTo({
-          left: scrollLeft,
-          behavior: 'smooth'
-        });
+        container.scrollTo({ left: scrollLeft, behavior: 'smooth' });
       }
     }
   }, [currentIndex]);
@@ -101,7 +97,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
     <AnimatePresence>
       {product && (
         <motion.div
-          className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex justify-center items-center p-4"
+          className="fixed inset-0 bg-black/50 backdrop-blur-md z-50 flex justify-center items-end sm:items-center p-0 sm:p-4"
           initial="hidden"
           animate="visible"
           exit="hidden"
@@ -109,146 +105,157 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           onClick={onClose}
         >
           <motion.div
-            className="bg-white rounded-[2rem] shadow-deep w-full max-w-5xl h-fit max-h-[85vh] overflow-hidden flex flex-col md:flex-row relative"
+            className="bg-white rounded-t-[2rem] sm:rounded-[2rem] shadow-deep w-full max-w-5xl
+                       flex flex-col md:flex-row relative
+                       h-[92dvh] sm:h-auto sm:max-h-[88vh]"
             variants={modalVariants}
             exit="exit"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button - Floating & Top-Right */}
+            {/* Close Button */}
             <button
               onClick={onClose}
-              className="absolute top-6 right-6 z-30 p-2 rounded-xl bg-gray-100/50 hover:bg-gray-100 text-gray-400 hover:text-gray-900 transition-all backdrop-blur-sm"
+              className="absolute top-5 right-5 z-30 p-2 rounded-xl bg-gray-100/70 hover:bg-gray-200 text-gray-400 hover:text-gray-900 transition-all backdrop-blur-sm"
             >
-              <FaTimes size={18} />
+              <FaTimes size={16} />
             </button>
 
-            {/* Left Column: Images Area */}
-            <div className="w-full md:w-[50%] p-6 md:p-8 shrink-0 bg-gray-50/50 flex flex-col items-center justify-center md:min-h-[600px] overflow-hidden">
-              <div className="w-full flex flex-col gap-6 mx-auto">
-                <div className="group/main relative aspect-square w-full md:max-h-[55vh] rounded-2xl overflow-hidden shadow-deep border border-gray-100 bg-white shrink-0">
-                  <motion.img
-                    key={selectedImage}
-                    initial={{ opacity: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    src={selectedImage}
-                    alt={product.productName}
-                    className="w-full h-full object-contain"
-                  />
+            {/* ── LEFT / TOP COLUMN: Images ─────────────────────────────────── */}
+            {/* On mobile: compact fixed height. On md+: takes 50% width, full height */}
+            <div className="w-full md:w-[50%] p-4 md:p-8 shrink-0 bg-gray-50/50
+                            flex flex-col items-center justify-center
+                            md:min-h-full overflow-hidden
+                            rounded-t-[2rem] md:rounded-l-[2rem] md:rounded-tr-none">
 
-                  {/* Navigation Arrows - Main Image */}
-                  {images.length > 1 && (
-                    <>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handlePrev(); }}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 p-3.5 border border-gray-100 rounded-full bg-white/95 text-gray-900 shadow-xl transition-all active:scale-90 z-10"
-                        aria-label="Imagen anterior"
-                      >
-                        <FaChevronLeft size={14} />
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleNext(); }}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 p-3.5 border border-gray-100 rounded-full bg-white/95 text-gray-900 shadow-xl transition-all active:scale-90 z-10"
-                        aria-label="Siguiente imagen"
-                      >
-                        <FaChevronRight size={14} />
-                      </button>
+              {/* Main image — shorter on mobile */}
+              <div className="group/main relative w-full rounded-2xl overflow-hidden shadow-deep border border-gray-100 bg-white shrink-0
+                              aspect-[4/3] sm:aspect-square md:aspect-square md:max-h-[50vh]">
+                <motion.img
+                  key={selectedImage}
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  src={selectedImage}
+                  alt={product.productName}
+                  className="w-full h-full object-contain"
+                />
 
-                      {/* Image Counter Overlay */}
-                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-black/50 backdrop-blur-md text-white text-[10px] font-black tracking-widest z-10">
-                        {currentIndex + 1} / {images.length}
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Thumbnails Row with Manual Controls */}
+                {/* Navigation Arrows */}
                 {images.length > 1 && (
-                  <div className="relative group/thumbs w-full px-1">
-                    <div className="flex items-center gap-2">
-                      {/* Left Control */}
-                      <button
-                        onClick={() => scrollThumbnails('left')}
-                        className="p-2 rounded-full bg-white border border-gray-100 text-gray-400 hover:text-purple-600 shadow-sm transition-all hover:shadow-md hidden md:block shrink-0"
-                      >
-                        <FaChevronLeft size={10} />
-                      </button>
+                  <>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handlePrev(); }}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 p-2.5 border border-gray-100 rounded-full bg-white/95 text-gray-900 shadow-xl transition-all active:scale-90 z-10"
+                      aria-label="Imagen anterior"
+                    >
+                      <FaChevronLeft size={12} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleNext(); }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2.5 border border-gray-100 rounded-full bg-white/95 text-gray-900 shadow-xl transition-all active:scale-90 z-10"
+                      aria-label="Siguiente imagen"
+                    >
+                      <FaChevronRight size={12} />
+                    </button>
 
-                      {/* Carousel Container */}
-                      <div
-                        ref={thumbnailsRef}
-                        className="flex-grow flex items-center gap-3 overflow-x-auto pb-2 custom-scrollbar-thin scroll-smooth snap-x items-center px-1"
-                      >
-                        {images.map((image) => (
-                          <div
-                            key={image.productImageId}
-                            className={clsx(
-                              "aspect-square w-16 shrink-0 rounded-xl overflow-hidden cursor-pointer border-2 transition-all p-0.5 bg-white snap-center",
-                              selectedImage === image.productImageUrl ? 'border-purple-600 shadow-md scale-105 z-10' : 'border-gray-100 hover:border-purple-200'
-                            )}
-                            onClick={() => setUserSelectedImage(image.productImageUrl)}
-                          >
-                            <img src={image.productImageUrl} alt="" className="w-full h-full object-cover rounded-[0.5rem]" />
-                          </div>
-                        ))}
-                      </div>
-
-                      {/* Right Control */}
-                      <button
-                        onClick={() => scrollThumbnails('right')}
-                        className="p-2 rounded-full bg-white border border-gray-100 text-gray-400 hover:text-purple-600 shadow-sm transition-all hover:shadow-md hidden md:block shrink-0"
-                      >
-                        <FaChevronRight size={10} />
-                      </button>
+                    {/* Counter */}
+                    <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/50 backdrop-blur-md text-white text-[10px] font-black tracking-widest z-10">
+                      {currentIndex + 1} / {images.length}
                     </div>
-                  </div>
-                )}
-
-                {/* Progress Dots Indicator */}
-                {images.length > 1 && (
-                  <div className="flex justify-center gap-1.5 pt-1">
-                    {images.map((_, idx) => (
-                      <div
-                        key={idx}
-                        className={clsx(
-                          "h-1 transition-all duration-300 rounded-full",
-                          currentIndex === idx ? "w-6 bg-purple-600" : "w-1.5 bg-gray-200"
-                        )}
-                      />
-                    ))}
-                  </div>
+                  </>
                 )}
               </div>
+
+              {/* Thumbnails */}
+              {images.length > 1 && (
+                <div className="relative w-full mt-3 px-1">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => scrollThumbnails('left')}
+                      className="p-2 rounded-full bg-white border border-gray-100 text-gray-400 hover:text-purple-600 shadow-sm transition-all hover:shadow-md hidden md:block shrink-0"
+                    >
+                      <FaChevronLeft size={10} />
+                    </button>
+
+                    <div
+                      ref={thumbnailsRef}
+                      className="flex-grow flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar-thin scroll-smooth snap-x px-1"
+                    >
+                      {images.map((image) => (
+                        <div
+                          key={image.productImageId}
+                          className={clsx(
+                            "aspect-square w-12 sm:w-14 shrink-0 rounded-xl overflow-hidden cursor-pointer border-2 transition-all p-0.5 bg-white snap-center",
+                            selectedImage === image.productImageUrl
+                              ? 'border-purple-600 shadow-md scale-105 z-10'
+                              : 'border-gray-100 hover:border-purple-200'
+                          )}
+                          onClick={() => setUserSelectedImage(image.productImageUrl)}
+                        >
+                          <img src={image.productImageUrl} alt="" className="w-full h-full object-cover rounded-[0.4rem]" />
+                        </div>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={() => scrollThumbnails('right')}
+                      className="p-2 rounded-full bg-white border border-gray-100 text-gray-400 hover:text-purple-600 shadow-sm transition-all hover:shadow-md hidden md:block shrink-0"
+                    >
+                      <FaChevronRight size={10} />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Progress dots */}
+              {images.length > 1 && (
+                <div className="flex justify-center gap-1.5 mt-2">
+                  {images.map((_, idx) => (
+                    <div
+                      key={idx}
+                      className={clsx(
+                        "h-1 transition-all duration-300 rounded-full",
+                        currentIndex === idx ? "w-5 bg-purple-600" : "w-1.5 bg-gray-200"
+                      )}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Right Column: Content (Scrollable) */}
-            <div className="w-full md:w-[50%] p-8 md:p-12 overflow-y-auto custom-scrollbar flex flex-col">
-              <div className="space-y-6 flex-grow">
+            {/* ── RIGHT / BOTTOM COLUMN: Content ────────────────────────────── */}
+            {/* flex-col with overflow-hidden so we can have scrollable body + fixed footer */}
+            <div className="w-full md:w-[50%] flex flex-col overflow-hidden min-h-0">
+
+              {/* Scrollable content area */}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 md:p-10 space-y-5">
                 <div>
                   <p className="text-[10px] font-black text-purple-600 uppercase tracking-[0.2em]">
                     {product.category?.categoryName}
                   </p>
-                  <h2 className="text-3xl font-black text-gray-900 mt-2 tracking-tighter leading-tight">
+                  <h2 className="text-2xl sm:text-3xl font-black text-gray-900 mt-2 tracking-tighter leading-tight">
                     {product.productName}
                   </h2>
                 </div>
 
                 <div className="flex flex-col gap-2">
-                  {product.productOfferPrice && parseFloat(product.productOfferPrice as any) > 0 && parseFloat(product.productOfferPrice as any) < parseFloat(product.productPrice as any) ? (
+                  {product.productOfferPrice &&
+                    parseFloat(product.productOfferPrice as any) > 0 &&
+                    parseFloat(product.productOfferPrice as any) < parseFloat(product.productPrice as any) ? (
                     <div className="flex items-baseline gap-4">
-                      <p className="text-4xl font-black text-gray-900 tracking-tighter">
+                      <p className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tighter">
                         {formatPrice(parseFloat(product.productOfferPrice as any))}
                       </p>
-                      <p className="text-xl text-gray-400 line-through font-medium">
+                      <p className="text-lg text-gray-400 line-through font-medium">
                         {formatPrice(parseFloat(product.productPrice as any))}
                       </p>
                     </div>
                   ) : (
-                    <p className="text-4xl font-black text-gray-900 tracking-tighter">
+                    <p className="text-3xl sm:text-4xl font-black text-gray-900 tracking-tighter">
                       {formatPrice(parseFloat(product.productPrice as any))}
                     </p>
                   )}
 
-                  <div className="pt-2">
+                  <div>
                     <span className={clsx(
                       "inline-flex items-center px-3 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-full",
                       stockColors.container, stockColors.text
@@ -259,28 +266,29 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
                   </div>
                 </div>
 
-                <div className="pt-6 border-t border-gray-100">
-                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Descripción</h4>
-                  <div className="text-gray-600 text-base leading-relaxed prose prose-sm max-w-none">
+                <div className="pt-4 border-t border-gray-100">
+                  <h4 className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Descripción</h4>
+                  <div className="text-gray-600 text-sm sm:text-base leading-relaxed prose prose-sm max-w-none">
                     <p className="whitespace-pre-wrap font-medium">{product.productDescription}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Action Area */}
-              <div className="mt-12 pt-8 border-t border-gray-100">
+              {/* ── Fixed-to-bottom WhatsApp CTA ──────────────────────────── */}
+              <div className="shrink-0 p-4 md:p-6 border-t border-gray-100 bg-white md:rounded-br-[2rem]">
                 <button
                   onClick={handleWhatsAppClick}
                   className="w-full flex items-center justify-center bg-emerald-500 text-white font-black py-4 px-8 rounded-2xl hover:bg-emerald-600 transition-all duration-300 shadow-lg shadow-emerald-500/20 group active:scale-[0.98]"
                 >
-                  <FaWhatsapp size={24} className="mr-3 group-hover:rotate-12 transition-transform" />
+                  <FaWhatsapp size={22} className="mr-3 group-hover:rotate-12 transition-transform" />
                   PEDIR POR WHATSAPP
                 </button>
-                <p className="text-center text-gray-400 text-[10px] font-bold mt-4 uppercase tracking-widest">
+                <p className="text-center text-gray-400 text-[10px] font-bold mt-2 uppercase tracking-widest">
                   Envío a domicilio en todo el país
                 </p>
               </div>
             </div>
+
           </motion.div>
         </motion.div>
       )}

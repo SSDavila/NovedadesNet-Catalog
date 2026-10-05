@@ -49,14 +49,15 @@ function SortableImage({ id, preview, index, onRemove }: SortableImageProps) {
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group w-24 h-24 touch-none">
-      <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover rounded-lg shadow-md" />
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} className="relative group aspect-square w-full touch-none">
+      <img src={preview} alt={`Preview ${index}`} className="w-full h-full object-cover rounded-xl shadow-sm border border-gray-100" />
       <button
         type="button"
         onClick={() => onRemove(index)}
-        className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-2.5 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 shadow-lg"
+        className="absolute -top-1.5 -right-1.5 bg-red-600 text-white rounded-full p-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all hover:scale-110 shadow-lg active:scale-90"
+        aria-label="Eliminar imagen"
       >
-        <FaTrash size={12} />
+        <FaTrash size={11} />
       </button>
     </div>
   );
@@ -155,8 +156,8 @@ export default function ProductForm({
     <div className="space-y-8">
 
       <fieldset>
-        <legend className="text-lg font-semibold text-gray-800 mb-4">Imágenes del Producto</legend>
-        <div className="grid grid-cols-4 gap-4">
+        <legend className="text-sm font-bold uppercase tracking-wider text-gray-700 mb-3">Imágenes del Producto</legend>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4">
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={imagePreviews} strategy={rectSortingStrategy}>
               {imagePreviews.map((preview, index) => (
@@ -164,36 +165,40 @@ export default function ProductForm({
               ))}
             </SortableContext>
           </DndContext>
-          <div {...getRootProps()} className={`aspect-square w-full flex items-center justify-center rounded-lg border-2 border-dashed cursor-pointer transition-colors ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'}`}>
+          <div {...getRootProps()} className={`aspect-square w-full flex flex-col items-center justify-center rounded-xl border-2 border-dashed cursor-pointer transition-colors ${isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-gray-200 hover:border-indigo-400 hover:bg-gray-50'}`}>
             <input {...getInputProps()} />
-            <div className="flex flex-col items-center justify-center text-gray-400">
-              <FaPlus size={24} />
+            <div className="flex flex-col items-center justify-center text-gray-400 gap-1">
+              <FaPlus size={20} />
+              <span className="text-[10px] font-semibold text-gray-400 sm:block hidden">Subir foto</span>
             </div>
           </div>
         </div>
       </fieldset>
 
       <fieldset className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
           <div>
             <label htmlFor="productName" className="block text-sm font-semibold text-gray-800 mb-1.5">Nombre del Producto</label>
-            <input type="text" name="productName" id="productName" value={productData.productName} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" required />
+            <input type="text" name="productName" id="productName" value={productData.productName} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" required />
           </div>
           <div>
-            <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-800 mb-1.5 flex items-center">
-              Categoría
+            <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-800 mb-1.5 flex items-center justify-between">
+              <span>Categoría</span>
               <button
                 type="button"
                 onClick={onAddNewCategory}
-                className="ml-2 p-1 rounded-full bg-blue-100 text-blue-600 hover:bg-blue-200 transition-colors"
+                className="p-1 rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors text-xs flex items-center gap-1 font-medium"
                 aria-label="Crear nueva categoría"
-              ><FaPlus className="w-3 h-3" /></button>
+              >
+                <FaPlus className="w-2.5 h-2.5" />
+                <span>Nueva</span>
+              </button>
             </label>
             <Combobox as="div" value={selectedCategory} onChange={(category: Category | null) => onProductDataChange({ ...productData, categoryId: category?.categoryId || '' })} nullable>
               <div className="relative">
                 <Combobox.Button as="div">
                   <Combobox.Input
-                    className="block w-full rounded-lg border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base pr-10"
+                    className="block w-full rounded-lg border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base pr-10"
                     onChange={(event) => setCategoryQuery(event.target.value)}
                     displayValue={(category: Category) => category?.categoryName || ''}
                     placeholder="Busca o selecciona una categoría"
@@ -234,42 +239,42 @@ export default function ProductForm({
       </fieldset>
 
       <fieldset className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
           <div>
             <label htmlFor="productPrice" className="block text-sm font-semibold text-gray-800 mb-1.5">Precio ($)</label>
-            <input type="number" name="productPrice" id="productPrice" value={productData.productPrice} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" required min="0" step="0.01" />
+            <input type="number" name="productPrice" id="productPrice" value={productData.productPrice} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" required min="0" step="0.01" />
           </div>
 
           {showOfferPrice ? (
-            <div className="self-end">
+            <div>
               <label htmlFor="productOfferPrice" className="block text-sm font-semibold text-gray-800 mb-1.5">Precio de Oferta</label>
               <div className="flex items-center">
-                <input type="number" name="productOfferPrice" id="productOfferPrice" value={productData.productOfferPrice} onChange={handleChange} className="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" min="0" step="0.01" />
-                <button type="button" onClick={handleToggleOfferPrice} className="p-3 bg-gray-200 text-gray-600 hover:bg-gray-300 rounded-r-lg border border-l-0 border-gray-300">
+                <input type="number" name="productOfferPrice" id="productOfferPrice" value={productData.productOfferPrice} onChange={handleChange} className="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" min="0" step="0.01" />
+                <button type="button" onClick={handleToggleOfferPrice} className="p-3 bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-r-lg border border-l-0 border-gray-300 transition-colors">
                   <FaTimes />
                 </button>
               </div>
             </div>
           ) : (
-            <div className="self-end">
+            <div className="flex flex-col justify-end">
               <button
                 type="button"
                 onClick={handleToggleOfferPrice}
-                className="w-full h-[46px] text-blue-600 font-semibold hover:text-blue-800 flex flex-col items-center justify-center gap-1 py-2 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-400 transition-colors"
+                className="w-full h-[46px] text-indigo-600 font-semibold hover:text-indigo-700 flex items-center justify-center gap-2 py-2 border-2 border-dashed border-indigo-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50/50 transition-colors"
               >
-                <FaTags size={20} />
-                <span className="text-xs text-center leading-tight">Añadir precio<br />de oferta</span>
+                <FaTags size={16} />
+                <span className="text-xs">Precio de oferta</span>
               </button>
             </div>
           )}
 
           <div>
             <label htmlFor="productStock" className="block text-sm font-semibold text-gray-800 mb-1.5">Stock</label>
-            <input type="number" name="productStock" id="productStock" value={productData.productStock} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" required min="0" />
+            <input type="number" name="productStock" id="productStock" value={productData.productStock} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" required min="0" />
           </div>
           <div>
-            <label htmlFor="productCost" className="block text-sm font-semibold text-gray-800 mb-1.5">Costo del Producto</label>
-            <input type="number" name="productCost" id="productCost" value={productData.productCost || ''} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 text-base" min="0" step="0.01" placeholder="0.00" />
+            <label htmlFor="productCost" className="block text-sm font-semibold text-gray-800 mb-1.5">Costo ($)</label>
+            <input type="number" name="productCost" id="productCost" value={productData.productCost || ''} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" min="0" step="0.01" placeholder="0.00" />
           </div>
         </div>
       </fieldset>

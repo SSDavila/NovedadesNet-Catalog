@@ -65,12 +65,12 @@ export const AdminProductCard = ({ product, onEdit, onDelete }: AdminProductCard
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover group-hover:scale-105 transition-transform duration-500 rounded-t-2xl"
         />
-        <div className="absolute inset-0 bg-gray-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
-        <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-          <button onClick={() => onEdit(product)} className="bg-white text-gray-700 p-2.5 rounded-xl hover:bg-purple-600 hover:text-white transition-all shadow-lg" aria-label="Editar producto">
+        <div className="absolute inset-0 bg-gray-900/10 opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 flex flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transform translate-y-0 sm:translate-y-2 sm:group-hover:translate-y-0 transition-all duration-300">
+          <button onClick={() => onEdit(product)} className="bg-white/95 backdrop-blur-sm text-gray-700 p-2 sm:p-2.5 rounded-xl hover:bg-purple-600 hover:text-white transition-all shadow-md active:scale-95" aria-label="Editar producto">
             <FaEdit size={14} />
           </button>
-          <button onClick={() => onDelete(product)} className="bg-white text-gray-700 p-2.5 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-lg" aria-label="Eliminar producto">
+          <button onClick={() => onDelete(product)} className="bg-white/95 backdrop-blur-sm text-gray-700 p-2 sm:p-2.5 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-md active:scale-95" aria-label="Eliminar producto">
             <FaTrashAlt size={14} />
           </button>
         </div>
