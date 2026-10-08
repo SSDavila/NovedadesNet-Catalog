@@ -80,18 +80,29 @@ export class CategoryService {
   async remove(id: string) {
     await this.findOne(id);
 
-    const productsCount = await this.prisma.product.count({
-      where: { categoryId: id },
+    const activeProductsCount = await this.prisma.product.count({
+      where: {
+        categoryId: id,
+        productIsActive: true,
+      },
     });
 
-    if (productsCount > 0) {
+    if (activeProductsCount > 0) {
       throw new ConflictException(
-        `Esta categoría no se puede eliminar porque está siendo utilizada por ${productsCount} producto(s).`,
+        `Esta categoría no se puede eliminar porque está siendo utilizada por ${activeProductsCount} producto(s) activo(s).`,
       );
     }
 
-    return this.prisma.category.delete({
-      where: { categoryId: id },
+    return this.prisma.$transaction(async (tx) => {
+      // Desvincular productos inactivos (eliminados lógicamente) para evitar fallos de clave foránea
+      await tx.product.updateMany({
+        where: { categoryId: id },
+        data: { categoryId: null },
+      });
+
+      return tx.category.delete({
+        where: { categoryId: id },
+      });
     });
   }
 }
