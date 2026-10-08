@@ -73,16 +73,19 @@ export default function ProductCard({ product, onCardClick }: ProductCardProps) 
 
       {/* Content - Tightened spacing */}
       <div className="p-3 sm:p-5 pb-3 sm:pb-4 flex flex-col flex-grow bg-white">
-        <div className="flex justify-between items-center gap-1 sm:gap-4 mb-2 sm:mb-3">
-          <div className="flex flex-col flex-1">
-            <p className="text-[9px] sm:text-[11px] font-black text-purple-600 uppercase tracking-[0.12em] sm:tracking-[0.2em] mb-1 truncate">
+        <div className="flex justify-between items-center gap-1.5 sm:gap-4 mb-2 sm:mb-3 min-w-0">
+          <div className="flex flex-col flex-1 min-w-0">
+            <p
+              className="text-[9px] sm:text-[11px] font-black text-purple-600 uppercase tracking-[0.12em] sm:tracking-[0.2em] mb-1 truncate"
+              title={product.category?.categoryName || 'General'}
+            >
               {product.category?.categoryName || 'General'}
             </p>
           </div>
 
           {/* Enhanced Stock Badge */}
           <div className={clsx(
-            "flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wider shadow-sm border whitespace-nowrap",
+            "flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-[8px] sm:text-[10px] font-bold uppercase tracking-wider shadow-sm border whitespace-nowrap shrink-0",
             stockStatus.bg,
             stockStatus.text,
             stockStatus.border

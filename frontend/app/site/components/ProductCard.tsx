@@ -86,16 +86,19 @@ export const ProductCard = ({ product }: ProductCardProps) => {
 
         {/* Content */}
         <div className="p-5 pb-4 flex flex-col flex-grow bg-white">
-          <div className="flex justify-between items-center gap-4 mb-3">
-            <div className="flex flex-col flex-1">
-              <p className="text-[11px] font-black text-purple-600 uppercase tracking-[0.2em] mb-1">
+          <div className="flex justify-between items-center gap-2 sm:gap-4 mb-3 min-w-0">
+            <div className="flex flex-col flex-1 min-w-0">
+              <p
+                className="text-[11px] font-black text-purple-600 uppercase tracking-[0.2em] mb-1 truncate"
+                title={product.category || 'General'}
+              >
                 {product.category || 'General'}
               </p>
             </div>
 
             {/* Enhanced Stock Badge */}
             <div className={clsx(
-              "flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider shadow-sm border whitespace-nowrap",
+              "flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[9px] sm:text-[10px] font-bold uppercase tracking-wider shadow-sm border whitespace-nowrap shrink-0",
               stockStatus.bg,
               stockStatus.text,
               stockStatus.border
