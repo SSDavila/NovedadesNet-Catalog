@@ -176,10 +176,10 @@ export default function ProductForm({
       </fieldset>
 
       <fieldset className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="productName" className="block text-sm font-semibold text-gray-800 mb-1.5">Nombre del Producto</label>
-            <input type="text" name="productName" id="productName" value={productData.productName} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" required />
+            <input type="text" name="productName" id="productName" value={productData.productName} onChange={handleChange} className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3 text-base" required />
           </div>
           <div>
             <label htmlFor="categoryId" className="block text-sm font-semibold text-gray-800 mb-1.5 flex items-center justify-between">
@@ -187,7 +187,7 @@ export default function ProductForm({
               <button
                 type="button"
                 onClick={onAddNewCategory}
-                className="p-1 rounded-md bg-indigo-50 text-indigo-600 hover:bg-indigo-100 transition-colors text-xs flex items-center gap-1 font-medium"
+                className="p-1 rounded-md bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors text-xs flex items-center gap-1 font-medium"
                 aria-label="Crear nueva categoría"
               >
                 <FaPlus className="w-2.5 h-2.5" />
@@ -198,13 +198,13 @@ export default function ProductForm({
               <div className="relative">
                 <Combobox.Button as="div">
                   <Combobox.Input
-                    className="block w-full rounded-lg border-gray-300 bg-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base pr-10"
+                    className="block w-full rounded-xl border-gray-300 bg-white shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3 text-base pr-10"
                     onChange={(event) => setCategoryQuery(event.target.value)}
                     displayValue={(category: Category) => category?.categoryName || ''}
                     placeholder="Busca o selecciona una categoría"
                     required
                   />
-                  <div className="absolute inset-y-0 right-0 flex items-center rounded-r-md px-2 focus:outline-none pointer-events-none">
+                  <div className="absolute inset-y-0 right-0 flex items-center rounded-r-xl px-2 focus:outline-none pointer-events-none">
                     <HiChevronUpDown className="h-5 w-5 text-gray-400" aria-hidden="true" />
                   </div>
                 </Combobox.Button>
@@ -239,42 +239,97 @@ export default function ProductForm({
       </fieldset>
 
       <fieldset className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="productPrice" className="block text-sm font-semibold text-gray-800 mb-1.5">Precio ($)</label>
-            <input type="number" name="productPrice" id="productPrice" value={productData.productPrice} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" required min="0" step="0.01" />
+            <input
+              type="number"
+              name="productPrice"
+              id="productPrice"
+              value={productData.productPrice}
+              onChange={handleChange}
+              className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3 text-base"
+              required
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+            />
           </div>
 
-          {showOfferPrice ? (
-            <div>
-              <label htmlFor="productOfferPrice" className="block text-sm font-semibold text-gray-800 mb-1.5">Precio de Oferta</label>
-              <div className="flex items-center">
-                <input type="number" name="productOfferPrice" id="productOfferPrice" value={productData.productOfferPrice} onChange={handleChange} className="block w-full rounded-l-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" min="0" step="0.01" />
-                <button type="button" onClick={handleToggleOfferPrice} className="p-3 bg-gray-100 text-gray-500 hover:bg-gray-200 rounded-r-lg border border-l-0 border-gray-300 transition-colors">
-                  <FaTimes />
+          <div>
+            {showOfferPrice ? (
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label htmlFor="productOfferPrice" className="block text-sm font-semibold text-gray-800">
+                    Precio de Oferta ($)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={handleToggleOfferPrice}
+                    className="text-xs text-rose-500 hover:text-rose-700 font-semibold flex items-center gap-1 transition-colors"
+                    title="Quitar oferta"
+                  >
+                    <FaTimes size={10} />
+                    <span>Quitar</span>
+                  </button>
+                </div>
+                <input
+                  type="number"
+                  name="productOfferPrice"
+                  id="productOfferPrice"
+                  value={productData.productOfferPrice}
+                  onChange={handleChange}
+                  className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3 text-base"
+                  min="0"
+                  step="0.01"
+                  placeholder="0.00"
+                />
+              </div>
+            ) : (
+              <div>
+                <label className="block text-sm font-semibold text-gray-800 mb-1.5">
+                  Precio de Oferta
+                </label>
+                <button
+                  type="button"
+                  onClick={handleToggleOfferPrice}
+                  className="w-full h-[46px] text-purple-600 font-semibold hover:text-purple-700 flex items-center justify-center gap-2 border-2 border-dashed border-purple-200 rounded-xl hover:border-purple-400 hover:bg-purple-50/50 transition-colors text-sm"
+                >
+                  <FaTags size={15} />
+                  <span>Activar oferta</span>
                 </button>
               </div>
-            </div>
-          ) : (
-            <div className="flex flex-col justify-end">
-              <button
-                type="button"
-                onClick={handleToggleOfferPrice}
-                className="w-full h-[46px] text-indigo-600 font-semibold hover:text-indigo-700 flex items-center justify-center gap-2 py-2 border-2 border-dashed border-indigo-200 rounded-lg hover:border-indigo-400 hover:bg-indigo-50/50 transition-colors"
-              >
-                <FaTags size={16} />
-                <span className="text-xs">Precio de oferta</span>
-              </button>
-            </div>
-          )}
+            )}
+          </div>
 
           <div>
             <label htmlFor="productStock" className="block text-sm font-semibold text-gray-800 mb-1.5">Stock</label>
-            <input type="number" name="productStock" id="productStock" value={productData.productStock} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" required min="0" />
+            <input
+              type="number"
+              name="productStock"
+              id="productStock"
+              value={productData.productStock}
+              onChange={handleChange}
+              className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3 text-base"
+              required
+              min="0"
+              placeholder="0"
+            />
           </div>
+
           <div>
             <label htmlFor="productCost" className="block text-sm font-semibold text-gray-800 mb-1.5">Costo ($)</label>
-            <input type="number" name="productCost" id="productCost" value={productData.productCost || ''} onChange={handleChange} className="block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 text-base" min="0" step="0.01" placeholder="0.00" />
+            <input
+              type="number"
+              name="productCost"
+              id="productCost"
+              value={productData.productCost ?? ''}
+              onChange={handleChange}
+              className="block w-full rounded-xl border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500 py-2.5 px-3 text-base"
+              min="0"
+              step="0.01"
+              placeholder="0.00"
+            />
           </div>
         </div>
       </fieldset>

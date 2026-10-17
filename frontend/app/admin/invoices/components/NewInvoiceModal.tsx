@@ -5,7 +5,7 @@ import { useForm, FormProvider, SubmitHandler } from 'react-hook-form';
 import { FaTimes, FaSpinner } from 'react-icons/fa';
 import NewInvoiceForm from './NewInvoiceForm';
 import { InvoicePreview } from './InvoicePreview';
-import { Customer, Product } from '@/interfaces';
+import { Customer, Product, User } from '@/interfaces';
 import axios from 'axios';
 import { motion } from 'framer-motion';
 import { backdropVariants, modalVariants } from '@/app/animations/modalVariants';
@@ -17,12 +17,14 @@ export interface InvoiceItem {
   productName: string;
   quantity: number;
   price: number;
-  discount: number; 
+  discount: number;
+  grabaIva: boolean;
   subtotal: number;
 }
 
 export interface InvoiceFormData {
   customerId: string;
+  sellerId: number | null;
   items: InvoiceItem[];
   paymentMethod: string;
 }
@@ -36,25 +38,28 @@ interface NewInvoiceModalProps {
 
 export default function NewInvoiceModal({ isOpen, onClose, onSubmit, isSubmitting }: NewInvoiceModalProps) {
   const methods = useForm<InvoiceFormData>({
-    defaultValues: { customerId: '', items: [], paymentMethod: '01' },
+    defaultValues: { customerId: '', sellerId: null, items: [], paymentMethod: '01' },
   });
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [sellers, setSellers] = useState<User[]>([]);
 
   useEffect(() => {
     if (!isOpen) return;
-    
+
     const fetchData = async () => {
       const token = localStorage.getItem('access_token');
       if (!token) return;
       const headers = { 'Authorization': `Bearer ${token}` };
       try {
-        const [customersRes, productsRes] = await Promise.all([
+        const [customersRes, productsRes, usersRes] = await Promise.all([
           axios.get(`${API_URL}/customers`, { headers }),
           axios.get(`${API_URL}/products`, { headers }),
+          axios.get(`${API_URL}/users`, { headers }),
         ]);
         setCustomers(customersRes.data);
         setProducts(productsRes.data);
+        setSellers(usersRes.data);
       } catch (error) {
         console.error("Error fetching data for invoice:", error);
       }
@@ -75,7 +80,7 @@ export default function NewInvoiceModal({ isOpen, onClose, onSubmit, isSubmittin
       <motion.div
         className="bg-gray-50 rounded-2xl shadow-2xl w-full max-w-7xl max-h-[95vh] flex flex-col"
         variants={modalVariants}
-        onClick={(e) => e.stopPropagation()} 
+        onClick={(e) => e.stopPropagation()}
       >
         <header className="flex justify-between items-center p-6 border-b">
           <h2 className="text-2xl font-bold text-gray-900">Nueva Factura</h2>
@@ -84,7 +89,7 @@ export default function NewInvoiceModal({ isOpen, onClose, onSubmit, isSubmittin
         <FormProvider {...methods}>
           <form onSubmit={methods.handleSubmit(handleFormSubmit)} className="flex-grow flex flex-col overflow-hidden">
             <div className="grid lg:grid-cols-2 flex-grow overflow-hidden">
-              <div className="overflow-y-auto p-8 bg-white"><NewInvoiceForm customers={customers} products={products} /></div>
+              <div className="overflow-y-auto p-8 bg-white"><NewInvoiceForm customers={customers} products={products} sellers={sellers} /></div>
               <div className="hidden lg:flex flex-col bg-gray-100 p-8 border-l overflow-y-auto"><InvoicePreview /></div>
             </div>
             <footer className="flex justify-end gap-3 p-6 border-t bg-gray-50 rounded-b-2xl">

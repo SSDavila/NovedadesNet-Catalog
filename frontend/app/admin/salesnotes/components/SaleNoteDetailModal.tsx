@@ -41,13 +41,19 @@ export default function SaleNoteDetailModal({ isOpen, onClose, saleNoteId }: Sal
         phone: saleNote.customer.customerPhone || '',
         email: saleNote.customer.customerEmail,
       },
-      items: (saleNote.items || []).map(item => ({
-        productId: item.product?.productId || '',
-        productName: item.product?.productName || '',
-        quantity: item.saleNoteItemQuantity,
-        price: Number(item.saleNoteItemUnitPrice),
-        subtotal: Number(item.saleNoteItemUnitPrice) * item.saleNoteItemQuantity,
-      })),
+      items: (saleNote.items || []).map(item => {
+        const price = Number(item.saleNoteItemUnitPrice);
+        const subtotal = item.saleNoteItemSubtotal ? Number(item.saleNoteItemSubtotal) : price * item.saleNoteItemQuantity;
+        return {
+          productId: item.product?.productId || '',
+          productName: item.product?.productName || '',
+          quantity: item.saleNoteItemQuantity,
+          price,
+          discount: 0,
+          grabaIva: true,
+          subtotal,
+        };
+      }),
     };
   }, [saleNote]);
 

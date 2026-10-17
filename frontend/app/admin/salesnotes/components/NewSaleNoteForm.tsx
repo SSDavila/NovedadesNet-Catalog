@@ -6,13 +6,14 @@ import { Combobox, Transition } from '@headlessui/react';
 import { FaPlus, FaTrash, FaUser, FaBoxOpen } from 'react-icons/fa';
 import { HiChevronUpDown, HiCheck } from 'react-icons/hi2';
 import { Customer, Product } from '@/interfaces';
-import NewCustomerModal from '../../customers/components/NewCustomerModal';
 
 export interface SaleNoteItem {
   productId: string;
   productName: string;
   quantity: number;
   price: number;
+  discount: number;
+  grabaIva: boolean;
   subtotal: number;
 }
 
@@ -28,12 +29,12 @@ interface NewSaleNoteFormProps {
   onCustomersNeedRefresh: () => Promise<void>;
 }
 
-const IVA_RATE = 0.12;
+const IVA_RATE = 0.15;
 
 export default function NewSaleNoteForm({ customers = [], products = [], onAddNewCustomer }: NewSaleNoteFormProps) {
   const { watch, setValue } = useFormContext<SaleNoteFormData>();
   const customer = watch('customer');
-  const items = watch('items');
+  const items = watch('items') || [];
 
   const [customerQuery, setCustomerQuery] = useState('');
   const [productQuery, setProductQuery] = useState('');
@@ -58,21 +59,29 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
 
   const handleAddItem = () => {
     if (!selectedProduct) return;
-    const existingItem = items.find((item: { productId: string; }) => item.productId === selectedProduct.productId);
+    const existingItem = items.find((item: SaleNoteItem) => item.productId === selectedProduct.productId);
     if (existingItem) {
-        const newItems: SaleNoteItem[] = items.map((item: SaleNoteItem) =>
-        item.productId === selectedProduct.productId
-          ? { ...item, quantity: item.quantity + 1, subtotal: (item.quantity + 1) * item.price }
-          : item
-      );
+      const newItems: SaleNoteItem[] = items.map((item: SaleNoteItem) => {
+        if (item.productId === selectedProduct.productId) {
+          const newQty = item.quantity + 1;
+          const subtotal = Math.max(0, (newQty * item.price) - (item.discount || 0));
+          return { ...item, quantity: newQty, subtotal };
+        }
+        return item;
+      });
       setValue('items', newItems, { shouldValidate: true });
     } else {
-        const newItem: SaleNoteItem = {
+      const price = Number(selectedProduct.productPrice);
+      // Por defecto graba IVA a menos que la tarifa del producto sea explícitamente "0"
+      const grabaIva = selectedProduct.productIvaRate === '0' ? false : true;
+      const newItem: SaleNoteItem = {
         productId: selectedProduct.productId,
         productName: selectedProduct.productName,
         quantity: 1,
- price: Number(selectedProduct.productPrice),
- subtotal: Number(selectedProduct.productPrice),
+        price,
+        discount: 0,
+        grabaIva,
+        subtotal: price,
       };
       setValue('items', [...items, newItem], { shouldValidate: true });
     }
@@ -81,11 +90,37 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
   };
 
   const handleQuantityChange = (productId: string, quantity: number) => {
-    const newItems = items.map(item =>
-      item.productId === productId
-        ? { ...item, quantity, subtotal: quantity * item.price }
-        : item
-    ).filter(item => item.quantity > 0); 
+    const newItems = items
+      .map((item) => {
+        if (item.productId === productId) {
+          const subtotal = Math.max(0, (quantity * item.price) - (item.discount || 0));
+          return { ...item, quantity, subtotal };
+        }
+        return item;
+      })
+      .filter((item) => item.quantity > 0);
+    setValue('items', newItems, { shouldValidate: true });
+  };
+
+  const handleDiscountChange = (productId: string, discount: number) => {
+    const newItems = items.map((item) => {
+      if (item.productId === productId) {
+        const validDiscount = Math.max(0, isNaN(discount) ? 0 : discount);
+        const subtotal = Math.max(0, (item.quantity * item.price) - validDiscount);
+        return { ...item, discount: validDiscount, subtotal };
+      }
+      return item;
+    });
+    setValue('items', newItems, { shouldValidate: true });
+  };
+
+  const handleToggleIva = (productId: string) => {
+    const newItems = items.map((item) => {
+      if (item.productId === productId) {
+        return { ...item, grabaIva: !item.grabaIva };
+      }
+      return item;
+    });
     setValue('items', newItems, { shouldValidate: true });
   };
 
@@ -94,17 +129,39 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
     setValue('items', newItems, { shouldValidate: true });
   };
 
-  const { subtotal, iva, total } = useMemo(() => {
-    const sub = items.reduce((acc, item) => acc + item.subtotal, 0);
-    const tax = sub * IVA_RATE;
-    return { subtotal: sub, iva: tax, total: sub + tax };
+  const totals = useMemo(() => {
+    let sub0 = 0;
+    let sub15 = 0;
+    let disc = 0;
+
+    items.forEach((item) => {
+      const itemSub = Math.max(0, (item.quantity * item.price) - (item.discount || 0));
+      disc += (item.discount || 0);
+      if (item.grabaIva) {
+        sub15 += itemSub;
+      } else {
+        sub0 += itemSub;
+      }
+    });
+
+    const tax = sub15 * IVA_RATE;
+    const total = sub0 + sub15 + tax;
+    return {
+      subtotal0: sub0,
+      subtotal15: sub15,
+      totalDiscount: disc,
+      iva: tax,
+      total,
+    };
   }, [items]);
 
   return (
     <div className="space-y-8">
-
+      {/* Datos del Cliente */}
       <fieldset>
-        <legend className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><FaUser /> Datos del Cliente</legend>
+        <legend className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <FaUser /> Datos del Cliente
+        </legend>
         <div className="flex items-center gap-2">
           <div className="flex-grow">
             <Combobox value={customer} onChange={(c) => setValue('customer', c, { shouldValidate: true })} nullable>
@@ -113,7 +170,7 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
                   <FaUser className="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </div>
                 <Combobox.Input
-                  className="w-full rounded-md border-0 bg-white py-2.5 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  className="w-full rounded-md border-0 bg-white py-2.5 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6"
                   onChange={(e) => setCustomerQuery(e.target.value)}
                   displayValue={(c: any) => c?.label || ''}
                   placeholder="Buscar cliente por nombre o RUC..."
@@ -127,12 +184,12 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
                       <div className="relative cursor-default select-none px-4 py-2 text-gray-700">No se encontró ningún cliente.</div>
                     ) : (
                       filteredCustomers.map((c) => (
-                        <Combobox.Option key={c.value} value={c} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-indigo-600 text-white' : 'text-gray-900'}`}>
+                        <Combobox.Option key={c.value} value={c} className={({ active }) => `relative cursor-default select-none py-2 pl-10 pr-4 ${active ? 'bg-purple-600 text-white' : 'text-gray-900'}`}>
                           {({ selected, active }) => (
                             <>
                               <span className={`block truncate ${selected ? 'font-medium' : 'font-normal'}`}>{c.label}</span>
-                              <span className={`block truncate text-xs ${active ? 'text-indigo-200' : 'text-gray-500'}`}>{c.email}</span>
-                              {selected ? (<span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-white' : 'text-indigo-600'}`}><HiCheck className="h-5 w-5" aria-hidden="true" /></span>) : null}
+                              <span className={`block truncate text-xs ${active ? 'text-purple-200' : 'text-gray-500'}`}>{c.email}</span>
+                              {selected ? (<span className={`absolute inset-y-0 left-0 flex items-center pl-3 ${active ? 'text-white' : 'text-purple-600'}`}><HiCheck className="h-5 w-5" aria-hidden="true" /></span>) : null}
                             </>
                           )}
                         </Combobox.Option>
@@ -143,10 +200,12 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
               </div>
             </Combobox>
           </div>
-          <button type="button" onClick={onAddNewCustomer} className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"><FaPlus /></button>
+          <button type="button" onClick={onAddNewCustomer} className="p-2.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors shadow-sm">
+            <FaPlus />
+          </button>
         </div>
         {customer && (
-          <div className="mt-4 p-4 bg-gray-100 rounded-lg text-sm text-gray-700 space-y-1">
+          <div className="mt-4 p-4 bg-gray-50 border border-gray-100 rounded-xl text-sm text-gray-700 space-y-1">
             <p><strong>RUC/Cédula:</strong> {customer.ruc}</p>
             <p><strong>Dirección:</strong> {customer.address}</p>
             <p><strong>Teléfono:</strong> {customer.phone}</p>
@@ -154,8 +213,11 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
         )}
       </fieldset>
 
+      {/* Ítems de la Venta */}
       <fieldset>
-        <legend className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2"><FaBoxOpen /> Ítems de la Venta</legend>
+        <legend className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <FaBoxOpen /> Ítems de la Venta
+        </legend>
         <div className="flex items-center gap-2 mb-4">
           <div className="flex-grow">
             <Combobox value={selectedProduct} onChange={setSelectedProduct} nullable>
@@ -164,7 +226,7 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
                   <FaBoxOpen className="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </div>
                 <Combobox.Input
-                  className="w-full rounded-md border-0 bg-white py-2.5 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                  className="w-full rounded-md border-0 bg-white py-2.5 pl-10 pr-10 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-purple-600 sm:text-sm sm:leading-6"
                   onChange={(e) => setProductQuery(e.target.value)}
                   displayValue={(p: Product) => p?.productName || ''}
                   placeholder="Buscar producto para agregar..."
@@ -178,10 +240,10 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
                       <div className="relative cursor-default select-none px-4 py-2 text-gray-700">No se encontró ningún producto.</div>
                     ) : (
                       filteredProducts.map((p) => (
-                        <Combobox.Option key={p.productId} value={p} className={({ active }) => `relative cursor-default select-none py-2 pl-4 pr-4 ${active ? 'bg-indigo-600 text-white' : 'text-gray-900'}`}>
-                          <div className="flex justify-between">
-                            <span>{p.productName}</span>
-                            <span className={`font-mono text-sm ${'text-gray-500'}`}>
+                        <Combobox.Option key={p.productId} value={p} className={({ active }) => `relative cursor-default select-none py-2 pl-4 pr-4 ${active ? 'bg-purple-600 text-white' : 'text-gray-900'}`}>
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium">{p.productName}</span>
+                            <span className="font-mono text-sm text-gray-500 font-bold ml-2">
                               ${Number(p.productPrice).toFixed(2)}
                             </span>
                           </div>
@@ -193,61 +255,177 @@ export default function NewSaleNoteForm({ customers = [], products = [], onAddNe
               </div>
             </Combobox>
           </div>
-          <button type="button" onClick={handleAddItem} disabled={!selectedProduct} className="p-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:bg-gray-300">Agregar</button>
+          <button
+            type="button"
+            onClick={handleAddItem}
+            disabled={!selectedProduct}
+            className="px-4 py-2.5 bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:bg-gray-300 font-semibold text-sm transition-colors shadow-sm"
+          >
+            Agregar
+          </button>
         </div>
 
-        <div className="flow-root">
+        <div className="overflow-x-auto border border-gray-200 rounded-xl shadow-sm">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Producto</th>
-                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase w-24">Cantidad</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase w-28">P. Unit.</th>
-                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 uppercase w-28">Subtotal</th>
-                <th className="relative px-4 py-2 w-12"><span className="sr-only">Eliminar</span></th>
+                <th className="px-3 py-2.5 text-left text-xs font-bold text-gray-500 uppercase tracking-wider w-48 sm:w-56 min-w-[170px] max-w-[230px]">
+                  Producto
+                </th>
+                <th className="px-2 py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-20">
+                  Cant.
+                </th>
+                <th className="px-2 py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-24">
+                  P. Unit.
+                </th>
+                <th className="px-2 py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-24">
+                  Desc. ($)
+                </th>
+                <th className="px-2 py-2.5 text-center text-xs font-bold text-gray-500 uppercase tracking-wider w-32">
+                  IVA (15%)
+                </th>
+                <th className="px-2 py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-24">
+                  Subtotal
+                </th>
+                <th className="px-2 py-2.5 text-right text-xs font-bold text-gray-500 uppercase tracking-wider w-24">
+                  Total
+                </th>
+                <th className="px-2 py-2.5 text-center w-10">
+                  <span className="sr-only">Eliminar</span>
+                </th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {items.length > 0 ? items.map(item => (
-                <tr key={item.productId}>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800">{item.productName}</td>
-                  <td className="px-4 py-2">
-                    <input
-                      type="number"
-                      value={item.quantity}
-                      onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value, 10) || 0)}
-                      className="w-20 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-center"
-                      min="1"
-                    />
-                  </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500 text-right">${item.price.toFixed(2)}</td>
-                  <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-800 font-medium text-right">${item.subtotal.toFixed(2)}</td>
-                  <td className="px-4 py-2 text-center">
-                    <button type="button" onClick={() => handleRemoveItem(item.productId)} className="text-red-500 hover:text-red-700"><FaTrash /></button>
+              {items.length > 0 ? items.map((item) => {
+                const itemIva = item.grabaIva ? item.subtotal * IVA_RATE : 0;
+                const itemTotal = item.subtotal + itemIva;
+
+                return (
+                  <tr key={item.productId} className="hover:bg-gray-50/80 transition-colors">
+                    {/* Fixed-width title container to force word wrap and prevent horizontal table expansion */}
+                    <td className="px-3 py-2.5 align-middle">
+                      <div
+                        className="w-48 sm:w-56 min-w-[170px] max-w-[230px] whitespace-normal break-words text-sm font-semibold text-gray-900 leading-snug"
+                        title={item.productName}
+                      >
+                        {item.productName}
+                      </div>
+                    </td>
+
+                    {/* Quantity */}
+                    <td className="px-2 py-2.5 text-center align-middle">
+                      <input
+                        type="number"
+                        value={item.quantity}
+                        onChange={(e) => handleQuantityChange(item.productId, parseInt(e.target.value, 10) || 0)}
+                        className="w-16 sm:w-20 rounded-lg border-gray-300 py-1 px-2 text-center text-sm font-bold focus:border-purple-500 focus:ring-purple-500 shadow-sm"
+                        min="1"
+                      />
+                    </td>
+
+                    {/* Unit Price */}
+                    <td className="px-2 py-2.5 text-right text-sm text-gray-600 font-medium whitespace-nowrap align-middle">
+                      ${item.price.toFixed(2)}
+                    </td>
+
+                    {/* Discount in $ */}
+                    <td className="px-2 py-2.5 text-center align-middle">
+                      <input
+                        type="number"
+                        value={item.discount === 0 ? '' : item.discount}
+                        onChange={(e) => handleDiscountChange(item.productId, parseFloat(e.target.value) || 0)}
+                        placeholder="0.00"
+                        className="w-20 rounded-lg border-gray-300 py-1 px-2 text-center text-sm focus:border-purple-500 focus:ring-purple-500 font-medium shadow-sm"
+                        min="0"
+                        step="0.01"
+                      />
+                    </td>
+
+                    {/* Button / Toggle for IVA */}
+                    <td className="px-2 py-2.5 text-center align-middle whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleIva(item.productId)}
+                        className={`px-2.5 py-1 text-xs font-bold rounded-lg border transition-all active:scale-95 inline-flex items-center gap-1.5 shadow-sm ${
+                          item.grabaIva
+                            ? 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100'
+                            : 'bg-gray-100 text-gray-500 border-gray-200 hover:bg-gray-200'
+                        }`}
+                        title={item.grabaIva ? 'Graba 15% IVA. Clic para desactivar.' : 'No graba IVA (0%). Clic para activar.'}
+                      >
+                        <span
+                          className={`w-2 h-2 rounded-full ${
+                            item.grabaIva ? 'bg-purple-600 animate-pulse' : 'bg-gray-400'
+                          }`}
+                        />
+                        {item.grabaIva ? 'Graba IVA' : 'No graba'}
+                      </button>
+                    </td>
+
+                    {/* Subtotal */}
+                    <td className="px-2 py-2.5 text-right text-sm text-gray-700 font-medium whitespace-nowrap align-middle">
+                      ${item.subtotal.toFixed(2)}
+                    </td>
+
+                    {/* Total (with IVA) */}
+                    <td className="px-2 py-2.5 text-right text-sm text-gray-900 font-bold whitespace-nowrap align-middle">
+                      ${itemTotal.toFixed(2)}
+                    </td>
+
+                    {/* Remove Action */}
+                    <td className="px-2 py-2.5 text-center align-middle">
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveItem(item.productId)}
+                        className="text-gray-400 hover:text-rose-600 p-1.5 rounded-lg hover:bg-rose-50 transition-colors"
+                        title="Eliminar producto"
+                      >
+                        <FaTrash size={12} />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              }) : (
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-gray-400 text-sm">
+                    Agrega productos a la nota de venta usando el buscador superior
                   </td>
                 </tr>
-              )) : (
-                <tr><td colSpan={5} className="text-center py-8 text-gray-500">Agrega productos a la nota de venta</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </fieldset>
 
+      {/* Summary Totals */}
       <div className="mt-6 border-t pt-6">
         <div className="flex justify-end">
-          <div className="w-full max-w-xs space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">Subtotal:</span>
-              <span className="font-medium text-gray-800">${subtotal.toFixed(2)}</span>
+          <div className="w-full max-w-sm bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-2 text-sm shadow-sm">
+            {totals.subtotal0 > 0 && (
+              <div className="flex justify-between text-gray-600">
+                <span>Subtotal 0% IVA:</span>
+                <span className="font-semibold text-gray-800">${totals.subtotal0.toFixed(2)}</span>
+              </div>
+            )}
+            {totals.subtotal15 > 0 && (
+              <div className="flex justify-between text-gray-600">
+                <span>Subtotal 15% IVA:</span>
+                <span className="font-semibold text-gray-800">${totals.subtotal15.toFixed(2)}</span>
+              </div>
+            )}
+            {totals.totalDiscount > 0 && (
+              <div className="flex justify-between text-gray-600">
+                <span>Descuento total:</span>
+                <span className="font-bold text-rose-600">-${totals.totalDiscount.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-gray-600">
+              <span>IVA (15%):</span>
+              <span className="font-semibold text-gray-800">${totals.iva.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-600">IVA ({IVA_RATE * 100}%):</span>
-              <span className="font-medium text-gray-800">${iva.toFixed(2)}</span>
-            </div>
-            <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-              <span className="text-gray-900">Total:</span>
-              <span className="text-indigo-600">${total.toFixed(2)}</span>
+            <div className="flex justify-between text-base font-bold border-t border-gray-200 pt-2.5 mt-2">
+              <span className="text-gray-900">Total a Pagar:</span>
+              <span className="text-purple-600 text-xl font-black">${totals.total.toFixed(2)}</span>
             </div>
           </div>
         </div>

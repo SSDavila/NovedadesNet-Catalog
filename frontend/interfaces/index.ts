@@ -19,6 +19,7 @@ export interface Product {
   productOfferPrice: number;
   productCost?: number;
   productStock: number;
+  productIvaRate?: string;
   categoryId: string;
   category: {
     categoryId: string;
@@ -77,6 +78,7 @@ export interface SaleNote {
     saleNoteItemId: number;
     saleNoteItemQuantity: number;
     saleNoteItemUnitPrice: number;
+    saleNoteItemSubtotal?: number;
     product: {
       productId: string;
       productName: string;

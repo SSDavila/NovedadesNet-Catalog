@@ -34,6 +34,8 @@ const createSaleNoteAPI = async (formData: SaleNoteFormData): Promise<SaleNote> 
     items: formData.items.map(item => ({
       productId: item.productId,
       quantity: Number(item.quantity),
+      discount: Number(item.discount || 0),
+      hasIva: Boolean(item.grabaIva),
     })),
   };
 

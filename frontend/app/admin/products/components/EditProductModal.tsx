@@ -46,11 +46,15 @@ export default function EditProductModal({ product, isOpen, onClose, updateProdu
     if (product) {
       setProductData({
         productName: product.productName,
-        productDescription: product.productDescription,
-        productPrice: product.productPrice.toString(),
-        productOfferPrice: (product.productOfferPrice || 0).toString(),
-        productCost: (product.productCost || '').toString(),
-        productStock: product.productStock.toString(),
+        productDescription: product.productDescription || '',
+        productPrice: (product.productPrice ?? '').toString(),
+        productOfferPrice: product.productOfferPrice !== undefined && product.productOfferPrice !== null && Number(product.productOfferPrice) > 0
+          ? product.productOfferPrice.toString()
+          : '',
+        productCost: product.productCost !== undefined && product.productCost !== null
+          ? product.productCost.toString()
+          : '',
+        productStock: (product.productStock ?? 0).toString(),
         categoryId: product.category?.categoryId || product.categoryId || '',
       });
       const initialImages = product.images?.map(img => ({ existingImage: img })) || [];

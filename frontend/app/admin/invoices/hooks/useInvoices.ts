@@ -31,7 +31,18 @@ export const useInvoices = () => {
   const createInvoiceMutation = useMutation({
     mutationFn: async (newInvoice: any) => {
       const token = localStorage.getItem('access_token');
-      const response = await axios.post(`${API_URL}/invoices`, newInvoice, {
+      const payload = {
+        customerId: newInvoice.customerId,
+        paymentMethod: newInvoice.paymentMethod,
+        ...(newInvoice.sellerId && { sellerIdOverride: Number(newInvoice.sellerId) }),
+        items: (newInvoice.items || []).map((item: any) => ({
+          productId: item.productId,
+          quantity: Number(item.quantity),
+          discount: Number(item.discount || 0),
+          hasIva: Boolean(item.grabaIva),
+        })),
+      };
+      const response = await axios.post(`${API_URL}/invoices`, payload, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -46,6 +57,7 @@ export const useInvoices = () => {
       toast.error('Error al crear factura: ' + (error.response?.data?.message || error.message));
     },
   });
+
 
   const authorizeInvoiceMutation = useMutation({
     mutationFn: async (invoiceId: number) => {

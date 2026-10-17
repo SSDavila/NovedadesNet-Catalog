@@ -144,7 +144,12 @@ export default function NewProductModal({ isOpen, onClose, createProductMutation
     formData.append('productName', productData.productName.trim());
     formData.append('productDescription', productData.productDescription.trim());
     formData.append('productPrice', productData.productPrice);
-    formData.append('productOfferPrice', productData.productOfferPrice || '0');
+    if (productData.productOfferPrice && parseFloat(productData.productOfferPrice) > 0) {
+      formData.append('productOfferPrice', productData.productOfferPrice);
+    }
+    if (productData.productCost !== undefined && productData.productCost !== '') {
+      formData.append('productCost', productData.productCost);
+    }
     formData.append('productStock', productData.productStock);
     formData.append('categoryId', productData.categoryId);
 

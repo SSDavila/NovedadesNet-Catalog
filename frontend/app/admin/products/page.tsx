@@ -7,6 +7,8 @@ import ConfirmationModal from '@/components/ConfirmationModal';
 import { useProducts } from './hooks/useProducts';
 import NewProductModal from './components/NewProductModal';
 import EditProductModal from './components/EditProductModal';
+import ProductModal from '@/app/site/products/components/ProductModal';
+import { Product } from '@/interfaces';
 
 export default function AdminProductsPage() {
   const {
@@ -27,6 +29,7 @@ export default function AdminProductsPage() {
     confirmModalProps,
   } = useProducts();
 
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const PRODUCTS_PER_PAGE = 12;
 
@@ -119,6 +122,7 @@ export default function AdminProductsPage() {
                     product={product}
                     onEdit={handleEditClick}
                     onDelete={handleDeleteClick}
+                    onCardClick={setSelectedProduct}
                   />
                 ))}
               </div>
@@ -184,6 +188,10 @@ export default function AdminProductsPage() {
           isOpen={isEditModalOpen}
           onClose={handleCloseEditModal}
           updateProductMutation={updateProductMutation}
+        />
+        <ProductModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
         />
       </div>
     </div>

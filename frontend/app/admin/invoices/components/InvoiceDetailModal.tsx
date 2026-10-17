@@ -17,12 +17,14 @@ export default function InvoiceDetailModal({ invoice, onClose }: InvoiceDetailMo
     if (!invoice) return null;
     return {
       customerId: invoice.customer.customerId,
+      sellerId: null,
       items: invoice.items.map(item => ({
         productId: item.product.productId,
         productName: item.product.productName,
         quantity: item.invoiceItemQuantity,
         price: Number(item.invoiceItemUnitPrice),
         discount: Number(item.invoiceItemDiscount),
+        grabaIva: true,
         subtotal: Number(item.invoiceItemSubtotal),
       })),
       paymentMethod: invoice.invoicePaymentMethod,
