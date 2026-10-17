@@ -24,7 +24,8 @@ export class InvoicesService {
   ) {}
 
   async create(createInvoiceDto: CreateInvoiceDto, sellerId: number) {
-    const { customerId, saleNoteId, items, paymentMethod } = createInvoiceDto;
+    const { customerId, saleNoteId, items, paymentMethod, sellerIdOverride } = createInvoiceDto;
+    const effectiveSellerId = sellerIdOverride ?? sellerId;
 
     if (items.length === 0) {
       throw new BadRequestException('La factura debe tener al menos un ítem.');
@@ -75,8 +76,8 @@ export class InvoicesService {
         const unitPrice = product.productPrice.toNumber();
         const discount = item.discount || 0;
         const subtotal = (unitPrice * item.quantity) - discount;
-        const ivaRate = ivaTariffs[product.productIvaRate] ?? 0;
-        const itemTax = subtotal * (ivaRate / 100);
+        const productIvaRate = item.hasIva === false ? 0 : (ivaTariffs[product.productIvaRate] ?? 15);
+        const itemTax = subtotal * (productIvaRate / 100);
 
         invoiceSubtotal += subtotal;
         invoiceTax += itemTax;
@@ -143,7 +144,7 @@ export class InvoicesService {
           create: invoiceItemsData,
         },
         seller: {
-          connect: { userId: sellerId },
+          connect: { userId: effectiveSellerId },
         },
         ...(saleNoteId && { saleNote: { connect: { saleNoteId } } }),
       };

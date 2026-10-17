@@ -76,12 +76,18 @@ export class ProductsService {
           productPrice: +productDetails.productPrice,
           productStock: +productDetails.productStock,
           images: { create: imageUrls },
-          productOfferPrice: productDetails.productOfferPrice
-            ? +productDetails.productOfferPrice
-            : undefined,
-          productCost: productDetails.productCost
-            ? +productDetails.productCost
-            : undefined,
+          productOfferPrice:
+            productDetails.productOfferPrice !== undefined &&
+            productDetails.productOfferPrice !== null &&
+            !isNaN(Number(productDetails.productOfferPrice))
+              ? +productDetails.productOfferPrice
+              : undefined,
+          productCost:
+            productDetails.productCost !== undefined &&
+            productDetails.productCost !== null &&
+            !isNaN(Number(productDetails.productCost))
+              ? +productDetails.productCost
+              : undefined,
         },
       });
 
@@ -162,10 +168,20 @@ export class ProductsService {
       const dataToUpdate: any = { ...productDetails };
 
       // 1. Convertir campos numéricos de string a number
-      if (dataToUpdate.productPrice) dataToUpdate.productPrice = +dataToUpdate.productPrice;
-      if (dataToUpdate.productOfferPrice) dataToUpdate.productOfferPrice = +dataToUpdate.productOfferPrice;
-      if (dataToUpdate.productCost) dataToUpdate.productCost = +dataToUpdate.productCost;
-      if (dataToUpdate.productStock) dataToUpdate.productStock = +dataToUpdate.productStock;
+      if (dataToUpdate.productPrice !== undefined) dataToUpdate.productPrice = +dataToUpdate.productPrice;
+      if (dataToUpdate.productOfferPrice !== undefined) {
+        dataToUpdate.productOfferPrice =
+          dataToUpdate.productOfferPrice !== '' && dataToUpdate.productOfferPrice !== null
+            ? +dataToUpdate.productOfferPrice
+            : null;
+      }
+      if (dataToUpdate.productCost !== undefined) {
+        dataToUpdate.productCost =
+          dataToUpdate.productCost !== '' && dataToUpdate.productCost !== null
+            ? +dataToUpdate.productCost
+            : null;
+      }
+      if (dataToUpdate.productStock !== undefined) dataToUpdate.productStock = +dataToUpdate.productStock;
 
       // 1.5 Sync seller specific commissions
       if (sellerCommissions) {

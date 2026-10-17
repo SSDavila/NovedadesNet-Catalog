@@ -8,7 +8,7 @@ import {
   Min,
   IsPositive,
 } from 'class-validator';
-import { Type } from 'class-transformer';
+import { Type, Transform } from 'class-transformer';
 
 export class CreateProductDto {
   @IsString()
@@ -21,13 +21,13 @@ export class CreateProductDto {
   productPrice: number;
 
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
   @Min(0)
   @IsOptional()
   productOfferPrice?: number;
 
   @IsNumber({ maxDecimalPlaces: 2 })
-  @Type(() => Number)
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
   @Min(0)
   @IsOptional()
   productCost?: number;

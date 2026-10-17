@@ -1,5 +1,6 @@
 import {
   IsArray,
+  IsBoolean,
   IsInt,
   IsNotEmpty,
   IsNumber,
@@ -22,6 +23,10 @@ class InvoiceItemDto {
   @IsNumber()
   @IsOptional()
   discount?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  hasIva?: boolean;
 }
 
 export class CreateInvoiceDto {
@@ -32,6 +37,10 @@ export class CreateInvoiceDto {
   @IsInt()
   @IsOptional()
   saleNoteId?: number;
+
+  @IsInt()
+  @IsOptional()
+  sellerIdOverride?: number;
 
   @IsArray()
   @ValidateNested({ each: true })

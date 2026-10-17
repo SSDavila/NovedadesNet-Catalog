@@ -49,8 +49,13 @@ export class SaleNotesService {
             `Stock insuficiente para el producto: ${product.productName}. Stock actual: ${product.productStock}`,
           );
         }
-        const subtotal = product.productPrice.toNumber() * item.quantity;
-        total += subtotal;
+        const unitPrice = product.productPrice.toNumber();
+        const discount = item.discount || 0;
+        const subtotal = Math.max(0, (unitPrice * item.quantity) - discount);
+        const hasIva = item.hasIva !== undefined ? item.hasIva : true;
+        const tax = hasIva ? subtotal * 0.15 : 0;
+        const itemTotal = subtotal + tax;
+        total += itemTotal;
 
         saleNoteItemsData.push({
           productId: item.productId,

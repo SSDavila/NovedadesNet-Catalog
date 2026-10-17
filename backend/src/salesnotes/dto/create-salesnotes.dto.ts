@@ -5,6 +5,9 @@ import {
   IsString,
   ValidateNested,
   Min,
+  IsNumber,
+  IsOptional,
+  IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -16,6 +19,15 @@ class SaleNoteItemDto {
   @IsInt()
   @Min(1)
   quantity: number;
+
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  discount?: number;
+
+  @IsBoolean()
+  @IsOptional()
+  hasIva?: boolean;
 }
 
 export class CreateSaleNoteDto {
